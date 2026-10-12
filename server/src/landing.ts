@@ -94,7 +94,7 @@ section{padding:64px 0}h2{font-size:clamp(1.5rem,3vw,2.1rem);letter-spacing:-.01
 .disc{border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--mute);font-size:.83rem;display:flex;gap:10px;align-items:flex-start}.disc svg{flex:none;color:var(--gold);margin-top:2px}
 footer{border-top:1px solid var(--line);padding:26px 0 36px;color:var(--mute);font-size:.85rem}footer .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;align-items:center}footer nav{display:flex;flex-wrap:wrap;gap:6px 16px}
 @media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:40px}.grid3{grid-template-columns:1fr 1fr}.grid2,.plans{grid-template-columns:1fr}.nav a.hide{display:none}}
-@media(max-width:600px){.nav .l{display:none}.nav .s{display:inline}.nav a{padding:8px 9px}.bar{gap:8px}.brand{font-size:1.05rem}.grid3{grid-template-columns:1fr}section{padding:44px 0}.ctas .btn{width:100%}.proof{gap:16px}}
+@media(max-width:600px){.nav .l{display:none}.nav .s{display:inline}.nav{gap:6px}.nav a{padding:8px 8px}.bar{gap:6px}.brand{font-size:1rem;gap:7px}.brand img{width:28px;height:28px}.grid3{grid-template-columns:1fr}section{padding:44px 0}.ctas .btn{width:100%}.proof{gap:16px}}
 </style></head><body>
 <header><div class="wrap bar"><a class="brand" href="/"><img src="/icon-192.png" width="32" height="32" alt="" style="border-radius:9px">${esc(short)} <b>AI</b></a>
 <nav class="nav"><a class="hide" href="#features">Features</a><a class="hide" href="#data">Data</a><a class="hide" href="#pricing">Pricing</a><a class="hide" href="/faq">FAQ</a><a href="/login">Sign in</a><a class="btn gold sm" href="/signup"><span class="l">Create free account</span><span class="s">Get started</span></a></nav></div></header>
