@@ -6,7 +6,8 @@ import { all, get, run } from "../db.js";
 import { config } from "../config.js";
 import { readSettingsForAdmin, writeSettings, integ, aiOn } from "../settings.js";
 import { channelStatus, sendAlert } from "../notify.js";
-import { ingestFromFeed, ingestRows, fireAlert, stats } from "../ingest.js";
+import { ingestFromFeed, ingestRows, fireAlert, stats, syncPoliticians } from "../ingest.js";
+import { FEED_PRESETS } from "../sources.js";
 import { tradeInsight } from "../ai.js";
 
 export const admin = Router();
@@ -151,6 +152,9 @@ admin.post("/admin/test/:channel", wrap(async (req, res) => {
 
 /* ---------- data feed & alerts ---------- */
 admin.post("/admin/ingest/run", wrap(async (_req, res) => res.json(await ingestFromFeed())));
+admin.get("/admin/ingest/presets", (_req, res) => res.json({ presets: FEED_PRESETS }));
+/** Fill party / state / chamber / photo for our politicians from the public legislators directory. */
+admin.post("/admin/politicians/sync", wrap(async (_req, res) => res.json(await syncPoliticians())));
 admin.post("/admin/ingest/import", wrap(async (req, res) => {
   const rows = Array.isArray(req.body) ? req.body : req.body?.rows;
   if (!Array.isArray(rows)) throw new Error("Body must be a JSON array of trade records");

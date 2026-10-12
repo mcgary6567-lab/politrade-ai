@@ -46,7 +46,7 @@ function List() {
           <Link key={p.id} to={`/politicians/${p.id}`} className="card p-4 transition hover:border-gold/40">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
-                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-600 font-display font-700 ${partyTone(p.party)}`}>{initials(p.name)}</span>
+                <Avatar p={p} size="h-10 w-10" />
                 <div><h3 className="font-display font-600 leading-tight">{p.name}</h3>
                   <div className="text-xs"><span className={partyTone(p.party)}>{p.party ?? "—"}</span> <span className="text-slate-500">· {p.chamber ?? "—"} {p.state ? `· ${p.state}` : ""}</span></div></div>
               </div>
@@ -72,6 +72,13 @@ function List() {
 
 const initials = (n: string) => n.replace(/^(Rep|Sen)\.\s*/, "").split(" ").map((x) => x[0]).slice(0, 2).join("");
 
+/** Official photo when the directory sync has one; initials otherwise (and if the image 404s). */
+export function Avatar({ p, size }: { p: any; size: string }) {
+  const [broken, setBroken] = useState(false);
+  if (p.photo_url && !broken) return <img src={p.photo_url} alt="" onError={() => setBroken(true)} className={`${size} shrink-0 rounded-full object-cover object-top ring-2 ring-ink-600`} />;
+  return <span className={`grid ${size} shrink-0 place-items-center rounded-full bg-ink-600 font-display font-700 ${partyTone(p.party)}`}>{initials(p.name)}</span>;
+}
+
 function Detail({ id }: { id: string }) {
   const [data, setData] = useState<any>(null);
   const [type, setType] = useState("");
@@ -84,7 +91,7 @@ function Detail({ id }: { id: string }) {
     <div className="space-y-5">
       <Link to="/politicians" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-gold"><ArrowLeft size={15} /> All politicians</Link>
       <div className="card flex flex-wrap items-center gap-4 p-5">
-        <span className={`grid h-16 w-16 place-items-center rounded-full bg-ink-600 font-display text-xl font-700 ${partyTone(p.party)}`}>{initials(p.name)}</span>
+        <Avatar p={p} size="h-16 w-16 text-xl" />
         <div className="flex-1">
           <h1 className="font-display text-2xl font-700">{p.name}</h1>
           <p className="mt-1"><span className={partyTone(p.party)}>{p.party ?? "—"}</span> <span className="text-slate-500">· {p.chamber ?? "—"} {p.state ? `· ${p.state}` : ""}</span></p>

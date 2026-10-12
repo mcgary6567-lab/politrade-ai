@@ -5,7 +5,7 @@ import { api, money, ago, getToken } from "../lib/api";
 import { pill } from "./Home";
 import { Select, AMOUNT_BANDS } from "../components/ui";
 
-const KEYS = ["q", "type", "party", "chamber", "state", "sector", "owner", "ticker", "politician", "issuer", "from", "to", "days", "amount_min", "amount_max", "sort"] as const;
+const KEYS = ["q", "type", "party", "chamber", "state", "sector", "owner", "ticker", "politician", "issuer", "from", "to", "pub_from", "pub_to", "days", "amount_min", "amount_max", "sort"] as const;
 
 export default function Trades() {
   const [sp, setSp] = useSearchParams();
@@ -24,7 +24,9 @@ export default function Trades() {
   const active = KEYS.filter((k) => k !== "sort" && get(k));
   const deps = KEYS.map(get).join("|");
 
-  useEffect(() => { api("/filters").then(setFilters).catch(() => {}); }, []);
+  const [pols, setPols] = useState<any[]>([]);
+  useEffect(() => { api("/filters").then(setFilters).catch(() => {}); api<any>("/politicians?sort=name").then((r) => setPols(r.rows)).catch(() => {}); }, []);
+  const polName = pols.find((p) => String(p.id) === get("politician"))?.name;
   useEffect(() => {
     setLoading(true);
     const p = query(); p.set("limit", "50"); p.set("offset", String(offset));
@@ -62,18 +64,22 @@ export default function Trades() {
         </div>
         {more && (
           <div className="flex flex-wrap items-center gap-2 border-t border-line pt-2">
+            <Select value={get("politician")} onChange={(v) => set("politician", v)} className="max-w-[220px]" opts={[["", "All politicians"], ...pols.map((p) => [String(p.id), p.name] as [string, string])]} />
+            <input className="input w-28 font-mono uppercase" list="tickers" placeholder="Ticker" defaultValue={get("ticker")} key={"t" + get("ticker")} onKeyDown={(e) => e.key === "Enter" && set("ticker", (e.target as HTMLInputElement).value)} onBlur={(e) => e.target.value !== get("ticker") && set("ticker", e.target.value)} />
+            <datalist id="tickers">{(filters?.tickers ?? []).map((t: string) => <option key={t} value={t} />)}</datalist>
             <Select value={get("sector")} onChange={(v) => set("sector", v)} opts={opt(filters?.sectors, "All sectors")} />
             <Select value={get("state")} onChange={(v) => set("state", v)} opts={opt(filters?.states, "All states")} />
             <Select value={get("owner")} onChange={(v) => set("owner", v)} opts={opt(filters?.owners, "Any owner")} />
             <Select value={band} onChange={(v) => { const b = AMOUNT_BANDS.find((x) => x[2] === v)!; setMany({ amount_min: b[0], amount_max: b[1] }); }} opts={AMOUNT_BANDS.map((b) => [b[2], b[2]] as [string, string]).map(([v, l]) => [v === "Any amount" ? "" : v, l])} />
             <label className="flex items-center gap-1.5 text-sm text-slate-400">Traded <input type="date" className="input w-auto py-2" value={get("from")} onChange={(e) => set("from", e.target.value)} /> → <input type="date" className="input w-auto py-2" value={get("to")} onChange={(e) => set("to", e.target.value)} /></label>
+            <label className="flex items-center gap-1.5 text-sm text-slate-400">Filed <input type="date" className="input w-auto py-2" value={get("pub_from")} onChange={(e) => set("pub_from", e.target.value)} /> → <input type="date" className="input w-auto py-2" value={get("pub_to")} onChange={(e) => set("pub_to", e.target.value)} /></label>
           </div>
         )}
         {active.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 border-t border-line pt-2">
             {active.filter((k) => k !== "amount_max").map((k) => (
               <button key={k} className="chip hover:border-sell/50 hover:text-sell" onClick={() => k === "amount_min" ? setMany({ amount_min: "", amount_max: "" }) : set(k, "")}>
-                {k === "amount_min" ? `amount: ${band || "custom"}` : `${k}: ${get(k)}`} <X size={12} />
+                {k === "amount_min" ? `amount: ${band || "custom"}` : k === "politician" ? `politician: ${polName ?? get(k)}` : `${k.replace("pub_", "filed ")}: ${get(k)}`} <X size={12} />
               </button>
             ))}
             <button className="ml-auto text-xs font-semibold text-slate-400 hover:text-gold" onClick={clear}>Clear all</button>

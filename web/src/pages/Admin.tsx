@@ -310,7 +310,8 @@ function DataTab() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState("");
   const [json, setJson] = useState("");
-  const load = () => Promise.all([api<any>("/admin/settings"), api<any>("/admin/ingest/log")]).then(([s, l]) => { setRows(s.rows.filter((r: any) => r.group === "feed")); setLog(l.rows); setDraft({}); }).catch((e) => toast.err(e.message));
+  const [presets, setPresets] = useState<any[]>([]);
+  const load = () => Promise.all([api<any>("/admin/settings"), api<any>("/admin/ingest/log"), api<any>("/admin/ingest/presets")]).then(([s, l, p]) => { setRows(s.rows.filter((r: any) => r.group === "feed")); setLog(l.rows); setPresets(p.presets); setDraft({}); }).catch((e) => toast.err(e.message));
   useEffect(() => { load(); }, []);
   const val = (k: string) => draft[k] ?? rows.find((r) => r.key === k)?.value ?? "";
   const save = async () => {
@@ -319,8 +320,20 @@ function DataTab() {
   };
   const run = async () => {
     setBusy("run");
-    try { const r = await api<any>("/admin/ingest/run", { method: "POST" }); toast.ok(`Fetched ${r.fetched} records, ${r.added} new trades added`); load(); } catch (e: any) { toast.err(e.message); load(); } finally { setBusy(""); }
+    try {
+      const r = await api<any>("/admin/ingest/run", { method: "POST" });
+      toast.ok(`Fetched ${r.fetched} records, ${r.added} new trades added`);
+      for (const e of r.errors ?? []) toast.err(e);
+      load();
+    } catch (e: any) { toast.err(e.message); load(); } finally { setBusy(""); }
   };
+  const sync = async () => {
+    setBusy("sync");
+    try { const r = await api<any>("/admin/politicians/sync", { method: "POST" }); toast.ok(`Directory: ${r.legislators} legislators, ${r.matched} matched, ${r.updated} profiles updated (party / state / photo)`); } catch (e: any) { toast.err(e.message); } finally { setBusy(""); }
+  };
+  const currentPreset = presets.find((p) => p.urls.join("\n") === val("feed.url").split(/[\n,]+/).map((x: string) => x.trim()).filter(Boolean).join("\n"))?.id ?? "";
+  const applyPreset = (id: string) => { const p = presets.find((x) => x.id === id); if (p) setDraft({ ...draft, "feed.url": p.urls.join("\n") }); };
+  const preset = presets.find((p) => p.id === currentPreset);
   const importJson = async () => {
     setBusy("import");
     try {
@@ -340,15 +353,24 @@ function DataTab() {
       <div className="card p-5">
         <div className="flex flex-wrap items-start gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-ink-600 text-gold"><Rss size={18} /></span>
-          <div className="flex-1 basis-[240px]"><h2 className="font-display text-lg font-600">Public disclosure feed</h2><p className="text-sm text-slate-400">A JSON URL of congressional STOCK-Act filings (House/Senate disclosure datasets or any API that returns an array of transactions). The app polls it on the schedule below, saves new trades, writes the AI note and pushes alerts.</p></div>
+          <div className="flex-1 basis-[240px]"><h2 className="font-display text-lg font-600">Real data — public disclosure feeds</h2><p className="text-sm text-slate-400">US lawmakers must file every stock trade (STOCK Act). Pick a source below — the app polls it on schedule, stores every real trade, writes the AI note and pushes alerts. Same official filings every trade tracker uses.</p></div>
           <div className="flex gap-2">
             <button className="btn-ghost text-sm" disabled={busy === "run"} onClick={run}><RefreshCw size={14} className={busy === "run" ? "animate-spin" : ""} /> {busy === "run" ? "Fetching…" : "Run now"}</button>
             <button className="btn-gold text-sm" disabled={!Object.keys(draft).length || busy === "save"} onClick={save}>Save</button>
           </div>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-[1fr_200px_160px]">
-          <Field label="Feed URL" hint="Must return JSON (array or {transactions:[…]}). Fields like representative/senator, ticker, type, amount, transaction_date, disclosure_date are detected automatically.">
-            <input className="input font-mono text-sm" placeholder="https://…/transactions.json" value={val("feed.url")} onChange={(e) => setDraft({ ...draft, "feed.url": e.target.value })} /></Field>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <Field label="Source preset">
+            <Select className="w-full" value={currentPreset} onChange={applyPreset} opts={[["", currentPreset ? "Custom URLs" : "Choose a source…"], ...presets.map((p) => [p.id, p.name] as [string, string])]} />
+            {preset && <span className="mt-1 block text-xs text-slate-500">{preset.note}</span>}
+          </Field>
+          <Field label="Feed API key" hint="Only for sources that need one (replaces {KEY} in the URLs). Stored masked.">
+            <input className="input font-mono text-sm" type="password" placeholder={rows.find((r) => r.key === "feed.api_key")?.set ? "•••• saved — type to replace" : "paste key if the source needs one"} value={draft["feed.api_key"] ?? ""} onChange={(e) => setDraft({ ...draft, "feed.api_key": e.target.value })} autoComplete="off" />
+          </Field>
+        </div>
+        <div className="mt-3 grid gap-3 md:grid-cols-[1fr_200px_160px]">
+          <Field label="Feed URL(s) — one per line" hint="Each must return JSON (array or {transactions:[…]}). House/Senate open-dataset, FMP and generic field names are detected automatically; a URL containing “house”/“senate” sets the chamber.">
+            <textarea className="input min-h-[88px] font-mono text-xs" placeholder={"https://…/house_transactions.json\nhttps://…/senate_transactions.json"} value={val("feed.url")} onChange={(e) => setDraft({ ...draft, "feed.url": e.target.value })} /></Field>
           <Field label="Schedule (cron)" hint="e.g. */30 * * * * = every 30 min">
             <Select className="w-full" value={["*/15 * * * *", "*/30 * * * *", "0 * * * *", "0 */6 * * *", "0 8 * * *"].includes(val("feed.cron")) ? val("feed.cron") : "custom"} onChange={(x) => x !== "custom" && setDraft({ ...draft, "feed.cron": x })}
               opts={[["*/15 * * * *", "Every 15 min"], ["*/30 * * * *", "Every 30 min"], ["0 * * * *", "Hourly"], ["0 */6 * * *", "Every 6 hours"], ["0 8 * * *", "Daily 08:00 UTC"], ["custom", "Custom…"]]} />
@@ -356,6 +378,10 @@ function DataTab() {
           <Field label="Alerts">
             <button type="button" className={`btn w-full border ${enabled ? "border-buy/40 bg-buy/10 text-buy" : "border-sell/40 bg-sell/10 text-sell"}`} onClick={() => setDraft({ ...draft, "alerts.enabled": enabled ? "0" : "1" })}>{enabled ? "Enabled" : "Paused"}</button>
             <span className="mt-1 block text-xs text-slate-500">Pause to ingest history without spamming channels.</span></Field>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-ink-800/60 p-3">
+          <div className="flex-1 basis-[240px] text-sm"><b>Politicians directory</b> <span className="text-slate-400">— fills party, state, chamber and official photo for every politician in your trades from the public <span className="font-mono text-xs">congress-legislators</span> dataset. Run after the first ingest.</span></div>
+          <button className="btn-ghost text-sm" disabled={busy === "sync"} onClick={sync}><RefreshCw size={14} className={busy === "sync" ? "animate-spin" : ""} /> {busy === "sync" ? "Syncing…" : "Sync directory"}</button>
         </div>
       </div>
 

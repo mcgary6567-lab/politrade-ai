@@ -117,12 +117,12 @@ test("manual import normalises feed-style rows and logs it; ingest without feed 
     { senator: "Sen. Sample Two", party: "Republican", state: "TX", ticker: "--", asset_description: "Muni bond", type: "sale", transaction_date: "2025-01-10" },
   ] });
   assert.equal(imp.status, 200, JSON.stringify(imp.data));
-  assert.equal(imp.data.added, 1);
-  assert.equal((await call(admin, "GET", "/api/admin/overview")).data.trades, before + 1);
+  assert.equal(imp.data.added, 2, "muni bond without ticker is still a disclosed trade");
+  assert.equal((await call(admin, "GET", "/api/admin/overview")).data.trades, before + 2);
   const t = (await call(admin, "GET", "/api/trades?ticker=AAPL&party=Democrat&q=Sample")).data.rows[0];
   assert.equal(t.tx_date, "2025-01-15"); assert.equal(t.amount_max, 50000); assert.equal(t.tx_type, "buy");
   const log = await call(admin, "GET", "/api/admin/ingest/log");
-  assert.ok(log.data.rows[0].fetched === 2 && log.data.rows[0].added === 1);
+  assert.ok(log.data.rows[0].fetched === 2 && log.data.rows[0].added === 2);
   await call(admin, "PUT", "/api/admin/settings", { values: { "feed.url": "" } });
   const run = await call(admin, "POST", "/api/admin/ingest/run");
   assert.equal(run.status, 400);
