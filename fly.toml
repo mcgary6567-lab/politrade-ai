@@ -1,0 +1,35 @@
+# PoliTrade AI on Fly.io — one always-on machine, SQLite on a persistent volume.
+app = "politrade-ai"
+primary_region = "iad"   # US East — close to the data sources
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "4000"
+  DB_PATH = "/data/politrade.db"
+  WEB_DIST = "/app/web/dist"
+  # DATA_FEED_URL, ADMIN_EMAIL/PASSWORD, JWT_SECRET, PUBLIC_URL, alert channels -> set via `fly secrets set`
+
+[mounts]
+  source = "politrade_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  [[http_service.checks]]
+    method = "get"
+    path = "/api/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+  cpus = 1
