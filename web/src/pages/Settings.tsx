@@ -17,7 +17,7 @@ export default function Settings() {
     <div className="space-y-5">
       <div><h1 className="flex items-center gap-2 font-display text-2xl font-700"><UserCog size={22} className="text-gold" /> Your settings</h1><p className="text-sm text-slate-400">Account, alert channels and watchlist.</p></div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="space-y-5 lg:col-span-2">
+        <div className="min-w-0 space-y-5 lg:col-span-2">
           <Channels u={u} transports={data.transports} bot={data.bot} onChange={load} />
           <Watchlist pro={u.pro} />
           <Profile u={u} onChange={load} />
@@ -71,9 +71,9 @@ function Channels({ u, transports, bot, onChange }: { u: any; transports: any; b
 
   return (
     <div className="card p-5">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div><h2 className="flex items-center gap-2 font-display text-lg font-600"><Bell size={17} className="text-gold" /> Alert channels</h2><p className="text-sm text-slate-400">Where to send you a message the moment a lawmaker files a trade that matches your watchlist.{!u.pro && <> <b className="text-gold">Pro feature</b> — you can set them up now; delivery starts when your plan is Pro.</>}</p></div>
-        <div className="space-y-1 text-sm">
+        <div className="shrink-0 space-y-1 text-sm">
           <label className="flex items-center gap-2"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Trade alerts <span className="text-xs text-slate-500">(watchlist filings)</span></label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={notifySig} onChange={(e) => setNotifySig(e.target.checked)} /> Signal alerts <span className="text-xs text-slate-500">(new / stronger buy signals)</span></label>
         </div>
@@ -99,10 +99,10 @@ function Channels({ u, transports, bot, onChange }: { u: any; transports: any; b
             : <Field label="Alert email"><input className="input text-sm" type="email" placeholder={u.email} value={em} onChange={(e) => setEm(e.target.value)} /></Field>}
         </div>
       </div>
-      <div className="mt-3 flex justify-end gap-2">
-        <button className="btn-ghost text-sm" disabled={busy === "test"} onClick={test}><FlaskConical size={14} /> Send test</button>
-        <button className="btn-ghost text-sm" disabled={busy === "sig"} onClick={testSignal} title="Sends the current #1 buy signal to your channels"><Zap size={14} /> Send test signal</button>
-        <button className="btn-gold text-sm" disabled={busy === "save"} onClick={save}><Save size={14} /> Save channels</button>
+      <div className="mt-3 flex flex-wrap justify-end gap-2">
+        <button className="btn-ghost whitespace-nowrap text-sm" disabled={busy === "test"} onClick={test}><FlaskConical size={14} /> Send test</button>
+        <button className="btn-ghost whitespace-nowrap text-sm" disabled={busy === "sig"} onClick={testSignal} title="Sends the current #1 buy signal to your channels"><Zap size={14} /> Send test signal</button>
+        <button className="btn-gold whitespace-nowrap text-sm" disabled={busy === "save"} onClick={save}><Save size={14} /> Save channels</button>
       </div>
     </div>
   );
@@ -173,7 +173,7 @@ function Profile({ u, onChange }: { u: any; onChange: () => void }) {
       <div className="mt-5 rounded-xl border border-line p-4">
         <h3 className="flex items-center gap-2 font-display font-600"><KeyRound size={16} className="text-gold" /> Quick sign-in PIN {u.has_pin ? <span className="chip border-buy/40 py-0 text-[10px] text-buy">set</span> : <span className="chip py-0 text-[10px]">not set</span>}</h3>
         <p className="mt-1 text-xs text-slate-400">A 4-digit PIN lets you sign in fast on your own phone or computer (email + PIN). Your password still works, and the PIN locks for 15 minutes after 5 wrong tries.</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-[120px_1fr_auto_auto]">
+        <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-[120px_1fr_auto_auto]">
           <input className="input text-center font-mono text-lg tracking-[0.4em]" inputMode="numeric" maxLength={4} placeholder="••••" value={pin.pin} onChange={(e) => setPin({ ...pin, pin: e.target.value.replace(/\D/g, "").slice(0, 4) })} />
           <input className="input" type="password" placeholder="Current password" autoComplete="current-password" value={pin.current_password} onChange={(e) => setPin({ ...pin, current_password: e.target.value })} />
           <button type="button" className="btn-gold text-sm" disabled={pin.busy || pin.pin.length !== 4 || !pin.current_password} onClick={() => savePin(false)}><Save size={14} /> {u.has_pin ? "Change PIN" : "Set PIN"}</button>

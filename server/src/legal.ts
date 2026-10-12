@@ -64,6 +64,7 @@ table{width:100%;border-collapse:collapse;font-size:.92rem;margin:10px 0}th,td{t
 .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;color:var(--ink);font-weight:600}.btn:hover{border-color:var(--gold);text-decoration:none}.btn.gold{background:var(--gold);color:#0a0f1c;border-color:var(--gold)}
 footer{border-top:1px solid var(--line);padding:22px 0;color:var(--mute);font-size:.85rem}footer .wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
 @media(max-width:860px){.grid{grid-template-columns:1fr}aside{position:static}.nav a{padding:6px 8px;font-size:.82rem}.hero h1{font-size:1.5rem}}
+@media(max-width:600px){.bar{flex-wrap:wrap;height:auto;min-height:56px;padding:8px 0}.nav{margin-left:0;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.nav a{white-space:nowrap}.hero{padding:28px 0 20px}section{padding:16px 14px}table{display:block;overflow-x:auto}}
 </style></head><body>
 <header><div class="wrap bar"><a class="brand" href="/"><img src="/icon-192.png" width="30" height="30" alt="" style="border-radius:8px">${name.replace(/ AI$/, "")} <b>AI</b></a><nav class="nav">${nav}</nav></div></header>
 <div class="wrap"><div class="hero"><h1>${title}</h1><p>${lead}</p><div class="meta"><span class="chip">${ic("clock", 14)} Last updated ${UPDATED}</span><span class="chip">${ic("file", 14)} ${sections.length} sections</span><span class="chip">${ic("globe", 14)} Applies worldwide</span></div></div>

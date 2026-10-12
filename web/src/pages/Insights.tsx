@@ -61,16 +61,16 @@ export default function Insights() {
         </Panel>
 
         <Panel title="By party">
-          <div className="flex items-center gap-4">
-            <ResponsiveContainer width="50%" height={220}>
+          <div className="flex flex-col items-center gap-4 sm:flex-row">
+            <div className="w-full sm:w-1/2"><ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={d.byParty} dataKey="trades" nameKey="party" innerRadius={50} outerRadius={85} paddingAngle={2} stroke="none">
                   {d.byParty.map((e: any) => <Cell key={e.party} fill={PARTY[e.party] ?? "#64748b"} />)}
                 </Pie>
                 <Tooltip {...tip} />
               </PieChart>
-            </ResponsiveContainer>
-            <ul className="flex-1 space-y-2 text-sm">
+            </ResponsiveContainer></div>
+            <ul className="w-full flex-1 space-y-2 text-sm">
               {d.byParty.map((e: any) => (
                 <li key={e.party}><div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: PARTY[e.party] ?? "#64748b" }} />{e.party}</span><span className="font-mono">{e.trades}</span></div>
                   <div className="text-xs text-slate-500"><span className="text-buy">{e.buys} buys</span> · <span className="text-sell">{e.sells} sells</span></div></li>

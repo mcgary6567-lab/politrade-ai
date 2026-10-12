@@ -29,11 +29,11 @@ export default function Home() {
 
       {/* AI signals strip */}
       <section className="card min-w-0 overflow-hidden border-gold/30 p-4">
-        <div className="mb-2 flex items-center gap-3">
-          <h2 className="flex items-center gap-2 font-display text-xs font-700 uppercase tracking-wider"><TrendingUp size={14} className="text-gold" /> AI Signals — where Congress is buying</h2>
-          <span className="chip py-0 text-[10px]">last 90 days</span>
-          <Link to="/invest" className="ml-auto flex items-center gap-1 text-xs font-semibold text-gold hover:underline"><Wallet size={13} /> Invest Plan & profit calculator →</Link>
-          <Link to="/signals" className="text-xs font-semibold text-slate-400 hover:text-gold">All signals →</Link>
+        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h2 className="flex items-center gap-2 whitespace-nowrap font-display text-xs font-700 uppercase tracking-wider"><TrendingUp size={14} className="text-gold" /> AI Signals <span className="hidden sm:inline">— where Congress is buying</span></h2>
+          <span className="chip whitespace-nowrap py-0 text-[10px]">last 90 days</span>
+          <Link to="/invest" className="flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-gold hover:underline sm:ml-auto"><Wallet size={13} /> Invest Plan & calculator →</Link>
+          <Link to="/signals" className="whitespace-nowrap text-xs font-semibold text-slate-400 hover:text-gold">All signals →</Link>
         </div>
         {!sig ? <div className="h-20 animate-pulse rounded-xl bg-ink-600/40" /> : (
           <div className="grid gap-3 sm:grid-cols-3">
@@ -56,8 +56,8 @@ export default function Home() {
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Latest trades */}
         <Panel title="Latest trades" icon={<ArrowLeftRight size={14} />} to="/trades" extra={
-          <div className="flex rounded-lg border border-line p-0.5 text-xs">
-            {(["stocks", "all"] as const).map((k) => <button key={k} onClick={() => setAssets(k)} className={`rounded-md px-2.5 py-1 font-semibold ${assets === k ? "bg-ink-500 text-slate-100" : "text-slate-400"}`}>{k === "stocks" ? "Stocks" : "All assets"}</button>)}
+          <div className="inline-flex rounded-lg border border-line p-0.5 text-xs">
+            {(["stocks", "all"] as const).map((k) => <button key={k} onClick={() => setAssets(k)} className={`whitespace-nowrap rounded-md px-2.5 py-1 font-semibold ${assets === k ? "bg-ink-500 text-slate-100" : "text-slate-400"}`}>{k === "stocks" ? "Stocks" : "All assets"}</button>)}
           </div>}>
           <div className="divide-y divide-line">
             {d.latest.map((r: any) => (
@@ -159,11 +159,11 @@ const k = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(n % 1e6 ? 1 : 0)}M` : n
 function Panel({ title, icon, to, sub, extra, children }: { title: string; icon?: React.ReactNode; to: string; sub?: string; extra?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="card min-w-0 overflow-hidden p-4">
-      <div className="mb-2 flex items-center gap-3">
-        <h2 className="flex items-center gap-2 font-display text-xs font-700 uppercase tracking-wider">{icon && <span className="text-gold">{icon}</span>}{title}</h2>
-        {sub && <span className="chip py-0 text-[10px]">{sub}</span>}
-        {extra}
-        <Link to={to} className="ml-auto text-xs font-semibold text-slate-400 hover:text-gold">View all</Link>
+      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <h2 className="flex items-center gap-2 whitespace-nowrap font-display text-xs font-700 uppercase tracking-wider">{icon && <span className="text-gold">{icon}</span>}{title}</h2>
+        {sub && <span className="chip whitespace-nowrap py-0 text-[10px]">{sub}</span>}
+        <Link to={to} className="ml-auto whitespace-nowrap text-xs font-semibold text-slate-400 hover:text-gold sm:order-last sm:ml-0">View all</Link>
+        {extra && <div className="basis-full sm:ml-auto sm:basis-auto">{extra}</div>}
       </div>
       {children}
     </section>

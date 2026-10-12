@@ -100,7 +100,33 @@ export default function Trades() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* phone: one card per trade */}
+        <ul className="divide-y divide-line md:hidden">
+          {rows.map((r) => (
+            <li key={r.id} className="p-3.5">
+              <div className="flex items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className={pill(r.tx_type)}>{r.tx_type.toUpperCase()}</span>
+                    {r.ticker ? <Link to={`/issuers/${r.issuer_id}`} className="font-mono text-base font-700 text-gold-300">{r.ticker}</Link> : <span className="text-slate-500">—</span>}
+                    <span className="truncate text-xs text-slate-400">{r.issuer}</span>
+                  </div>
+                  <Link to={`/politicians/${r.politician_id}`} className="mt-1.5 block truncate text-sm font-semibold">{r.politician}</Link>
+                  <div className="text-xs text-slate-500">{[r.party, r.chamber, r.state].filter(Boolean).join(" · ")}{r.owner ? ` · ${r.owner}` : ""}</div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="font-mono text-sm text-slate-100">{money(r.amount_min, r.amount_max)}</div>
+                  <div className="mt-1 text-xs text-slate-400">{r.tx_date ?? "—"}</div>
+                  <div className={`text-[11px] ${r.filed_after_days > 45 ? "text-sell" : "text-slate-500"}`}>filed {ago(r.published_date)}{r.filed_after_days != null ? ` · ${r.filed_after_days}d` : ""}</div>
+                </div>
+              </div>
+              {r.ai_note && <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-ink-800/70 px-2.5 py-1.5 text-xs text-slate-400"><Sparkles size={11} className="mt-0.5 shrink-0 text-gold" />{r.ai_note}</div>}
+            </li>
+          ))}
+          {loading && !rows.length && Array.from({ length: 6 }, (_, i) => <li key={i} className="p-3.5"><div className="h-12 animate-pulse rounded bg-ink-600/60" /></li>)}
+          {!loading && !rows.length && <li className="p-8 text-center text-sm text-slate-500">No trades match these filters.</li>}
+        </ul>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[820px]">
             <thead className="border-b border-line"><tr>
               <th className="th">Politician</th><th className="th">Issuer</th><th className="th">Type</th>
@@ -111,7 +137,7 @@ export default function Trades() {
                 <tr key={r.id} className="hover:bg-ink-700/40">
                   <td className="td"><Link to={`/politicians/${r.politician_id}`} className="font-semibold hover:text-gold">{r.politician}</Link>
                     <div className="text-xs text-slate-500">{[r.party, r.chamber, r.state].filter(Boolean).join(" · ")}</div></td>
-                  <td className="td"><div className="font-semibold">{r.ticker ? <Link to={`/issuers/${r.issuer_id}`} className="font-mono text-gold-300 hover:underline">{r.ticker}</Link> : "—"} <span className="chip ml-1 py-0 text-[10px]">{r.sector ?? "Other"}</span></div>
+                  <td className="td"><div className="font-semibold">{r.ticker ? <Link to={`/issuers/${r.issuer_id}`} className="font-mono text-gold-300 hover:underline">{r.ticker}</Link> : "—"} {r.sector && <span className="chip ml-1 py-0 text-[10px]">{r.sector}</span>}</div>
                     <div className="max-w-[220px] truncate text-xs text-slate-400">{r.issuer}</div></td>
                   <td className="td"><span className={pill(r.tx_type)}>{r.tx_type.toUpperCase()}</span></td>
                   <td className="td text-right font-mono">{money(r.amount_min, r.amount_max)}</td>

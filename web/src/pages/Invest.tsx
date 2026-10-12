@@ -114,7 +114,25 @@ export default function Invest() {
           <span className="text-sm text-slate-400">— how {usd(amount)} would be split across the current buy signals, weighted by score</span>
           <Link to="/signals" className="ml-auto text-xs font-semibold text-gold hover:underline">Full signal detail →</Link>
         </div>
-        <div className="overflow-x-auto">
+        <ul className="divide-y divide-line md:hidden">
+          {d.portfolio.map((p: any) => (
+            <li key={p.rank} className={`flex items-center gap-3 p-3.5 ${p.locked ? "opacity-70" : ""}`}>
+              <span className="w-5 shrink-0 font-mono text-sm text-slate-500">{p.rank}</span>
+              <div className="min-w-0 flex-1">
+                {p.locked ? <span className="flex items-center gap-2 text-sm text-slate-500"><Lock size={13} className="text-gold" /> Pro members only</span>
+                  : <><Link to={`/issuers/${p.issuer_id}`} className="font-mono font-700 text-gold hover:underline">{p.ticker}</Link><div className="truncate text-xs text-slate-400">{p.issuer}</div></>}
+                <div className="mt-1 flex flex-wrap gap-x-2 text-[11px] text-slate-400">
+                  <span className={`chip py-0 text-[10px] ${p.confidence === "high" ? "border-buy/50 text-buy" : p.confidence === "medium" ? "border-gold/50 text-gold" : ""}`}>{p.score}/100</span>
+                  <span>{p.buyers} buying{p.bipartisan ? " · bipartisan" : ""}</span>
+                  {p.histHit != null && <span className={p.histHit >= 0.5 ? "text-buy" : ""}>{Math.round(p.histHit * 100)}% beat mkt</span>}
+                </div>
+              </div>
+              <div className="shrink-0 text-right"><div className="font-mono text-sm text-slate-100">{usd(amount * p.weight / 100)}</div><div className="text-xs text-slate-500">{p.weight}%</div></div>
+            </li>
+          ))}
+          {!d.portfolio.length && <li className="p-8 text-center text-sm text-slate-500">No buying clusters right now.</li>}
+        </ul>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="border-b border-line"><tr><th className="th">#</th><th className="th">Stock</th><th className="th">Signal</th><th className="th text-right">Weight</th><th className="th text-right">Amount</th><th className="th">Lawmakers</th><th className="th">Past buys here</th><th className="th">Top buyer</th></tr></thead>
             <tbody className="divide-y divide-line">

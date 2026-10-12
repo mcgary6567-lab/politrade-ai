@@ -91,7 +91,7 @@ export default function Signals() {
 function SignalCard({ s, rank }: { s: any; rank: number }) {
   if (s.locked) return (
     <div className="card relative overflow-hidden p-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="font-mono text-slate-500">#{rank}</span>
         <span className="font-mono text-lg font-700 text-slate-600">•••</span>
         <span className="chip">{s.sector ?? "Stock"}</span>
@@ -103,11 +103,11 @@ function SignalCard({ s, rank }: { s: any; rank: number }) {
   );
   return (
     <div className="card p-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="font-mono text-slate-500">#{rank}</span>
         <Link to={`/issuers/${s.issuer_id}`} className="font-mono text-lg font-700 text-gold hover:underline">{s.ticker}</Link>
-        <span className="min-w-0 flex-1 truncate text-sm text-slate-300">{s.issuer}</span>
-        <span className={`chip py-0 text-[10px] ${s.confidence === "high" ? "border-buy/50 text-buy" : s.confidence === "medium" ? "border-gold/50 text-gold" : ""}`}>{s.confidence}</span>
+        <span className="order-last min-w-0 basis-full truncate text-sm text-slate-300 sm:order-none sm:basis-auto sm:flex-1">{s.issuer}</span>
+        <span className={`ml-auto chip py-0 text-[10px] sm:ml-0 ${s.confidence === "high" ? "border-buy/50 text-buy" : s.confidence === "medium" ? "border-gold/50 text-gold" : ""}`}>{s.confidence}</span>
         <Score v={s.score} />
       </div>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">

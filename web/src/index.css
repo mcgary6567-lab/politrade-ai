@@ -23,3 +23,14 @@ body { margin: 0; background: #0a0f1c; color: #e7ecf5; font-family: "Inter", sys
   .th { @apply px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400; }
   .td { @apply px-3 py-3 align-middle; }
 }
+
+/* phones: cards and chart wrappers never widen the page; comfortable tap targets */
+.card { min-width: 0; }
+.recharts-responsive-container { min-width: 0 !important; }
+@media (max-width: 640px) {
+  .btn { min-height: 42px; }
+  .input, select.input { font-size: 16px; } /* stops iOS zoom-on-focus */
+}
+@supports (padding: env(safe-area-inset-bottom)) {
+  footer { padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
+}

@@ -43,7 +43,27 @@ function List() {
         <Select value={get("sort")} onChange={(v) => set("sort", v)} opts={[["", "Most trades"], ["volume", "Largest volume"], ["politicians", "Most politicians"], ["recent", "Most recent"], ["name", "Name A–Z"]]} />
       </div>
       <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
+        <ul className="divide-y divide-line md:hidden">
+          {rows.map((i) => (
+            <li key={i.id}>
+              <Link to={`/issuers/${i.id}`} className="flex items-center gap-3 p-3.5 active:bg-ink-700/40">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2"><span className="font-mono font-700 text-gold-300">{i.ticker ?? "—"}</span>{i.sector && <span className="chip py-0 text-[10px]">{i.sector}</span>}</div>
+                  <div className="truncate text-sm font-semibold">{i.name}</div>
+                  <div className="text-xs text-slate-500">{i.politicians ?? 0} politicians · last {ago(i.last_traded)}</div>
+                </div>
+                <div className="shrink-0 text-right text-xs">
+                  <div className="font-mono text-base text-slate-100">{i.trades}</div>
+                  <div><span className="text-buy">{i.buys ?? 0} buy</span> · <span className="text-sell">{i.sells ?? 0} sell</span></div>
+                  <div className="font-mono text-slate-400">{compact(i.volume)}</div>
+                </div>
+              </Link>
+            </li>
+          ))}
+          {loading && !rows.length && <li className="p-8 text-center text-sm text-slate-500">Loading…</li>}
+          {!loading && !rows.length && <li className="p-8 text-center text-sm text-slate-500">No issuers found.</li>}
+        </ul>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[760px]">
             <thead className="border-b border-line"><tr>
               <th className="th">Ticker</th><th className="th">Company</th><th className="th">Sector</th>
@@ -54,7 +74,7 @@ function List() {
                 <tr key={i.id} className="hover:bg-ink-700/40">
                   <td className="td font-mono font-semibold text-gold-300"><Link to={`/issuers/${i.id}`} className="hover:underline">{i.ticker ?? "—"}</Link></td>
                   <td className="td font-semibold"><Link to={`/issuers/${i.id}`} className="hover:text-gold">{i.name}</Link></td>
-                  <td className="td"><button className="chip hover:border-gold/50" onClick={() => set("sector", i.sector ?? "Other")}>{i.sector ?? "Other"}</button></td>
+                  <td className="td">{i.sector ? <button className="chip hover:border-gold/50" onClick={() => set("sector", i.sector)}>{i.sector}</button> : <span className="text-xs text-slate-500">—</span>}</td>
                   <td className="td text-right font-mono">{i.trades}</td>
                   <td className="td text-right font-mono text-buy">{i.buys ?? 0}</td>
                   <td className="td text-right font-mono text-sell">{i.sells ?? 0}</td>
@@ -85,7 +105,7 @@ function Detail({ id }: { id: string }) {
       <Link to="/issuers" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-gold"><ArrowLeft size={15} /> All issuers</Link>
       <div className="card flex flex-wrap items-center gap-4 p-5">
         <span className="grid h-16 w-16 place-items-center rounded-2xl bg-ink-600 font-mono text-lg font-700 text-gold">{i.ticker ?? "?"}</span>
-        <div className="flex-1"><h1 className="font-display text-2xl font-700">{i.name}</h1><p className="mt-1 text-slate-400">{i.sector ?? "Other"}</p></div>
+        <div className="flex-1"><h1 className="font-display text-2xl font-700">{i.name}</h1><p className="mt-1 text-slate-400">{i.sector ?? `${i.ticker ? "Ticker " + i.ticker : "Issuer"} · traded by ${s.politicians ?? 0} lawmakers`}</p></div>
         <Link to={`/trades?issuer=${i.id}`} className="btn-ghost text-sm"><ExternalLink size={14} /> Open in Trades</Link>
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
