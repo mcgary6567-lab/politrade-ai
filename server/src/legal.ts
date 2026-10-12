@@ -132,8 +132,9 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact"):
       <li>We may suspend or terminate access for breach of these Terms, suspected fraud or abuse, legal requirements, or discontinuation of the Service.</li>
       <li>Sections on intellectual property, no advice, liability, indemnity and governing law survive termination.</li></ul>` },
     { id: "law", icon: "globe", title: "Governing law & disputes", html: `
-      <ul><li>These Terms are governed by the laws of <b>${law || "the jurisdiction in which " + co + " is established"}</b>, without regard to conflict-of-law rules.</li>
+      <ul><li>These Terms are governed by the laws of <b>${law || "the United States of America"}</b>, without regard to conflict-of-law rules. The Service is operated for a US audience; if you access it from elsewhere you are responsible for compliance with your local laws.</li>
       <li>Before starting any formal proceeding, you agree to contact us first so we can try to resolve the matter informally within 30 days.</li>
+      <li>Any dispute that cannot be resolved informally will be brought in the state or federal courts located in the United States, and you consent to their jurisdiction. Where permitted by law, claims must be brought individually and not as part of a class action.</li>
       <li>If any provision is found unenforceable, the rest remains in effect. Our failure to enforce a provision is not a waiver.</li>
       <li>These Terms, the Privacy Policy and the Disclaimer are the entire agreement between you and ${co} regarding the Service.</li></ul>` },
     { id: "contact", icon: "mail", title: "Contact", html: `<p>Questions about these Terms: <a href="mailto:${mail}">${mail}</a> · <a href="/contact">Contact page</a>.</p>` },

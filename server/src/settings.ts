@@ -36,7 +36,7 @@ export const integ = {
   socialLinkedin: () => s("social.linkedin", config.social.linkedin),
   companyName: () => s("brand.company", config.brandName),
   companyAddress: () => s("brand.address", ""),
-  jurisdiction: () => s("brand.jurisdiction", ""),
+  jurisdiction: () => s("brand.jurisdiction", "the United States of America"),
   alertsEnabled: () => s("alerts.enabled", "1") === "1",
   signalMin: () => (s("signals.min", "medium") as "low" | "medium" | "high"),
 };
@@ -71,7 +71,7 @@ export const SETTING_KEYS: { key: string; label: string; secret?: boolean; group
   { key: "social.linkedin", label: "LinkedIn URL", group: "brand" },
   { key: "brand.company", label: "Legal entity name (shown in Terms / Privacy)", group: "brand" },
   { key: "brand.address", label: "Business address (optional, shown on Contact)", group: "brand" },
-  { key: "brand.jurisdiction", label: "Governing law / jurisdiction (e.g. Pakistan)", group: "brand" },
+  { key: "brand.jurisdiction", label: "Governing law / jurisdiction (default: United States of America)", group: "brand" },
 ];
 
 const mask = (v: string) => (v.length <= 6 ? "••••" : v.slice(0, 3) + "••••" + v.slice(-3));
@@ -96,7 +96,7 @@ function envFallback(key: string): string {
     "pols.source_url": "https://raw.githubusercontent.com/unitedstates/congress-legislators/gh-pages/legislators-current.json",
     "brand.name": config.brandName, "brand.contact": config.contactEmail,
     "social.x": config.social.x, "social.telegram": config.social.telegram, "social.github": config.social.github, "social.linkedin": config.social.linkedin,
-    "brand.company": config.brandName, "brand.address": "", "brand.jurisdiction": "",
+    "brand.company": config.brandName, "brand.address": "", "brand.jurisdiction": "the United States of America",
   };
   return m[key] ?? "";
 }
