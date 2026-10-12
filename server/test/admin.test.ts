@@ -193,3 +193,32 @@ test("signals: pro gets full list + leaderboard, free gets a teaser with locked 
   assert.ok(!free.data.buy[0].locked && free.data.buy.slice(1).every((x: any) => x.locked && x.ticker === "•••"));
   assert.ok(free.data.sell.every((x: any) => x.locked));
 });
+
+test("signal alerts: first run seeds silently, forced run announces to pro members + admin channels, deduped after", async () => {
+  // a pro member with an email channel (simulated transport)
+  const c = await call(admin, "POST", "/api/admin/users", { email: "pro@example.com", password: "secret12", name: "Pro" });
+  const proPlan = (await call(admin, "GET", "/api/admin/plans")).data.rows.find((p: any) => p.name === "Pro");
+  await call(admin, "PUT", `/api/admin/users/${c.data.id}`, { plan_id: proPlan.id });
+  const tok = (await call("", "POST", "/api/auth/login", { email: "pro@example.com", password: "secret12" })).data.token;
+  await call(tok, "PUT", "/api/me", { alert_email: "pro.alerts@example.com" });
+  await call(admin, "PUT", "/api/admin/settings", { values: { "signals.min": "low" } });
+
+  const dry = await call(admin, "POST", "/api/admin/signals/check?dry=1");
+  assert.equal(dry.status, 200); assert.ok(dry.data.checked > 0);
+  const seed = await call(admin, "POST", "/api/admin/signals/check");
+  assert.ok(seed.data.seeded > 0 && seed.data.announced.length === 0, "first run only records");
+  const again = await call(admin, "POST", "/api/admin/signals/check");
+  assert.equal(again.data.announced.length, 0, "nothing new → nothing sent");
+  const forced = await call(admin, "POST", "/api/admin/signals/check?force=1");
+  assert.ok(forced.data.announced.length > 0);
+  const log = await call(admin, "GET", "/api/admin/signals/log");
+  assert.ok(log.data.rows.length > 0 && log.data.rows[0].attempts >= 1);
+  const me = await call(tok, "GET", "/api/me");
+  assert.ok(me.data.signalAlerts.length > 0 && me.data.signalAlerts[0].channel === "email");
+  assert.match(me.data.signalAlerts[0].info, /simulated/);
+  const t = await call(tok, "POST", "/api/me/test-signal");
+  assert.equal(t.status, 200); assert.ok(t.data.ticker);
+  // opting out stops delivery
+  await call(tok, "PUT", "/api/me", { notify_signals: false });
+  assert.equal((await call(tok, "GET", "/api/me")).data.user.notify_signals, 0);
+});

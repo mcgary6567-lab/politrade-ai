@@ -1,5 +1,8 @@
-import { all, get } from "./db.js";
+import { all, get, run } from "./db.js";
 import { signalThesis } from "./ai.js";
+import { sendAlert, sendToUser } from "./notify.js";
+import { integ } from "./settings.js";
+import { config } from "./config.js";
 
 /**
  * Smart-money signals computed from the disclosure data itself:
@@ -112,3 +115,64 @@ export async function withTheses(sigs: Signal[], n = 5) {
 }
 
 export const marketStats = () => get(`SELECT COUNT(*) n, AVG(excess_6m > 0) hit, AVG(excess_6m) avg FROM trades WHERE tx_type='buy' AND excess_6m IS NOT NULL`);
+
+const RANK = { low: 0, medium: 1, high: 2 } as const;
+
+/**
+ * After new filings arrive: find buy signals that are new (or stronger than when last announced) and push them
+ * to the platform channels and to every Pro member who opted into signal alerts. Deduped per ticker+direction:
+ * a ticker is re-announced only when its confidence tier rises or at least two more lawmakers joined the cluster.
+ */
+export async function checkSignalAlerts(opts: { days?: number; dryRun?: boolean; force?: boolean } = {}): Promise<{ checked: number; seeded?: number; announced: { ticker: string; score: number; confidence: string; sentTo: number }[] }> {
+  const days = opts.days ?? 90;
+  const min = RANK[integ.signalMin()] ?? 1;
+  const r = computeSignals(days, 20);
+  const candidates = r.buy.filter((s) => RANK[s.confidence] >= min);
+  const announced: { ticker: string; score: number; confidence: string; sentTo: number }[] = [];
+  // very first evaluation on an install with data: record what already exists instead of blasting history at everyone
+  if (!opts.force && !opts.dryRun && !get("SELECT 1 FROM signal_alerts LIMIT 1")) {
+    for (const sg of candidates) run("INSERT INTO signal_alerts(ticker,direction,confidence,score,buyers,sellers,created_at) VALUES(?,?,?,?,?,?,?)", sg.ticker, sg.direction, sg.confidence, sg.score, sg.buyers, sg.sellers, new Date().toISOString());
+    return { checked: candidates.length, seeded: candidates.length, announced };
+  }
+  const members = all(`SELECT u.id, u.role, u.tg_chat_id, u.wa_to, u.alert_email, p.price_cents, p.active
+                       FROM users u LEFT JOIN plans p ON p.id=u.plan_id
+                       WHERE u.status='active' AND u.notify=1 AND u.notify_signals=1
+                         AND (u.tg_chat_id IS NOT NULL OR u.wa_to IS NOT NULL OR u.alert_email IS NOT NULL)`)
+    .filter((u: any) => u.role === "admin" || (u.active && u.price_cents > 0));
+  for (const sg of candidates) {
+    const last = get("SELECT * FROM signal_alerts WHERE ticker=? AND direction=? ORDER BY id DESC LIMIT 1", sg.ticker, sg.direction);
+    const fresh = !last || (Date.now() - Date.parse(last.created_at)) > 30 * 86400000;
+    const stronger = last && (RANK[sg.confidence as keyof typeof RANK] > RANK[last.confidence as keyof typeof RANK] || sg.buyers >= last.buyers + 2);
+    if (!opts.force && !fresh && !stronger) continue;
+    if (opts.dryRun) { announced.push({ ticker: sg.ticker, score: sg.score, confidence: sg.confidence, sentTo: members.length }); continue; }
+    await withTheses([sg], 1);
+    const id = Number(run("INSERT INTO signal_alerts(ticker,direction,confidence,score,buyers,sellers,created_at) VALUES(?,?,?,?,?,?,?)",
+      sg.ticker, sg.direction, sg.confidence, sg.score, sg.buyers, sg.sellers, new Date().toISOString()).lastInsertRowid);
+    const { text, subject } = formatSignal(sg, last ? "upgraded" : "new");
+    // platform channels (admin's own Telegram / WhatsApp / email)
+    if (integ.alertsEnabled()) {
+      const res = await sendAlert(text, subject);
+      for (const [channel, info] of Object.entries(res)) run("INSERT INTO user_signal_alerts(user_id,signal_id,channel,ok,info,created_at) VALUES(NULL,?,?,?,?,?)", id, channel, info.startsWith("sent") ? 1 : 0, info, new Date().toISOString());
+    }
+    let sent = 0;
+    for (const u of members) {
+      const res = await sendToUser(u, text, subject);
+      for (const [channel, info] of Object.entries(res)) { run("INSERT INTO user_signal_alerts(user_id,signal_id,channel,ok,info,created_at) VALUES(?,?,?,?,?,?)", u.id, id, channel, info.startsWith("sent") ? 1 : 0, info, new Date().toISOString()); if (info.startsWith("sent")) sent++; }
+    }
+    announced.push({ ticker: sg.ticker, score: sg.score, confidence: sg.confidence, sentTo: sent });
+  }
+  return { checked: candidates.length, announced };
+}
+
+export function formatSignal(sg: Signal, kind: "new" | "upgraded" | "test" = "new") {
+  const brand = integ.brandName();
+  const head = kind === "upgraded" ? "⬆️ SIGNAL STRENGTHENED" : kind === "test" ? "🧪 TEST SIGNAL" : "🚦 NEW BUY SIGNAL";
+  const buyers = sg.topBuyers.slice(0, 3).map((b) => b.name.replace(/^(Rep|Sen)\. /, "") + (b.hit_rate != null ? ` (${Math.round(b.hit_rate * 100)}%)` : "")).join(", ");
+  const text = `<b>${head} · ${sg.ticker}</b> — ${sg.issuer}\n` +
+    `Score <b>${sg.score}/100</b> · ${sg.confidence} confidence\n` +
+    sg.reasons.slice(0, 4).map((x) => `• ${x}`).join("\n") + "\n" +
+    (buyers ? `Buyers: ${buyers}\n` : "") +
+    (sg.thesis ? `\n${sg.thesis}\n` : "") +
+    `\n${config.publicUrl}/signals\n<i>${brand} · research signal from public filings, not investment advice</i>`;
+  return { text, subject: `${brand}: ${kind === "upgraded" ? "stronger" : "new"} buy signal — ${sg.ticker} (${sg.score}/100)` };
+}

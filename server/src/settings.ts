@@ -34,6 +34,7 @@ export const integ = {
   socialTelegram: () => s("social.telegram", config.social.telegram),
   socialGithub: () => s("social.github", config.social.github),
   alertsEnabled: () => s("alerts.enabled", "1") === "1",
+  signalMin: () => (s("signals.min", "medium") as "low" | "medium" | "high"),
 };
 
 export const aiOn = () => Boolean(integ.anthropicKey() || integ.geminiKey());
@@ -57,6 +58,7 @@ export const SETTING_KEYS: { key: string; label: string; secret?: boolean; group
   { key: "feed.cron", label: "Ingest schedule (cron)", group: "feed" },
   { key: "pols.source_url", label: "Politicians directory source (JSON)", group: "feed" },
   { key: "alerts.enabled", label: "Alerts enabled (1/0)", group: "feed" },
+  { key: "signals.min", label: "Signal alerts: minimum confidence (low / medium / high)", group: "feed" },
   { key: "brand.name", label: "Brand name", group: "brand" },
   { key: "brand.contact", label: "Contact email", group: "brand" },
   { key: "social.x", label: "X / Twitter URL", group: "brand" },
@@ -82,7 +84,7 @@ function envFallback(key: string): string {
     "tg.token": config.telegram.token, "tg.chat_id": config.telegram.chatId,
     "wa.token": config.wa.token, "wa.phone_id": config.wa.phoneNumberId, "wa.to": config.wa.to,
     "email.webhook_url": config.email.webhookUrl, "email.api_key": config.email.apiKey, "email.from": config.email.from, "email.to": config.email.to,
-    "feed.url": config.dataFeedUrl, "feed.cron": config.ingestCron, "alerts.enabled": "1", "feed.api_key": "",
+    "feed.url": config.dataFeedUrl, "feed.cron": config.ingestCron, "alerts.enabled": "1", "feed.api_key": "", "signals.min": "medium",
     "pols.source_url": "https://raw.githubusercontent.com/unitedstates/congress-legislators/gh-pages/legislators-current.json",
     "brand.name": config.brandName, "brand.contact": config.contactEmail,
     "social.x": config.social.x, "social.telegram": config.social.telegram, "social.github": config.social.github,

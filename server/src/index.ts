@@ -95,6 +95,10 @@ async function bootstrapData() {
     console.log(`[ingest] first load: fetched ${r.fetched}, added ${r.added}${r.errors.length ? `, errors: ${r.errors.join(" | ")}` : ""}`);
     const s = await syncPoliticians();
     console.log(`[directory] ${s.matched} politicians matched, ${s.updated} updated`);
+    // first boot: record the current signals as already announced so members are not flooded with history
+    const { checkSignalAlerts } = await import("./signals.js");
+    const a = await checkSignalAlerts().catch((e) => { console.error("[signals]", e.message); return null; });
+    if (a) console.log(`[signals] ${a.seeded ?? 0} recorded, ${a.announced.length} announced`);
   } catch (e: any) { console.error("[ingest] first load failed:", e.message); }
 }
 
@@ -110,7 +114,15 @@ function startScheduler() {
     task?.stop(); task = null; current = key;
     if (!key || !cron.validate(expr)) { if (url) console.warn(`[ingest] invalid cron "${expr}"`); return; }
     task = cron.schedule(expr, () => {
-      ingestFromFeed().then((r) => { console.log(`[ingest] fetched ${r.fetched}, added ${r.added}`); if (r.added) { bumpCache(); return syncPoliticians(); } return null; }).catch((e) => console.error("[ingest]", e.message));
+      ingestFromFeed().then(async (r) => {
+        console.log(`[ingest] fetched ${r.fetched}, added ${r.added}`);
+        if (!r.added) return;
+        bumpCache();
+        await syncPoliticians().catch((e) => console.error("[directory]", e.message));
+        const { checkSignalAlerts } = await import("./signals.js");
+        const a = await checkSignalAlerts();
+        if (a.announced.length) console.log(`[signals] announced: ${a.announced.map((x) => `${x.ticker} ${x.score}`).join(", ")}`);
+      }).catch((e) => console.error("[ingest]", e.message));
     });
     console.log(`[ingest] scheduled (${expr}) from ${url}`);
   };

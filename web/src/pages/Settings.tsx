@@ -39,7 +39,8 @@ export default function Settings() {
             <h2 className="mb-2 font-display font-600">Your recent alerts</h2>
             <ul className="space-y-1.5 text-xs">
               {data.alerts.map((a: any, i: number) => <li key={i} className="flex items-center gap-2"><span className={a.ok ? "text-buy" : "text-sell"}>{a.ok ? <CheckCircle2 size={12} /> : <XCircle size={12} />}</span><span className="capitalize text-slate-400">{a.channel}</span><span className="truncate">{a.politician} {a.tx_type} {a.ticker}</span><span className="ml-auto whitespace-nowrap text-slate-500">{a.created_at?.slice(5, 16).replace("T", " ")}</span></li>)}
-              {!data.alerts.length && <li className="text-slate-500">None yet{authUser?.pro ? " — they appear here as new filings arrive." : " — alerts are a Pro feature."}</li>}
+              {data.signalAlerts?.map((a: any, i: number) => <li key={"s" + i} className="flex items-center gap-2"><span className={a.ok ? "text-buy" : "text-sell"}>{a.ok ? <CheckCircle2 size={12} /> : <XCircle size={12} />}</span><span className="capitalize text-slate-400">{a.channel}</span><span className="truncate">🚦 Signal {a.ticker} {a.score}/100</span><span className="ml-auto whitespace-nowrap text-slate-500">{a.created_at?.slice(5, 16).replace("T", " ")}</span></li>)}
+              {!data.alerts.length && !data.signalAlerts?.length && <li className="text-slate-500">None yet{authUser?.pro ? " — they appear here as new filings and signals arrive." : " — alerts are a Pro feature."}</li>}
             </ul>
           </div>
         </div>
@@ -52,9 +53,11 @@ function Channels({ u, transports, bot, onChange }: { u: any; transports: any; b
   const [wa, setWa] = useState(u.wa_to ?? "");
   const [em, setEm] = useState(u.alert_email ?? "");
   const [notify, setNotify] = useState(Boolean(u.notify));
+  const [notifySig, setNotifySig] = useState(u.notify_signals == null ? true : Boolean(u.notify_signals));
   const [link, setLink] = useState<any>(null);
   const [busy, setBusy] = useState("");
-  const save = async () => { setBusy("save"); try { await api("/me", { method: "PUT", body: { wa_to: wa, alert_email: em, notify } }); toast.ok("Alert settings saved"); onChange(); } catch (e: any) { toast.err(e.message); } finally { setBusy(""); } };
+  const save = async () => { setBusy("save"); try { await api("/me", { method: "PUT", body: { wa_to: wa, alert_email: em, notify, notify_signals: notifySig } }); toast.ok("Alert settings saved"); onChange(); } catch (e: any) { toast.err(e.message); } finally { setBusy(""); } };
+  const testSignal = async () => { setBusy("sig"); try { const r = await api<any>("/me/test-signal", { method: "POST" }); toast.ok(`Sent #1 signal (${r.ticker}): ` + Object.entries(r.results).map(([k, v]) => `${k} ${v}`).join(" · ")); } catch (e: any) { toast.err(e.message); } finally { setBusy(""); } };
   const test = async () => { setBusy("test"); try { const r = await api<any>("/me/test", { method: "POST" }); toast.ok(Object.entries(r.results).map(([k, v]) => `${k}: ${v}`).join(" · ")); } catch (e: any) { toast.err(e.message); } finally { setBusy(""); } };
   const connectTg = async () => {
     try { const r = await api<any>("/me/telegram/link", { method: "POST" }); setLink(r); window.open(r.url, "_blank"); } catch (e: any) { toast.err(e.message); }
@@ -70,7 +73,10 @@ function Channels({ u, transports, bot, onChange }: { u: any; transports: any; b
     <div className="card p-5">
       <div className="mb-3 flex items-center justify-between">
         <div><h2 className="font-display text-lg font-600">Alert channels</h2><p className="text-sm text-slate-400">Where to send you a message the moment a lawmaker files a trade that matches your watchlist.{!u.pro && <> <b className="text-gold">Pro feature</b> — you can set them up now; delivery starts when your plan is Pro.</>}</p></div>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Alerts on</label>
+        <div className="space-y-1 text-sm">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Trade alerts <span className="text-xs text-slate-500">(watchlist filings)</span></label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={notifySig} onChange={(e) => setNotifySig(e.target.checked)} /> Signal alerts <span className="text-xs text-slate-500">(new / stronger buy signals)</span></label>
+        </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-line p-4">
@@ -95,6 +101,7 @@ function Channels({ u, transports, bot, onChange }: { u: any; transports: any; b
       </div>
       <div className="mt-3 flex justify-end gap-2">
         <button className="btn-ghost text-sm" disabled={busy === "test"} onClick={test}>Send test</button>
+        <button className="btn-ghost text-sm" disabled={busy === "sig"} onClick={testSignal} title="Sends the current #1 buy signal to your channels">Send test signal</button>
         <button className="btn-gold text-sm" disabled={busy === "save"} onClick={save}>Save channels</button>
       </div>
     </div>

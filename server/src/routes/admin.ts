@@ -152,7 +152,22 @@ admin.post("/admin/test/:channel", wrap(async (req, res) => {
 }));
 
 /* ---------- data feed & alerts ---------- */
-admin.post("/admin/ingest/run", wrap(async (_req, res) => { const r = await ingestFromFeed(); bumpCache(); res.json(r); }));
+admin.post("/admin/ingest/run", wrap(async (_req, res) => {
+  const r = await ingestFromFeed(); bumpCache();
+  let signals: any = null;
+  if (r.added) { const { checkSignalAlerts } = await import("../signals.js"); signals = await checkSignalAlerts().catch((e) => ({ error: e.message })); }
+  res.json({ ...r, signals });
+}));
+/** Evaluate signals now; dry=1 only lists what would be announced. */
+admin.post("/admin/signals/check", wrap(async (req, res) => {
+  const { checkSignalAlerts } = await import("../signals.js");
+  res.json(await checkSignalAlerts({ dryRun: String(req.query.dry ?? "") === "1", force: String(req.query.force ?? "") === "1" }));
+}));
+admin.get("/admin/signals/log", (_req, res) => res.json({
+  rows: all(`SELECT s.id, s.ticker, s.direction, s.confidence, s.score, s.buyers, s.created_at,
+                    SUM(a.ok) sent, COUNT(a.id) attempts
+             FROM signal_alerts s LEFT JOIN user_signal_alerts a ON a.signal_id=s.id GROUP BY s.id ORDER BY s.id DESC LIMIT 50`),
+}));
 admin.get("/admin/ingest/presets", (_req, res) => res.json({ presets: FEED_PRESETS }));
 /** Fill party / state / chamber / photo for our politicians from the public legislators directory. */
 admin.post("/admin/politicians/sync", wrap(async (_req, res) => { const r = await syncPoliticians(); bumpCache(); res.json(r); }));

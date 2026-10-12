@@ -415,9 +415,21 @@ function DataTab() {
 /* -------------------------------------------------------------------- alerts */
 function AlertsTab() {
   const [rows, setRows] = useState<any[]>([]);
+  const [sig, setSig] = useState<any[]>([]);
   const [busy, setBusy] = useState(0);
-  const load = () => api<any>("/admin/alerts/log").then((r) => setRows(r.rows)).catch((e) => toast.err(e.message));
+  const [sigBusy, setSigBusy] = useState("");
+  const load = () => Promise.all([api<any>("/admin/alerts/log"), api<any>("/admin/signals/log")]).then(([a, s]) => { setRows(a.rows); setSig(s.rows); }).catch((e) => toast.err(e.message));
   useEffect(() => { load(); }, []);
+  const checkSignals = async (mode: "dry" | "run" | "force") => {
+    setSigBusy(mode);
+    try {
+      const r = await api<any>(`/admin/signals/check${mode === "dry" ? "?dry=1" : mode === "force" ? "?force=1" : ""}`, { method: "POST" });
+      if (r.seeded) toast.ok(`First evaluation: ${r.seeded} current signal(s) recorded as already known — only new or stronger ones will be announced from now on`);
+      else if (mode === "dry") toast.ok(r.announced.length ? `Would announce: ${r.announced.map((x: any) => `${x.ticker} ${x.score}`).join(", ")}` : "Nothing new to announce");
+      else toast.ok(r.announced.length ? `Announced ${r.announced.length}: ${r.announced.map((x: any) => `${x.ticker} (${x.sentTo} deliveries)`).join(", ")}` : "Nothing new to announce");
+      load();
+    } catch (e: any) { toast.err(e.message); } finally { setSigBusy(""); }
+  };
   const resend = async (id: number) => {
     setBusy(id);
     try { const r = await api<any>(`/admin/alerts/resend/${id}`, { method: "POST" }); toast.ok(`Re-sent: ${Object.entries(r ?? {}).map(([k, v]) => `${k} ${v}`).join(" · ")}`); load(); } catch (e: any) { toast.err(e.message); } finally { setBusy(0); }
@@ -425,7 +437,19 @@ function AlertsTab() {
   const testAll = async () => { try { const r = await api<any>("/admin/test/all", { method: "POST" }); toast.ok(Object.entries(r.results).map(([k, v]) => `${k}: ${v}`).join(" · ")); } catch (e: any) { toast.err(e.message); } };
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><p className="text-sm text-slate-400">Every delivery attempt per channel. Failed rows show the provider's error so you can fix the key and re-send.</p><button className="btn-ghost text-sm" onClick={testAll}><Send size={14} /> Send test to all channels</button></div>
+      <div className="card p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1 basis-[260px]"><h2 className="font-display font-600">🚦 Signal alerts</h2><p className="text-sm text-slate-400">After every ingest that adds filings, new or strengthened buy signals (at or above the minimum confidence set in Data feed) go to your channels and to every Pro member who opted in. A ticker is re-announced only when its confidence rises or 2+ more lawmakers join.</p></div>
+          <button className="btn-ghost text-sm" disabled={!!sigBusy} onClick={() => checkSignals("dry")}>Dry run</button>
+          <button className="btn-ghost text-sm" disabled={!!sigBusy} onClick={() => checkSignals("run")}><RefreshCw size={14} className={sigBusy === "run" ? "animate-spin" : ""} /> Check now</button>
+          <button className="btn-gold text-sm" disabled={!!sigBusy} onClick={() => { if (confirm("Force-announce the current top signals to everyone now?")) checkSignals("force"); }}>Announce now</button>
+        </div>
+        {sig.length > 0 && (
+          <table className="mt-3 w-full text-sm"><thead className="border-b border-line"><tr><th className="th">When</th><th className="th">Ticker</th><th className="th">Confidence</th><th className="th text-right">Score</th><th className="th text-right">Buyers</th><th className="th text-right">Delivered</th></tr></thead>
+            <tbody className="divide-y divide-line">{sig.slice(0, 12).map((r) => <tr key={r.id}><td className="td whitespace-nowrap text-slate-400">{r.created_at?.replace("T", " ").slice(5, 16)}</td><td className="td font-mono font-700 text-gold">{r.ticker}</td><td className="td capitalize">{r.confidence}</td><td className="td text-right font-mono">{r.score}</td><td className="td text-right font-mono">{r.buyers}</td><td className="td text-right font-mono">{r.sent ?? 0}/{r.attempts}</td></tr>)}</tbody></table>
+        )}
+      </div>
+      <div className="flex items-center justify-between"><p className="text-sm text-slate-400">Trade alerts — every delivery attempt per channel. Failed rows show the provider's error so you can fix the key and re-send.</p><button className="btn-ghost text-sm" onClick={testAll}><Send size={14} /> Send test to all channels</button></div>
       <div className="card overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="border-b border-line"><tr><th className="th">When</th><th className="th">Trade</th><th className="th">Channel</th><th className="th">Result</th><th className="th text-right">Actions</th></tr></thead>

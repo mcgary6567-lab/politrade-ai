@@ -83,12 +83,22 @@ export function migrate() {
   addColumn("users", "wa_to", "TEXT");
   addColumn("users", "alert_email", "TEXT");
   addColumn("users", "notify", "INTEGER NOT NULL DEFAULT 1");
+  addColumn("users", "notify_signals", "INTEGER NOT NULL DEFAULT 1");
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_alerts (
       id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), trade_id INTEGER NOT NULL REFERENCES trades(id),
       channel TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 1, info TEXT, created_at TEXT NOT NULL, UNIQUE(user_id, trade_id, channel)
     );
     CREATE TABLE IF NOT EXISTS tg_links (code TEXT PRIMARY KEY, user_id INTEGER NOT NULL, created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS signal_alerts (
+      id INTEGER PRIMARY KEY, ticker TEXT NOT NULL, direction TEXT NOT NULL, confidence TEXT NOT NULL, score INTEGER NOT NULL,
+      buyers INTEGER NOT NULL, sellers INTEGER NOT NULL, created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_sig_alerts ON signal_alerts(ticker, direction, created_at);
+    CREATE TABLE IF NOT EXISTS user_signal_alerts (
+      id INTEGER PRIMARY KEY, user_id INTEGER REFERENCES users(id), signal_id INTEGER NOT NULL REFERENCES signal_alerts(id),
+      channel TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 1, info TEXT, created_at TEXT NOT NULL
+    );
   `);
 }
 
