@@ -31,7 +31,7 @@ app.get("/api/photo/:bioguide", photo);
 app.get("/api/health", (_req, res) => res.json({ ok: true, version: APP_VERSION, ai: aiOn(), ...stats() }));
 app.get("/api/branding", (_req, res) => res.json({
   name: integ.brandName(), version: APP_VERSION, contact: integ.contactEmail(),
-  social: { x: integ.socialX(), telegram: integ.socialTelegram(), github: integ.socialGithub() },
+  social: { x: integ.socialX(), telegram: integ.socialTelegram(), github: integ.socialGithub(), linkedin: integ.socialLinkedin() },
 }));
 
 app.post("/api/auth/login", (req, res) => {

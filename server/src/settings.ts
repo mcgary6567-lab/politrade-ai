@@ -33,6 +33,10 @@ export const integ = {
   socialX: () => s("social.x", config.social.x),
   socialTelegram: () => s("social.telegram", config.social.telegram),
   socialGithub: () => s("social.github", config.social.github),
+  socialLinkedin: () => s("social.linkedin", config.social.linkedin),
+  companyName: () => s("brand.company", config.brandName),
+  companyAddress: () => s("brand.address", ""),
+  jurisdiction: () => s("brand.jurisdiction", ""),
   alertsEnabled: () => s("alerts.enabled", "1") === "1",
   signalMin: () => (s("signals.min", "medium") as "low" | "medium" | "high"),
 };
@@ -64,6 +68,10 @@ export const SETTING_KEYS: { key: string; label: string; secret?: boolean; group
   { key: "social.x", label: "X / Twitter URL", group: "brand" },
   { key: "social.telegram", label: "Telegram URL", group: "brand" },
   { key: "social.github", label: "GitHub URL", group: "brand" },
+  { key: "social.linkedin", label: "LinkedIn URL", group: "brand" },
+  { key: "brand.company", label: "Legal entity name (shown in Terms / Privacy)", group: "brand" },
+  { key: "brand.address", label: "Business address (optional, shown on Contact)", group: "brand" },
+  { key: "brand.jurisdiction", label: "Governing law / jurisdiction (e.g. Pakistan)", group: "brand" },
 ];
 
 const mask = (v: string) => (v.length <= 6 ? "••••" : v.slice(0, 3) + "••••" + v.slice(-3));
@@ -87,7 +95,8 @@ function envFallback(key: string): string {
     "feed.url": config.dataFeedUrl, "feed.cron": config.ingestCron, "alerts.enabled": "1", "feed.api_key": "", "signals.min": "medium",
     "pols.source_url": "https://raw.githubusercontent.com/unitedstates/congress-legislators/gh-pages/legislators-current.json",
     "brand.name": config.brandName, "brand.contact": config.contactEmail,
-    "social.x": config.social.x, "social.telegram": config.social.telegram, "social.github": config.social.github,
+    "social.x": config.social.x, "social.telegram": config.social.telegram, "social.github": config.social.github, "social.linkedin": config.social.linkedin,
+    "brand.company": config.brandName, "brand.address": "", "brand.jurisdiction": "",
   };
   return m[key] ?? "";
 }
