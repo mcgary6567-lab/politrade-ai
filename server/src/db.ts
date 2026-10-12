@@ -69,6 +69,16 @@ export function migrate() {
   addColumn("users", "plan_id", "INTEGER");
   addColumn("users", "status", "TEXT NOT NULL DEFAULT 'active'");
   addColumn("users", "last_login", "TEXT");
+  addColumn("trades", "ret_6m", "REAL");
+  addColumn("trades", "excess_6m", "REAL");
+  addColumn("politicians", "hit_rate", "REAL");
+  addColumn("politicians", "avg_excess", "REAL");
+  addColumn("politicians", "ann_return", "REAL");
+  addColumn("politicians", "spy_return", "REAL");
+  addColumn("politicians", "sharpe", "REAL");
+  addColumn("politicians", "perf_n", "INTEGER");
+  // rows imported before filing delay was derived from the dates
+  db.exec("UPDATE trades SET filed_after_days = CAST(MAX(0, julianday(published_date) - julianday(tx_date)) AS INTEGER) WHERE filed_after_days IS NULL AND tx_date IS NOT NULL AND published_date IS NOT NULL");
   addColumn("users", "tg_chat_id", "TEXT");
   addColumn("users", "wa_to", "TEXT");
   addColumn("users", "alert_email", "TEXT");

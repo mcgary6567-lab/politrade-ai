@@ -240,3 +240,17 @@ function fillMonths(months: string[], rows: any[]) {
   const by = new Map(rows.map((r) => [r.month, r]));
   return months.map((m) => ({ month: m, buys: by.get(m)?.buys ?? 0, sells: by.get(m)?.sells ?? 0, trades: by.get(m)?.trades ?? ((by.get(m)?.buys ?? 0) + (by.get(m)?.sells ?? 0)) }));
 }
+
+/** GET /api/signals — smart-money signals. Free members get a teaser (top one unlocked, the rest hidden). */
+data.get("/signals", cached(600_000, (req) => `/signals?days=${req.query.days ?? 90}`), async (req, res) => {
+  const { computeSignals, leaderboard, withTheses, marketStats } = await import("../signals.js");
+  const days = Math.min(Math.max(Number(req.query.days ?? 90), 7), 365);
+  const r = computeSignals(days, 12);
+  await withTheses(r.buy, 5); await withTheses(r.sell, 2);
+  const stats = marketStats();
+  const lb = leaderboard(10).map((p) => ({ ...p, photo_url: photoUrl(p) }));
+  if (req.user?.pro) return res.json({ ...r, leaderboard: lb, stats, locked: false });
+  // teaser: full detail for the first buy signal only, the others only as count
+  const lock = (s: any) => ({ ticker: "•••", issuer: "Locked — Pro members see every signal", issuer_id: 0, sector: s.sector, direction: s.direction, score: s.score, confidence: s.confidence, buyers: s.buyers, sellers: s.sellers, locked: true, reasons: [], topBuyers: [], volume: 0, bipartisan: s.bipartisan, lastFiled: s.lastFiled, days: s.days });
+  res.json({ ...r, buy: r.buy.map((s, i) => (i === 0 ? s : lock(s))), sell: r.sell.map(lock), leaderboard: lb.slice(0, 3), stats, locked: true });
+});

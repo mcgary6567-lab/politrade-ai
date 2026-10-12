@@ -51,7 +51,7 @@ function List() {
                 <div><h3 className="font-display font-600 leading-tight">{p.name}</h3>
                   <div className="text-xs"><span className={partyTone(p.party)}>{p.party ?? "—"}</span> <span className="text-slate-500">· {p.chamber ?? "—"} {p.state ? `· ${p.state}` : ""}</span></div></div>
               </div>
-              <span className="text-xs text-slate-500">#{idx + 1}</span>
+              <span className="text-right text-xs text-slate-500">#{idx + 1}{p.hit_rate != null && <div className="mt-0.5 whitespace-nowrap font-mono text-buy" title="Share of buys that beat the market after 6 months">{Math.round(p.hit_rate * 100)}% hit</div>}</span>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
               <div className="rounded-lg bg-ink-800 py-1.5"><div className="font-mono text-base text-gold">{p.trades}</div>trades</div>
@@ -72,6 +72,7 @@ function List() {
   );
 }
 
+const Rec = ({ v, l, tone }: { v: string; l: string; tone?: string }) => <div><div className={`font-mono text-lg font-700 ${tone ?? "text-slate-100"}`}>{v}</div><div className="text-[11px] text-slate-500">{l}</div></div>;
 const initials = (n: string) => n.replace(/^(Rep|Sen)\.\s*/, "").split(" ").map((x) => x[0]).slice(0, 2).join("");
 
 /** Official photo when the directory sync has one; initials otherwise (and if the image 404s). */
@@ -107,6 +108,16 @@ function Detail({ id }: { id: string }) {
         <KPI label="Issuers" value={s.issuers ?? 0} />
         <KPI label="Avg filing delay" value={s.avg_delay != null ? `${Math.round(s.avg_delay)}d` : "—"} tone={s.avg_delay > 45 ? "text-sell" : ""} sub="STOCK Act limit 45d" />
       </div>
+      {p.hit_rate != null && (
+        <div className="card flex flex-wrap items-center gap-4 border-gold/30 p-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-gold">Track record</div>
+          <Rec v={`${Math.round(p.hit_rate * 100)}%`} l="buys that beat the market (6m)" tone="text-buy" />
+          <Rec v={p.avg_excess != null ? `${p.avg_excess > 0 ? "+" : ""}${Math.round(p.avg_excess * 100)}%` : "—"} l="avg vs market after 6m" tone={p.avg_excess > 0 ? "text-buy" : "text-sell"} />
+          <Rec v={p.ann_return != null ? `${Math.round(p.ann_return * 100)}%` : "—"} l={`annual return${p.spy_return != null ? ` (S&P ${Math.round(p.spy_return * 100)}%)` : ""}`} />
+          <Rec v={p.sharpe != null ? p.sharpe.toFixed(2) : "—"} l="Sharpe" />
+          <span className="ml-auto text-[11px] text-slate-500">from {p.perf_n} measured trades · research only</span>
+        </div>
+      )}
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="card p-4">
           <h2 className="mb-3 font-display font-600">Favourite issuers</h2>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, LineChart, Line, ResponsiveContainer, XAxis, Tooltip } from "recharts";
-import { Sparkles } from "lucide-react";
+import { Sparkles, TrendingUp, Lock } from "lucide-react";
 import { api, money, ago } from "../lib/api";
 import { useAuth } from "../App";
 import { compact, partyTone } from "../components/ui";
@@ -13,7 +13,9 @@ export default function Home() {
   const { user } = useAuth();
   const [d, setD] = useState<any>(null);
   const [assets, setAssets] = useState<"stocks" | "all">("stocks");
+  const [sig, setSig] = useState<any>(null);
   useEffect(() => { api(`/dashboard?assets=${assets}`).then(setD).catch(() => {}); }, [assets]);
+  useEffect(() => { api("/signals?days=90").then(setSig).catch(() => {}); }, []);
   if (!d) return <div className="grid gap-5 lg:grid-cols-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className="card h-80 animate-pulse" />)}</div>;
 
   return (
@@ -24,6 +26,31 @@ export default function Home() {
           <Link to="/settings" className="btn-gold px-3 py-1.5 text-xs">Upgrade</Link>
         </div>
       )}
+
+      {/* AI signals strip */}
+      <section className="card min-w-0 overflow-hidden border-gold/30 p-4">
+        <div className="mb-2 flex items-center gap-3">
+          <h2 className="flex items-center gap-2 font-display text-xs font-700 uppercase tracking-wider"><TrendingUp size={14} className="text-gold" /> AI Signals — where Congress is buying</h2>
+          <span className="chip py-0 text-[10px]">last 90 days</span>
+          <Link to="/signals" className="ml-auto text-xs font-semibold text-gold hover:underline">All signals →</Link>
+        </div>
+        {!sig ? <div className="h-20 animate-pulse rounded-xl bg-ink-600/40" /> : (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {sig.buy.slice(0, 3).map((x: any, i: number) => (
+              <Link key={i} to="/signals" className="rounded-xl border border-line bg-ink-800/60 p-3 transition hover:border-gold/50">
+                <div className="flex items-center gap-2">
+                  <span className={`font-mono text-lg font-700 ${x.locked ? "text-slate-600" : "text-gold"}`}>{x.locked ? "•••" : x.ticker}</span>
+                  <span className={`chip py-0 text-[10px] ${x.confidence === "high" ? "border-buy/50 text-buy" : x.confidence === "medium" ? "border-gold/50 text-gold" : ""}`}>{x.score}/100</span>
+                  {x.locked && <Lock size={12} className="ml-auto text-gold" />}
+                </div>
+                <div className="mt-1 truncate text-sm text-slate-200">{x.locked ? "Unlock with Pro" : x.issuer}</div>
+                <div className="mt-1 text-xs text-slate-400">{x.buyers} lawmakers buying{x.bipartisan ? " · bipartisan" : ""}{!x.locked && x.histHit != null ? ` · ${Math.round(x.histHit * 100)}% hist. win` : ""}</div>
+              </Link>
+            ))}
+            {!sig.buy.length && <p className="text-sm text-slate-500">No buying clusters yet in this window.</p>}
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Latest trades */}

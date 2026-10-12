@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog } from "lucide-react";
+import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog, TrendingUp } from "lucide-react";
 import { useAuth } from "../App";
 import { prefetch } from "../lib/api";
 import { Search } from "lucide-react";
@@ -9,13 +9,14 @@ import { OfflineBar, InstallNudge } from "./InstallApp";
 import Logo from "./Logo";
 
 /** Warm the cache for a page when its nav link is hovered. */
-const PREFETCH: Record<string, string[]> = { "/": ["/dashboard?assets=stocks"], "/trades": ["/trades?limit=50&offset=0", "/filters"], "/politicians": ["/politicians?"], "/issuers": ["/issuers?limit=60"], "/insights": ["/insights"] };
+const PREFETCH: Record<string, string[]> = { "/": ["/dashboard?assets=stocks"], "/trades": ["/trades?limit=50&offset=0", "/filters"], "/politicians": ["/politicians?"], "/issuers": ["/issuers?limit=60"], "/insights": ["/insights"], "/signals": ["/signals?days=90"] };
 const BASE_NAV: { to: string; label: string; icon: any; end?: boolean }[] = [
   { to: "/", label: "Home", icon: LayoutGrid, end: true },
   { to: "/trades", label: "Trades", icon: ArrowLeftRight },
   { to: "/politicians", label: "Politicians", icon: Landmark },
   { to: "/issuers", label: "Issuers", icon: Building2 },
   { to: "/insights", label: "Insights", icon: Sparkles },
+  { to: "/signals", label: "Signals", icon: TrendingUp },
 ];
 
 export default function Layout() {

@@ -178,3 +178,18 @@ test("member settings: profile/password/channels, telegram link needs bot, dashb
   assert.equal(d.data.window, 30);
   assert.ok((await call(tok, "GET", "/api/dashboard?assets=all")).data.latest.length > 0);
 });
+
+test("signals: pro gets full list + leaderboard, free gets a teaser with locked rows", async () => {
+  const pro = await call(admin, "GET", "/api/signals?days=365");
+  assert.equal(pro.status, 200);
+  assert.ok(Array.isArray(pro.data.buy) && pro.data.buy.length > 0, "demo data yields buy clusters");
+  const s = pro.data.buy[0];
+  assert.ok(s.ticker && s.score >= 0 && s.reasons.length >= 1 && s.topBuyers.length >= 1 && typeof s.thesis === "string");
+  assert.equal(pro.data.locked, false);
+  await call(admin, "POST", "/api/admin/users", { email: "viewer@example.com", password: "secret12" });
+  const tok = (await call("", "POST", "/api/auth/login", { email: "viewer@example.com", password: "secret12" })).data.token;
+  const free = await call(tok, "GET", "/api/signals?days=365");
+  assert.equal(free.data.locked, true);
+  assert.ok(!free.data.buy[0].locked && free.data.buy.slice(1).every((x: any) => x.locked && x.ticker === "•••"));
+  assert.ok(free.data.sell.every((x: any) => x.locked));
+});

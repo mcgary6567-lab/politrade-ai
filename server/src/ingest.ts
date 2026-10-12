@@ -9,15 +9,24 @@ import { integ } from "./settings.js";
 
 const now = () => new Date().toISOString();
 
-function upsertPolitician(p: { ext_id?: string; name: string; party?: string; chamber?: string; state?: string }): number {
+type Perf = { hit_rate?: number | null; avg_excess?: number | null; ann_return?: number | null; spy_return?: number | null; sharpe?: number | null; perf_n?: number | null };
+function setPerf(id: number, perf?: Perf) {
+  if (!perf || perf.hit_rate == null) return;
+  run("UPDATE politicians SET hit_rate=?, avg_excess=?, ann_return=?, spy_return=?, sharpe=?, perf_n=? WHERE id=?",
+    perf.hit_rate, perf.avg_excess ?? null, perf.ann_return ?? null, perf.spy_return ?? null, perf.sharpe ?? null, perf.perf_n ?? null, id);
+}
+
+function upsertPolitician(p: { ext_id?: string; name: string; party?: string; chamber?: string; state?: string; perf?: Perf }): number {
   if (!p.name) throw new Error("politician name required");
   let row = p.ext_id ? get("SELECT id FROM politicians WHERE ext_id=?", p.ext_id) : null;
   if (!row) row = get("SELECT id FROM politicians WHERE name=?", p.name);
   // feeds spell names differently ("Hon. Nancy Pelosi" vs "Pelosi, Nancy"): match on first+last token too
   if (!row) { const k = nameKey(p.name); row = all("SELECT id, name FROM politicians").find((x: any) => nameKey(x.name) === k) ?? null; }
-  if (row) { run("UPDATE politicians SET party=COALESCE(?,party), chamber=COALESCE(?,chamber), state=COALESCE(?,state) WHERE id=?", p.party ?? null, p.chamber ?? null, p.state ?? null, row.id); return row.id; }
-  return Number(run("INSERT INTO politicians(ext_id,name,party,chamber,state,created_at) VALUES(?,?,?,?,?,?)",
+  if (row) { run("UPDATE politicians SET party=COALESCE(?,party), chamber=COALESCE(?,chamber), state=COALESCE(?,state) WHERE id=?", p.party ?? null, p.chamber ?? null, p.state ?? null, row.id); setPerf(row.id, p.perf); return row.id; }
+  const id = Number(run("INSERT INTO politicians(ext_id,name,party,chamber,state,created_at) VALUES(?,?,?,?,?,?)",
     p.ext_id ?? null, p.name, p.party ?? null, p.chamber ?? null, p.state ?? null, now()).lastInsertRowid);
+  setPerf(id, p.perf);
+  return id;
 }
 
 function upsertIssuer(i: { ticker?: string; name: string; sector?: string }): number {
@@ -29,19 +38,26 @@ function upsertIssuer(i: { ticker?: string; name: string; sector?: string }): nu
 
 /** Insert a trade if new; returns the trade id when it was freshly created (so the caller can alert), else null. */
 export async function recordTrade(t: {
-  raw_id?: string; politician: { ext_id?: string; name: string; party?: string; chamber?: string; state?: string };
+  raw_id?: string; politician: { ext_id?: string; name: string; party?: string; chamber?: string; state?: string; perf?: Perf };
   issuer: { ticker?: string; name: string; sector?: string }; tx_type: string;
   tx_date?: string; published_date?: string; amount_min?: number; amount_max?: number; filed_after_days?: number; owner?: string; comment?: string;
+  ret_6m?: number | null; excess_6m?: number | null;
 }, opts: { alert: boolean }): Promise<number | null> {
   const rawId = t.raw_id ?? crypto.createHash("sha1").update([t.politician.name, t.issuer.ticker || t.issuer.name, t.tx_type, t.tx_date, t.amount_min].join("|")).digest("hex");
-  if (get("SELECT 1 FROM trades WHERE raw_id=?", rawId)) return null;
+  const existing = get("SELECT id, ret_6m, politician_id FROM trades WHERE raw_id=?", rawId);
+  if (existing) {
+    // already stored: just pick up performance figures the source may have added since
+    if (t.ret_6m != null && existing.ret_6m == null) run("UPDATE trades SET ret_6m=?, excess_6m=? WHERE id=?", t.ret_6m, t.excess_6m ?? null, existing.id);
+    if (t.politician.perf) setPerf(existing.politician_id, t.politician.perf);
+    return null;
+  }
   const polId = upsertPolitician(t.politician);
   const issId = upsertIssuer(t.issuer);
   const id = Number(run(
-    `INSERT INTO trades(raw_id,politician_id,issuer_id,tx_type,tx_date,published_date,amount_min,amount_max,filed_after_days,owner,comment,created_at)
-     VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
+    `INSERT INTO trades(raw_id,politician_id,issuer_id,tx_type,tx_date,published_date,amount_min,amount_max,filed_after_days,owner,comment,ret_6m,excess_6m,created_at)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     rawId, polId, issId, normType(t.tx_type), t.tx_date ?? null, t.published_date ?? t.tx_date ?? now().slice(0, 10),
-    t.amount_min ?? null, t.amount_max ?? null, t.filed_after_days ?? null, t.owner ?? null, t.comment ?? null, now(),
+    t.amount_min ?? null, t.amount_max ?? null, t.filed_after_days ?? null, t.owner ?? null, t.comment ?? null, t.ret_6m ?? null, t.excess_6m ?? null, now(),
   ).lastInsertRowid);
 
   if (opts.alert) await fireAlert(id).catch(() => {});
@@ -166,8 +182,9 @@ export async function loadSource(url: string): Promise<any[]> {
       const m = queue.shift()!;
       try {
         const d = await fetchJson(`${base}${m.id}.json`);
+        const perf = d.hit_rate != null ? { hit_rate: d.hit_rate, avg_excess: d.avg_buy_excess_6m ?? null, ann_return: d.trade?.ann_return ?? null, spy_return: d.trade?.spy_ann_return ?? null, sharpe: d.trade?.sharpe ?? null, perf_n: d.n_trades ?? null } : undefined;
         for (const t of [...(d.trades ?? []), ...(d.other_trades ?? [])]) {
-          out.push({ ...t, name: d.name ?? m.name, chamber: d.chamber ?? m.chamber, party: d.party ?? m.party, state: d.state ?? m.state, __filed: t.filing_date });
+          out.push({ ...t, name: d.name ?? m.name, chamber: d.chamber ?? m.chamber, party: d.party ?? m.party, state: d.state ?? m.state, __filed: t.filing_date, __perf: perf });
         }
       } catch (e: any) { console.warn(`[ingest] member ${m.id}: ${e.message}`); }
     }
@@ -283,10 +300,11 @@ export function normalizeFeedRow(r: any, hint?: ChamberHint): Parameters<typeof 
   return {
     // content hash (not the source's own id) so the same filing arriving from two datasets is stored once
     raw_id: crypto.createHash("sha1").update([nameKey(name), ticker || String(issuer).replace(/\s+/g, " ").slice(0, 40).toLowerCase(), normType(type), txDate, pubDate ?? "", amt?.min ?? "", normOwner(r.owner) ?? ""].join("|")).digest("hex"),
-    politician: { ext_id: member?.bioguideId || r.bioguide || r.politician_id || r.bioguide_id || r.bioguideId, name, party, chamber, state },
+    politician: { ext_id: member?.bioguideId || r.bioguide || r.politician_id || r.bioguide_id || r.bioguideId, name, party, chamber, state, perf: r.__perf },
     issuer: { ticker, name: String(issuer).replace(/\s+/g, " ").slice(0, 120), sector },
     tx_type: type, tx_date: txDate, published_date: pubDate ?? txDate,
     amount_min: amt?.min, amount_max: amt?.max, owner: normOwner(r.owner), comment: r.comment || (link ? `Filing: ${link}` : undefined),
+    ret_6m: num(r.trade_ret_6m ?? r.ret_6m), excess_6m: num(r.trade_excess_6m ?? r.excess_6m),
     filed_after_days: r.delay_days != null ? Number(r.delay_days) : txDate && pubDate ? Math.max(0, Math.round((Date.parse(pubDate) - Date.parse(txDate)) / 86400000)) : undefined,
   };
 }
@@ -314,6 +332,8 @@ function normOwner(o: any): string | undefined {
   if (x === "self") return "self";
   return x;
 }
+
+const num = (v: any) => (v == null || v === "" || Number.isNaN(Number(v)) ? null : Number(v));
 
 function normParty(p: any): string | undefined {
   const x = String(p ?? "").toLowerCase();
