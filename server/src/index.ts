@@ -9,8 +9,10 @@ import { migrate, get, run, getSetting, setSetting } from "./db.js";
 import { seedAdmin, login, requireAuth } from "./auth.js";
 import { data } from "./routes/data.js";
 import { alerts } from "./routes/alerts.js";
+import { me } from "./routes/me.js";
 import { admin } from "./routes/admin.js";
 import { ingestFromFeed, stats, syncPoliticians } from "./ingest.js";
+import { pollTelegramLinks } from "./notify.js";
 import { seedDemo } from "./seed.js";
 import { legalPage } from "./legal.js";
 import { integ, aiOn } from "./settings.js";
@@ -46,7 +48,7 @@ app.get("/contact", (_req, res) => res.type("html").send(legalPage("contact")));
 // everything below requires sign-in
 const api = express.Router();
 api.use(requireAuth);
-api.get("/me", (req, res) => res.json({ user: req.user }));
+api.use(me);
 api.use(data);
 api.use(alerts);
 api.use(admin);
@@ -109,6 +111,7 @@ function startScheduler() {
   };
   sync();
   setInterval(sync, 60_000).unref();
+  setInterval(() => pollTelegramLinks().catch(() => 0), 20_000).unref();
 }
 
 if (process.env.NODE_ENV !== "test") {

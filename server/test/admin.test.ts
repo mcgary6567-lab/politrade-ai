@@ -156,3 +156,25 @@ test("plan gating: free member sees 30-day window, no CSV, 1 watchlist item; Pro
   assert.equal((await call(tok, "GET", "/api/trades?limit=1")).data.total, all);
   assert.equal((await call(tok, "GET", "/api/trades.csv")).status, 200);
 });
+
+test("member settings: profile/password/channels, telegram link needs bot, dashboard shape", async () => {
+  await call(admin, "POST", "/api/admin/users", { email: "sam@example.com", password: "secret12", name: "Sam" });
+  let tok = (await call("", "POST", "/api/auth/login", { email: "sam@example.com", password: "secret12" })).data.token;
+  const me0 = await call(tok, "GET", "/api/me");
+  assert.equal(me0.data.user.plan, "Free"); assert.ok("transports" in me0.data);
+  // wrong current password blocks email/password change
+  assert.equal((await call(tok, "PUT", "/api/me", { password: "newpass12", current_password: "nope" })).status, 400);
+  assert.equal((await call(tok, "PUT", "/api/me", { name: "Samuel", wa_to: "+92 300 1234567", alert_email: "sam.alerts@example.com", password: "newpass12", current_password: "secret12" })).status, 200);
+  assert.equal((await call("", "POST", "/api/auth/login", { email: "sam@example.com", password: "secret12" })).status, 401);
+  tok = (await call("", "POST", "/api/auth/login", { email: "sam@example.com", password: "newpass12" })).data.token;
+  const me1 = (await call(tok, "GET", "/api/me")).data.user;
+  assert.equal(me1.name, "Samuel"); assert.equal(me1.wa_to, "923001234567"); assert.equal(me1.alert_email, "sam.alerts@example.com");
+  assert.equal((await call(tok, "POST", "/api/me/telegram/link")).status, 400, "no bot token in test");
+  const t = await call(tok, "POST", "/api/me/test");
+  assert.equal(t.status, 200); assert.match(t.data.results.whatsapp, /simulated/);
+  const d = await call(tok, "GET", "/api/dashboard");
+  assert.equal(d.status, 200);
+  assert.ok(d.data.latest.length > 0 && d.data.featuredPols.length === 3 && d.data.featuredPols[0].series.length === 12 && d.data.featuredIssuers.length > 0 && d.data.states.length > 0);
+  assert.equal(d.data.window, 30);
+  assert.ok((await call(tok, "GET", "/api/dashboard?assets=all")).data.latest.length > 0);
+});

@@ -9,6 +9,7 @@ import Politicians from "./pages/Politicians";
 import Issuers from "./pages/Issuers";
 import Insights from "./pages/Insights";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 import { Toasts } from "./components/ui";
 
 type User = { id: number; email: string; name?: string; role: string; plan?: string; pro?: boolean };
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/issuers" element={<Issuers />} />
             <Route path="/issuers/:id" element={<Issuers />} />
             <Route path="/insights" element={<Insights />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/admin/*" element={<Admin />} />
           </Route>
         </Route>

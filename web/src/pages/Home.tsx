@@ -1,122 +1,174 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeftRight, Landmark, Building2, Bell, TrendingUp, Radio } from "lucide-react";
+import { BarChart, Bar, LineChart, Line, ResponsiveContainer, XAxis, Tooltip } from "recharts";
+import { Sparkles } from "lucide-react";
 import { api, money, ago } from "../lib/api";
 import { useAuth } from "../App";
+import { compact, partyTone } from "../components/ui";
+import { Avatar } from "./Politicians";
+
+export const pill = (t: string) => (t === "buy" ? "pill-buy" : t === "sell" ? "pill-sell" : "pill-ex");
 
 export default function Home() {
   const { user } = useAuth();
-  const [ins, setIns] = useState<any>(null);
-  const [recent, setRecent] = useState<any[]>([]);
-  const [status, setStatus] = useState<any>(null);
-  const [counts, setCounts] = useState<{ pols: number; iss: number } | null>(null);
+  const [d, setD] = useState<any>(null);
+  const [assets, setAssets] = useState<"stocks" | "all">("stocks");
+  useEffect(() => { api(`/dashboard?assets=${assets}`).then(setD).catch(() => {}); }, [assets]);
+  if (!d) return <p className="text-slate-500">Loading…</p>;
 
-  useEffect(() => {
-    api("/insights").then(setIns).catch(() => {});
-    api("/trades?limit=8").then((r: any) => setRecent(r.rows)).catch(() => {});
-    api("/alerts/status").then(setStatus).catch(() => {});
-    Promise.all([api<any>("/politicians"), api<any>("/issuers")])
-      .then(([p, i]) => setCounts({ pols: p.rows.length, iss: i.rows.length })).catch(() => {});
-  }, []);
-
-  const t = ins?.totals;
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-700">Welcome{user?.name ? `, ${user.name}` : ""}</h1>
-        <p className="text-sm text-slate-400">Live overview of publicly disclosed congressional trades.</p>
-      </div>
-
-      {status && status.trades === 0 && (
-        <div className="card flex flex-wrap items-center gap-3 border-gold/40 p-4 text-sm">
-          <Radio size={18} className="shrink-0 animate-pulse text-gold" />
-          <div className="flex-1 basis-[260px]">
-            {status.lastIngest?.error ? <><b className="text-sell">Data load failed:</b> <span className="text-slate-300">{status.lastIngest.error}</span></>
-              : status.lastIngest && !status.lastIngest.finished_at ? <><b>Loading real disclosure data…</b> <span className="text-slate-400">first import of the full House + Senate history takes a minute or two. Refresh shortly.</span></>
-              : <><b>No trades yet.</b> <span className="text-slate-400">The data feed has not run.</span></>}
-          </div>
-          {user?.role === "admin" && <Link to="/admin/data" className="btn-gold px-3 py-2 text-xs">Open data feed</Link>}
+    <div className="space-y-5">
+      {d.window && (
+        <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 px-4 py-3 text-sm">
+          <span className="flex-1 basis-[260px]"><b className="text-gold">Free plan</b> — showing the last {d.window} days. <b>Pro ($300 / year)</b>: full history since 2014, instant Telegram / WhatsApp / Email alerts, CSV.</span>
+          <Link to="/settings" className="btn-gold px-3 py-1.5 text-xs">Upgrade</Link>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat icon={<ArrowLeftRight size={18} />} label="Total trades" value={num(t?.trades)} to="/trades" />
-        <Stat icon={<TrendingUp size={18} />} label="Buys / Sells" value={t ? `${t.buys ?? 0} / ${t.sells ?? 0}` : "…"} to="/trades" />
-        <Stat icon={<Landmark size={18} />} label="Politicians" value={num(counts?.pols)} to="/politicians" />
-        <Stat icon={<Building2 size={18} />} label="Issuers" value={num(counts?.iss)} to="/issuers" />
-      </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="card p-4 lg:col-span-2">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display font-600">Latest trades</h2>
-            <Link to="/trades" className="text-sm font-semibold text-gold hover:underline">View all →</Link>
-          </div>
+      <div className="grid gap-5 lg:grid-cols-2">
+        {/* Latest trades */}
+        <Panel title="Latest trades" to="/trades" extra={
+          <div className="flex rounded-lg border border-line p-0.5 text-xs">
+            {(["stocks", "all"] as const).map((k) => <button key={k} onClick={() => setAssets(k)} className={`rounded-md px-2.5 py-1 font-semibold ${assets === k ? "bg-ink-500 text-slate-100" : "text-slate-400"}`}>{k === "stocks" ? "Stocks" : "All assets"}</button>)}
+          </div>}>
           <div className="divide-y divide-line">
-            {recent.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 py-3">
-                <span className={pill(r.tx_type)}>{r.tx_type.toUpperCase()}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold">{r.politician} <span className="text-xs font-normal text-slate-500">· {r.party ?? "—"}</span></div>
-                  <div className="truncate text-sm text-slate-400">{r.ticker ? <span className="font-mono text-gold-300">{r.ticker}</span> : null} {r.issuer}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-mono text-sm">{money(r.amount_min, r.amount_max)}</div>
-                  <div className="text-xs text-slate-500">{ago(r.published_date)}</div>
-                </div>
+            {d.latest.map((r: any) => (
+              <div key={r.id} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-3 py-2.5 text-sm sm:grid-cols-[64px_1fr_1fr_auto]">
+                <div><span className={pill(r.tx_type)}>{r.tx_type.toUpperCase()}</span><div className="mt-1 text-[11px] text-slate-500">{ago(r.published_date)}</div></div>
+                <div className="min-w-0"><Link to={`/issuers/${r.issuer_id}`} className="block truncate font-semibold hover:text-gold">{r.issuer}</Link><div className="truncate font-mono text-xs text-gold-300">{r.ticker ?? "—"}<span className="font-sans text-slate-500 sm:hidden"> · {r.politician}</span></div></div>
+                <div className="hidden min-w-0 sm:block"><Link to={`/politicians/${r.politician_id}`} className="block truncate font-semibold hover:text-gold">{r.politician}</Link><div className="truncate text-xs text-slate-500">{[r.party, r.chamber, r.state].filter(Boolean).join(" | ")}</div></div>
+                <div className="text-right font-mono text-xs text-slate-300">{band(r.amount_min, r.amount_max)}</div>
               </div>
             ))}
-            {!recent.length && <p className="py-6 text-center text-sm text-slate-500">Loading…</p>}
+            {!d.latest.length && <p className="py-6 text-center text-sm text-slate-500">No trades in this window.</p>}
           </div>
-        </div>
+        </Panel>
+
+        {/* Latest insights */}
+        <Panel title="Latest insights" to="/insights">
+          <div className="divide-y divide-line">
+            {d.notable.map((r: any) => (
+              <Link key={r.id} to={`/politicians/${r.politician_id}`} className="flex items-start gap-3 py-2.5 hover:bg-ink-700/40">
+                <Avatar p={{ name: r.politician, party: r.party, photo_url: r.photo_url }} size="h-9 w-9 text-xs" />
+                <div className="min-w-0 flex-1 text-sm">
+                  <div className="text-[11px] text-slate-500">{r.published_date}</div>
+                  <div className="truncate font-semibold">{r.politician} <span className={pill(r.tx_type)}>{r.tx_type.toUpperCase()}</span> {r.ticker ? <span className="font-mono text-gold-300">{r.ticker}</span> : r.issuer} · {money(r.amount_min, r.amount_max)}</div>
+                  <div className="truncate text-xs text-slate-400">{r.ai_note ?? `${r.issuer}${r.owner ? ` · ${r.owner}` : ""}${r.filed_after_days != null ? ` · filed after ${r.filed_after_days} days` : ""}`}</div>
+                </div>
+                {r.ai_note && <Sparkles size={14} className="mt-1 shrink-0 text-gold" />}
+              </Link>
+            ))}
+          </div>
+        </Panel>
+
+        {/* Featured politicians */}
+        <Panel title="Featured politicians" to="/politicians" sub="last 12 months">
+          <div className="divide-y divide-line">
+            {d.featuredPols.map((p: any) => (
+              <div key={p.id} className="py-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Avatar p={p} size="h-10 w-10" />
+                  <div className="min-w-0 flex-1 basis-[160px]"><Link to={`/politicians/${p.id}`} className="block truncate font-semibold hover:text-gold">{p.name}</Link>
+                    <div className="truncate text-xs"><span className={partyTone(p.party)}>{p.party}</span><span className="text-slate-500"> | {p.chamber} | {p.state}</span></div></div>
+                  <div className="grid w-full grid-cols-4 gap-3 sm:w-auto"><Stat n={p.trades} l="Trades" /><Stat n={p.filings} l="Filings" /><Stat n={p.issuers} l="Issuers" /><Stat n={compact(p.volume)} l="Volume" /></div>
+                </div>
+                <ResponsiveContainer width="100%" height={90}>
+                  <BarChart data={p.series} margin={{ top: 8, left: 0, right: 0, bottom: 0 }} barGap={1}>
+                    <XAxis dataKey="month" tick={{ fill: "#8a96ad", fontSize: 9 }} tickFormatter={(m) => MON[Number(m.slice(5, 7)) - 1]} axisLine={false} tickLine={false} interval={0} />
+                    <Tooltip {...tip} labelFormatter={(m) => m} />
+                    <Bar dataKey="buys" fill="#22c58b" barSize={5} radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="sells" fill="#e7b23c" barSize={5} radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ))}
+          </div>
+        </Panel>
 
         <div className="space-y-5">
-          <div className="card p-4">
-            <h2 className="mb-3 flex items-center gap-2 font-display font-600"><Radio size={16} className="text-gold" /> Alert channels</h2>
-            {status ? (
-              <ul className="space-y-2 text-sm">
-                <ChannelRow on={status.channels.telegram} name="Telegram" />
-                <ChannelRow on={status.channels.whatsapp} name="WhatsApp" />
-                <ChannelRow on={status.channels.email} name="Email" />
-                <li className="flex items-center justify-between pt-1 text-slate-400"><span>AI summaries</span><span className={status.ai ? "text-buy" : "text-slate-500"}>{status.ai ? "on" : "off"}</span></li>
-                <li className="flex items-center justify-between text-slate-400"><span>Data feed</span><span className={status.feed.configured ? "text-buy" : "text-slate-500"}>{status.feed.configured ? "connected" : "demo data"}</span></li>
-              </ul>
-            ) : <p className="text-sm text-slate-500">…</p>}
-            <p className="mt-3 text-xs text-slate-500">New disclosures are pushed to connected channels automatically.{user?.role === "admin" && <> <Link to="/admin/integrations" className="text-gold hover:underline">Configure →</Link></>}</p>
-          </div>
-          <div className="card p-4">
-            <h2 className="mb-3 flex items-center gap-2 font-display font-600"><Bell size={16} className="text-gold" /> Most active</h2>
-            <ul className="space-y-2 text-sm">
-              {ins?.topPols?.slice(0, 5).map((p: any) => (
-                <li key={p.id} className="flex items-center justify-between">
-                  <Link to={`/politicians/${p.id}`} className="truncate hover:text-gold">{p.name}</Link>
-                  <span className="font-mono text-slate-400">{p.trades}</span>
-                </li>
+          {/* Featured issuers */}
+          <Panel title="Featured issuers" to="/issuers" sub="3 years">
+            <div className="divide-y divide-line">
+              {d.featuredIssuers.map((i: any) => (
+                <Link key={i.id} to={`/issuers/${i.id}`} className="grid grid-cols-[40px_minmax(0,1fr)_auto_auto] items-center gap-3 py-2.5 hover:bg-ink-700/40 sm:grid-cols-[40px_1fr_auto_auto_110px]">
+                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-600 font-mono text-[11px] font-700 text-gold">{i.ticker.slice(0, 4)}</span>
+                  <div className="min-w-0"><div className="truncate text-sm font-semibold">{i.name}</div><div className="font-mono text-xs text-slate-500">{i.ticker}:US</div></div>
+                  <Stat n={i.trades} l="Trades" />
+                  <div className="text-right text-xs"><div className="font-mono text-buy">{i.buys}</div><div className="font-mono text-sell">{i.sells}</div></div>
+                  <div className="hidden h-9 sm:block"><ResponsiveContainer width="100%" height={36}>
+                    <LineChart data={i.series}><Line type="monotone" dataKey="trades" stroke="#22c58b" strokeWidth={1.5} dot={false} /></LineChart>
+                  </ResponsiveContainer></div>
+                </Link>
               ))}
-              {!ins && <li className="text-slate-500">…</li>}
-            </ul>
-          </div>
+            </div>
+          </Panel>
+
+          {/* States */}
+          <Panel title="States" to="/trades" sub="3 years">
+            <StateTiles states={d.states} />
+            <div className="mt-3 divide-y divide-line">
+              {d.states.slice(0, 3).map((s: any) => (
+                <Link key={s.state} to={`/trades?state=${s.state}`} className="flex flex-wrap items-center gap-3 py-2.5 text-sm hover:bg-ink-700/40">
+                  <span className="w-24 truncate font-semibold">{STATE_NAMES[s.state] ?? s.state}</span>
+                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink-600 font-mono text-xs text-gold">{s.state}</span>
+                  <Stat n={s.trades.toLocaleString()} l="Trades" /><Stat n={s.politicians} l="Politicians" /><Stat n={compact(s.volume)} l="Volume" />
+                </Link>
+              ))}
+            </div>
+          </Panel>
         </div>
       </div>
+      {user?.role === "admin" && <p className="text-xs text-slate-500">Admin: configure feeds, channels and plans in the <Link to="/admin" className="text-gold">Admin panel</Link>.</p>}
     </div>
   );
 }
 
-const num = (n?: number) => (n == null ? "…" : n.toLocaleString("en-US"));
-export const pill = (t: string) => (t === "buy" ? "pill-buy" : t === "sell" ? "pill-sell" : "pill-ex");
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const tip = { contentStyle: { background: "#121a2e", border: "1px solid #223052", borderRadius: 10, color: "#e7ecf5", fontSize: 12 }, cursor: { fill: "rgba(231,178,60,.08)" } } as any;
+const band = (a?: number | null, b?: number | null) => a == null ? "—" : `${k(a)}–${k(b ?? a)}`;
+const k = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(n % 1e6 ? 1 : 0)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n);
 
-function Stat({ icon, label, value, to }: { icon: React.ReactNode; label: string; value: React.ReactNode; to: string }) {
+function Panel({ title, to, sub, extra, children }: { title: string; to: string; sub?: string; extra?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <Link to={to} className="card p-4 transition hover:border-gold/40">
-      <div className="flex items-center gap-2 text-slate-400">{icon}<span className="text-xs font-semibold uppercase tracking-wide">{label}</span></div>
-      <div className="mt-2 font-display text-2xl font-700">{value}</div>
-    </Link>
+    <section className="card min-w-0 overflow-hidden p-4">
+      <div className="mb-2 flex items-center gap-3">
+        <h2 className="font-display text-xs font-700 uppercase tracking-wider">{title}</h2>
+        {sub && <span className="chip py-0 text-[10px]">{sub}</span>}
+        {extra}
+        <Link to={to} className="ml-auto text-xs font-semibold text-slate-400 hover:text-gold">View all</Link>
+      </div>
+      {children}
+    </section>
   );
 }
-function ChannelRow({ on, name }: { on: boolean; name: string }) {
+const Stat = ({ n, l }: { n: React.ReactNode; l: string }) => <div className="text-right"><div className="font-mono text-sm text-slate-100">{n}</div><div className="text-[10px] uppercase tracking-wide text-slate-500">{l}</div></div>;
+
+/** US tile map (the familiar 11×8 grid of state squares) shaded by trade count; no geo data needed. */
+const TILES: Record<string, [number, number]> = {
+  AK: [0, 0], ME: [10, 0], VT: [9, 1], NH: [10, 1], WA: [0, 2], ID: [1, 2], MT: [2, 2], ND: [3, 2], MN: [4, 2], IL: [5, 2], WI: [6, 2], MI: [7, 2], NY: [8, 2], RI: [9, 2], MA: [10, 2],
+  OR: [0, 3], NV: [1, 3], WY: [2, 3], SD: [3, 3], IA: [4, 3], IN: [5, 3], OH: [6, 3], PA: [7, 3], NJ: [8, 3], CT: [9, 3],
+  CA: [0, 4], UT: [1, 4], CO: [2, 4], NE: [3, 4], MO: [4, 4], KY: [5, 4], WV: [6, 4], VA: [7, 4], MD: [8, 4], DE: [9, 4],
+  AZ: [1, 5], NM: [2, 5], KS: [3, 5], AR: [4, 5], TN: [5, 5], NC: [6, 5], SC: [7, 5], DC: [8, 5],
+  OK: [3, 6], LA: [4, 6], MS: [5, 6], AL: [6, 6], GA: [7, 6], HI: [0, 7], TX: [3, 7], FL: [8, 7],
+};
+function StateTiles({ states }: { states: any[] }) {
+  const by = new Map(states.map((s) => [s.state, s]));
+  const max = Math.max(1, ...states.map((s) => s.trades));
   return (
-    <li className="flex items-center justify-between">
-      <span className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${on ? "bg-buy" : "bg-slate-600"}`} />{name}</span>
-      <span className={on ? "text-buy" : "text-slate-500"}>{on ? "connected" : "not set"}</span>
-    </li>
+    <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(11, minmax(0, 1fr))" }}>
+      {Array.from({ length: 88 }, (_, i) => {
+        const x = i % 11, y = Math.floor(i / 11);
+        const st = Object.keys(TILES).find((s) => TILES[s][0] === x && TILES[s][1] === y);
+        if (!st) return <div key={i} />;
+        const s = by.get(st); const t = s ? Math.sqrt(s.trades / max) : 0;
+        const lean = s ? (s.rep > s.dem ? "251,113,133" : s.dem > s.rep ? "56,189,248" : "231,178,60") : "36,49,79";
+        return (
+          <Link key={i} to={`/trades?state=${st}`} title={s ? `${STATE_NAMES[st] ?? st}: ${s.trades.toLocaleString()} trades · ${s.politicians} politicians` : st}
+            className="grid aspect-square place-items-center rounded-[3px] text-[9px] font-semibold text-slate-200 transition hover:ring-1 hover:ring-gold"
+            style={{ background: `rgba(${lean},${s ? 0.15 + t * 0.85 : 0.35})` }}>{st}</Link>
+        );
+      })}
+    </div>
   );
 }
+const STATE_NAMES: Record<string, string> = { AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming", DC: "D.C." };

@@ -4,7 +4,7 @@ import { PHOTO_URL } from "./sources.js";
 import { config } from "./config.js";
 import { get, run, all } from "./db.js";
 import { tradeInsight } from "./ai.js";
-import { sendAlert, recordAlert } from "./notify.js";
+import { sendAlert, recordAlert, sendToUser } from "./notify.js";
 import { integ } from "./settings.js";
 
 const now = () => new Date().toISOString();
@@ -69,9 +69,31 @@ export async function fireAlert(tradeId: number) {
   const emoji = t.tx_type === "buy" ? "🟢 BUY" : t.tx_type === "sell" ? "🔴 SELL" : "🔄 EXCHANGE";
   const link = `${config.publicUrl}/trades`;
   const text = `<b>${brand} · ${emoji}</b>\n${note}\n\n${t.ticker ? `Ticker: ${t.ticker}\n` : ""}Filed: ${t.published_date ?? "-"}\n${link}`;
-  const results = await sendAlert(text, `${brand}: ${t.pol} ${t.tx_type} ${t.ticker || t.issuer}`);
+  const subject = `${brand}: ${t.pol} ${t.tx_type} ${t.ticker || t.issuer}`;
+  const results = await sendAlert(text, subject);
   recordAlert(tradeId, results);
+  await fanOutToMembers(t, text, subject).catch((e) => console.error("[alerts] members", e.message));
   return results;
+}
+
+/** Deliver one trade to every Pro member whose own channels are set and whose watchlist matches (or who watches everything). */
+async function fanOutToMembers(t: any, text: string, subject: string) {
+  const members = all(`SELECT u.id, u.role, u.tg_chat_id, u.wa_to, u.alert_email, p.price_cents, p.active
+                       FROM users u LEFT JOIN plans p ON p.id=u.plan_id
+                       WHERE u.status='active' AND u.notify=1 AND (u.tg_chat_id IS NOT NULL OR u.wa_to IS NOT NULL OR u.alert_email IS NOT NULL)`);
+  for (const u of members) {
+    const pro = u.role === "admin" || (u.active && u.price_cents > 0);
+    if (!pro) continue;
+    const watch = all("SELECT kind, value FROM watchlist WHERE user_id=?", u.id);
+    const hit = !watch.length || watch.some((w: any) =>
+      w.kind === "any" || (w.kind === "ticker" && t.ticker && w.value.toUpperCase() === t.ticker)
+      || (w.kind === "party" && t.party && w.value.toLowerCase() === String(t.party).toLowerCase())
+      || (w.kind === "politician" && (String(w.value) === String(t.politician_id) || nameKey(w.value) === nameKey(t.pol))));
+    if (!hit) continue;
+    const r = await sendToUser(u, text, subject);
+    for (const [channel, info] of Object.entries(r))
+      run("INSERT OR IGNORE INTO user_alerts(user_id,trade_id,channel,ok,info,created_at) VALUES(?,?,?,?,?,?)", u.id, t.id, channel, info.startsWith("sent") ? 1 : 0, info, now());
+  }
 }
 
 /** Pull the configured public disclosure feed and ingest new trades (firing alerts for each new one). */

@@ -63,6 +63,17 @@ export function migrate() {
   addColumn("users", "plan_id", "INTEGER");
   addColumn("users", "status", "TEXT NOT NULL DEFAULT 'active'");
   addColumn("users", "last_login", "TEXT");
+  addColumn("users", "tg_chat_id", "TEXT");
+  addColumn("users", "wa_to", "TEXT");
+  addColumn("users", "alert_email", "TEXT");
+  addColumn("users", "notify", "INTEGER NOT NULL DEFAULT 1");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_alerts (
+      id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), trade_id INTEGER NOT NULL REFERENCES trades(id),
+      channel TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 1, info TEXT, created_at TEXT NOT NULL, UNIQUE(user_id, trade_id, channel)
+    );
+    CREATE TABLE IF NOT EXISTS tg_links (code TEXT PRIMARY KEY, user_id INTEGER NOT NULL, created_at TEXT NOT NULL);
+  `);
 }
 
 export const get = (sql: string, ...p: any[]) => db.prepare(sql).get(...p) as any;

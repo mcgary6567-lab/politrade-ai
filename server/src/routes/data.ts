@@ -197,3 +197,37 @@ data.get("/insights", (req, res) => {
       GROUP BY p.id HAVING trades >= 2 ORDER BY avg_delay DESC LIMIT 6`);
   res.json({ totals, topIssuers, topPols, byParty, byChamber, bySector, byState, volume, bands, lateFilers });
 });
+
+/** GET /api/dashboard — the post-login overview: latest trades, notable filings, featured politicians / issuers, states. */
+data.get("/dashboard", (req, res) => {
+  const stocksOnly = req.query.assets !== "all";
+  const win = req.user?.pro ? "" : "AND tr.published_date >= date('now','-30 days')";
+  const latest = all(`${TRADE_SELECT} WHERE 1=1 ${stocksOnly ? "AND i.ticker IS NOT NULL" : ""} ${win} ORDER BY tr.published_date DESC, tr.id DESC LIMIT 8`);
+  // "insights": the most notable recent filings (largest ranges in the last 45 days), with the AI note when one exists
+  const notable = all(`${TRADE_SELECT} WHERE tr.published_date >= date('now','-45 days') ${win}
+      ORDER BY COALESCE(tr.amount_max,tr.amount_min,0) DESC, tr.published_date DESC LIMIT 6`);
+  const months = all(`WITH RECURSIVE m(d) AS (SELECT date('now','start of month','-11 months') UNION ALL SELECT date(d,'+1 month') FROM m WHERE d < date('now','start of month')) SELECT substr(d,1,7) month FROM m`).map((r) => r.month);
+  const featuredPols = all(`SELECT p.id, p.name, p.party, p.chamber, p.state, p.photo_url, COUNT(*) trades, COUNT(DISTINCT tr.published_date) filings,
+        COUNT(DISTINCT tr.issuer_id) issuers, SUM(COALESCE(tr.amount_max,tr.amount_min,0)) volume
+      FROM trades tr JOIN politicians p ON p.id=tr.politician_id WHERE tr.published_date >= date('now','-12 months')
+      GROUP BY p.id ORDER BY volume DESC LIMIT 3`).map((p) => ({
+    ...p, series: fillMonths(months, all(`SELECT substr(published_date,1,7) month, SUM(tx_type='buy') buys, SUM(tx_type='sell') sells FROM trades
+        WHERE politician_id=? AND published_date >= date('now','-12 months') GROUP BY month`, p.id)),
+  }));
+  const featuredIssuers = all(`SELECT i.id, i.ticker, i.name, i.sector, COUNT(*) trades, SUM(tr.tx_type='buy') buys, SUM(tr.tx_type='sell') sells,
+        COUNT(DISTINCT tr.politician_id) politicians
+      FROM trades tr JOIN issuers i ON i.id=tr.issuer_id WHERE i.ticker IS NOT NULL AND tr.published_date >= date('now','-3 years')
+      GROUP BY i.id ORDER BY trades DESC LIMIT 5`).map((i) => ({
+    ...i, series: fillMonths(months, all(`SELECT substr(published_date,1,7) month, COUNT(*) trades FROM trades WHERE issuer_id=? AND published_date >= date('now','-12 months') GROUP BY month`, i.id)),
+  }));
+  const states = all(`SELECT p.state, COUNT(*) trades, COUNT(DISTINCT p.id) politicians, SUM(COALESCE(tr.amount_max,tr.amount_min,0)) volume,
+        SUM(p.party='Democrat') dem, SUM(p.party='Republican') rep
+      FROM trades tr JOIN politicians p ON p.id=tr.politician_id WHERE p.state IS NOT NULL AND tr.published_date >= date('now','-3 years')
+      GROUP BY p.state ORDER BY trades DESC`);
+  res.json({ latest, notable, featuredPols, featuredIssuers, states, months, window: req.user?.pro ? null : 30 });
+});
+
+function fillMonths(months: string[], rows: any[]) {
+  const by = new Map(rows.map((r) => [r.month, r]));
+  return months.map((m) => ({ month: m, buys: by.get(m)?.buys ?? 0, sells: by.get(m)?.sells ?? 0, trades: by.get(m)?.trades ?? ((by.get(m)?.buys ?? 0) + (by.get(m)?.sells ?? 0)) }));
+}
