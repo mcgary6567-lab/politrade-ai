@@ -61,7 +61,7 @@ app.use("/api", api);
 const webDist = path.resolve(config.webDist);
 if (fs.existsSync(webDist)) {
   // hashed assets are immutable; index.html must always be fresh so new deploys show up
-  app.use(express.static(webDist, { maxAge: "365d", immutable: true, index: false, setHeaders: (res, p) => { if (p.endsWith(".html") || p.endsWith(".webmanifest")) res.setHeader("cache-control", "no-cache"); } }));
+  app.use(express.static(webDist, { maxAge: "365d", immutable: true, index: false, setHeaders: (res, p) => { if (p.endsWith(".html") || p.endsWith(".webmanifest") || p.endsWith("sw.js")) res.setHeader("cache-control", "no-cache"); } }));
   app.get(/^\/(?!api).*/, (_req, res) => res.sendFile(path.join(webDist, "index.html"), { headers: { "cache-control": "no-cache" } }));
 }
 

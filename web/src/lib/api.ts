@@ -29,7 +29,7 @@ async function request<T>(path: string, opts: { method?: string; body?: any }): 
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) { const e: any = new Error(data?.error || `Error ${res.status}`); e.status = res.status; throw e; }
+  if (!res.ok) { const e: any = new Error(res.status === 503 && !navigator.onLine ? "You are offline — this page was not loaded before." : (data?.error || `Error ${res.status}`)); e.status = res.status; throw e; }
   return data as T;
 }
 

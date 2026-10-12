@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "PoliTrade AI — Congressional trade tracker",
+  "short_name": "PoliTrade AI",
+  "description": "Every disclosed US congressional stock trade, with instant alerts. Works offline with your last-loaded data.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["finance", "news", "productivity"],
+  "background_color": "#0a0f1c",
+  "theme_color": "#0a0f1c",
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Latest trades", "short_name": "Trades", "url": "/trades", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Politicians", "short_name": "Politicians", "url": "/politicians", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "My alerts", "short_name": "Alerts", "url": "/settings", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

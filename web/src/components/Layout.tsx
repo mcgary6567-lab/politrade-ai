@@ -5,6 +5,7 @@ import { useAuth } from "../App";
 import { prefetch } from "../lib/api";
 import { Search } from "lucide-react";
 import Footer from "./Footer";
+import { OfflineBar, InstallNudge } from "./InstallApp";
 import Logo from "./Logo";
 
 /** Warm the cache for a page when its nav link is hovered. */
@@ -26,6 +27,7 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-900">
+      <OfflineBar />
       <header className="sticky top-0 z-30 border-b border-line bg-ink-900/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Link to="/" className="flex items-center gap-2.5"><Logo className="h-8 w-8" /><span className="whitespace-nowrap font-display text-lg font-700 tracking-tight">Poli<span className="text-gold">Trade</span> <span className="text-slate-400">AI</span></span></Link>
@@ -64,6 +66,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <InstallNudge />
     </div>
   );
 }
