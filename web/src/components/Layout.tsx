@@ -33,22 +33,23 @@ export default function Layout() {
       <header className="sticky top-0 z-30 border-b border-line bg-ink-900/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Link to="/" className="flex items-center gap-2.5"><Logo className="h-8 w-8" /><span className="whitespace-nowrap font-display text-lg font-700 tracking-tight">Poli<span className="text-gold">Trade</span> <span className="text-slate-400">AI</span></span></Link>
-          <nav className="ml-4 hidden items-center gap-0.5 md:flex">
-            {NAV.filter((n) => n.to !== "/settings").map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.end} onMouseEnter={() => PREFETCH[n.to]?.forEach(prefetch)} className={({ isActive }) =>
-                `flex items-center gap-1.5 rounded-lg px-2 py-2 text-[13px] font-semibold transition lg:px-2.5 lg:text-sm ${isActive ? "bg-gold/15 text-gold" : "text-slate-300 hover:bg-ink-700"}`}>
-                <n.icon size={16} /> {n.label}
+          <nav className="ml-1 hidden items-center gap-0 md:flex xl:ml-3 xl:gap-0.5">
+            {BASE_NAV.map((n) => (
+              <NavLink key={n.to} to={n.to} end={n.end} title={n.label} onMouseEnter={() => PREFETCH[n.to]?.forEach(prefetch)} className={({ isActive }) =>
+                `flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2 text-xs font-semibold transition lg:px-1.5 xl:px-2.5 xl:text-sm ${isActive ? "bg-gold/15 text-gold" : "text-slate-300 hover:bg-ink-700"}`}>
+                <n.icon size={16} /> <span className="hidden lg:inline">{n.label}</span>
               </NavLink>
             ))}
           </nav>
-          <form className="relative ml-auto hidden lg:block" onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem("q") as HTMLInputElement).value.trim(); if (q) nav(`/trades?q=${encodeURIComponent(q)}`); }}>
+          <form className="relative ml-auto hidden 2xl:block" onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem("q") as HTMLInputElement).value.trim(); if (q) nav(`/trades?q=${encodeURIComponent(q)}`); }}>
             <Search size={14} className="pointer-events-none absolute left-2.5 top-2.5 text-slate-500" />
             <input name="q" className="input w-40 py-1.5 pl-8 text-sm xl:w-52" placeholder="Politician or ticker…" />
           </form>
-          <div className="ml-auto flex items-center gap-2 lg:ml-0">
-            <Link to="/settings" className="hidden max-w-[180px] items-center gap-2 truncate text-sm text-slate-400 hover:text-gold sm:flex" title="Your settings"><UserCog size={15} className="shrink-0" /><span className="truncate">{user?.name ?? user?.email}</span>
-              <span className={`chip py-0.5 text-[10px] ${user?.pro ? "border-gold/50 text-gold" : ""}`}>{user?.role === "admin" ? "ADMIN" : user?.pro ? "PRO" : "FREE"}</span></Link>
-            <button onClick={signOut} className="btn-ghost gap-1.5 px-3 py-2 text-sm" title="Logout"><LogOut size={15} /> <span className="hidden sm:inline">Logout</span></button>
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 2xl:ml-0 2xl:gap-2">
+            {user?.role === "admin" && <Link to="/admin" className="btn-ghost hidden px-2.5 py-2 md:flex" title="Admin panel"><ShieldCheck size={16} /></Link>}
+            <Link to="/settings" className="hidden max-w-[180px] items-center gap-2 truncate text-sm text-slate-400 hover:text-gold sm:flex" title="Your settings"><UserCog size={15} className="shrink-0" /><span className="hidden truncate xl:inline">{user?.name ?? user?.email}</span>
+              <span className={`chip hidden py-0.5 text-[10px] xl:inline ${user?.pro ? "border-gold/50 text-gold" : ""}`}>{user?.role === "admin" ? "ADMIN" : user?.pro ? "PRO" : "FREE"}</span></Link>
+            <button onClick={signOut} className="btn-ghost shrink-0 gap-1.5 whitespace-nowrap px-3 py-2 text-sm" title="Logout"><LogOut size={15} /> <span className="hidden sm:inline">Logout</span></button>
             <button onClick={() => setOpen(!open)} className="btn-ghost px-2.5 py-2 md:hidden" aria-label="Menu">{open ? <X size={18} /> : <Menu size={18} />}</button>
           </div>
         </div>
