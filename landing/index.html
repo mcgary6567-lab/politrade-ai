@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PoliTrade AI — Congress stock trade tracker · public STOCK Act disclosures</title>
+<meta name="description" content="See every stock trade US senators and representatives disclose under the STOCK Act. Tens of thousands of filings since 2014, updated daily from the official records. Free to search.">
+<link rel="canonical" href="https://politrade-ai.fly.dev/">
+<link rel="icon" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0f1c">
+<meta property="og:title" content="What is Congress trading?">
+<meta property="og:description" content="Every disclosed congressional stock trade, from the official filings, searchable and free.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"PoliTrade AI","applicationCategory":"ReferenceApplication","operatingSystem":"Web, Android, iOS","description":"Searchable database of stock trades disclosed by members of the US Congress under the STOCK Act.","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"300","priceCurrency":"USD","name":"Pro (per year)"}]}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="/"><img src="assets/icon-192.png" width="32" height="32" alt=""><span data-brand-short>PoliTrade</span> <b>AI</b></a>
+    <nav class="nav">
+      <a class="hide" href="#features">Features</a>
+      <a class="hide" href="#data">Data</a>
+      <a class="hide" href="#pricing">Pricing</a>
+      <a class="hide" href="/faq">FAQ</a>
+      <a href="/login">Sign in</a>
+      <a class="btn gold sm" href="/signup"><span class="l">Create free account</span><span class="s">Get started</span></a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <span class="eyebrow"><svg class="i" viewBox="0 0 24 24"><use href="#i-shield"/></svg> Public records · STOCK Act disclosures</span>
+      <h1>See what members of <em>Congress</em> are trading.</h1>
+      <p class="lead">Every stock trade US senators and representatives are required to disclose, pulled from the official filings into one fast, searchable place. Who bought what, when, and how late they told the public.</p>
+      <div class="ctas">
+        <a class="btn gold" href="/signup"><svg class="i" viewBox="0 0 24 24"><use href="#i-user"/></svg> Create a free account</a>
+        <a class="btn" href="/login">Sign in</a>
+        <small>No card needed · takes 30 seconds</small>
+      </div>
+      <div class="proof">
+        <div><b data-stat="trades">57,000+</b><span>disclosed trades since <span data-stat="since">2014</span></span></div>
+        <div><b data-stat="politicians">350+</b><span>senators &amp; representatives</span></div>
+        <div><b data-stat="issuers">9,000+</b><span>companies &amp; assets</span></div>
+        <div><b data-stat="last">daily</b><span>latest filing published</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="latest-panel">
+      <div class="ph"><span>Latest filings</span><span class="live"><i></i> Live from the record</span></div>
+      <div id="latest">
+        <div class="row skeleton"></div><div class="row skeleton"></div><div class="row skeleton"></div>
+        <div class="row skeleton"></div><div class="row skeleton"></div><div class="row skeleton"></div>
+      </div>
+      <div class="row center"><a href="/signup">See all <span data-stat="trades">57,000+</span> trades →</a></div>
+    </div>
+  </div>
+</main>
+
+<div class="strip">
+  <div class="wrap">
+    <span><svg class="i" viewBox="0 0 24 24"><use href="#i-file"/></svg> House Clerk &amp; Senate eFD filings</span>
+    <span><svg class="i" viewBox="0 0 24 24"><use href="#i-refresh"/></svg> Updated several times a day</span>
+    <span><svg class="i" viewBox="0 0 24 24"><use href="#i-db"/></svg> Full record since <span data-stat="since">2014</span></span>
+    <span><svg class="i" viewBox="0 0 24 24"><use href="#i-globe"/></svg> Independent · non-partisan</span>
+    <span><svg class="i" viewBox="0 0 24 24"><use href="#i-lock"/></svg> No ads, no data resale</span>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section id="features">
+    <h2>Everything the filings contain, none of the PDF reading.</h2>
+    <p class="sub">Lawmakers file Periodic Transaction Reports as documents. <span data-brand-short>PoliTrade</span> turns them into structured data you can search, follow and get alerted on.</p>
+    <div class="grid3">
+      <div class="card"><div class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-search"/></svg></div><h3>Every disclosed trade, searchable</h3><p>Filter <span data-stat="trades">57,000+</span> filings by lawmaker, company, party, chamber, state, trade type, amount and date. Export to CSV.</p></div>
+      <div class="card"><div class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-user"/></svg></div><h3>Lawmaker profiles</h3><p>Photo, party, chamber, state, every filing on record, which companies they trade most and how late they file.</p></div>
+      <div class="card"><div class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-db"/></svg></div><h3>Company view</h3><p>Pick any ticker and see which members of Congress have bought or sold it, when, and how much.</p></div>
+      <div class="card"><div class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-spark"/></svg></div><h3>Activity clusters</h3><p>When several lawmakers file trades in the same company within weeks, we flag it and explain why in plain English.</p></div>
+      <div class="card"><div class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-bell"/></svg></div><h3>Instant alerts</h3><p>Follow the lawmakers and companies you care about. Get a Telegram, WhatsApp or email message the moment a matching filing is published.</p></div>
+      <div class="card"><div class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-phone"/></svg></div><h3>Works everywhere</h3><p>Installs on Android, iPhone and desktop as an app, loads in under a second and keeps working offline.</p></div>
+    </div>
+  </section>
+
+  <section id="data">
+    <h2>Right now in Congress</h2>
+    <p class="sub">A live sample of the last 90 days. Sign in free to see the full record, filters and profiles.</p>
+    <div class="grid2">
+      <div class="card"><h3 class="ch"><svg class="i" viewBox="0 0 24 24"><use href="#i-user"/></svg> Most active lawmakers</h3><ul class="list" id="active"><li class="skeleton"></li><li class="skeleton"></li><li class="skeleton"></li></ul></div>
+      <div class="card"><h3 class="ch"><svg class="i" viewBox="0 0 24 24"><use href="#i-db"/></svg> Companies traded by the most lawmakers</h3><ul class="list" id="popular"><li class="skeleton"></li><li class="skeleton"></li><li class="skeleton"></li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <p class="sub">From a filing on a government website to a message on your phone, in three steps.</p>
+    <div class="grid3 steps">
+      <div class="card"><h3>We collect the filings</h3><p>Several times a day we read the official House and Senate disclosure records and the congressional directory, and add every new transaction with its lawmaker, company, amount band and dates.</p></div>
+      <div class="card"><h3>You follow who matters to you</h3><p>Add lawmakers or companies to your watchlist. Browse by party, chamber, state, trade type or amount. Export what you need.</p></div>
+      <div class="card"><h3>You hear about it first</h3><p>Pro members get a Telegram, WhatsApp or email message the moment a matching filing is published, plus a note when several lawmakers file trades in the same company.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Built for people who read the record</h2>
+    <p class="sub">Used by journalists, researchers, voters and self-directed investors who want the primary source, not a headline.</p>
+    <div class="aud">
+      <span>Newsrooms &amp; reporters</span><span>Academic researchers</span><span>Government-transparency advocates</span>
+      <span>Constituents checking their representative</span><span>Investors doing their own homework</span><span>Policy &amp; compliance teams</span>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <h2 class="center">Simple pricing</h2>
+    <p class="sub center">Search is free. Pro is for people who want the whole record and instant alerts.</p>
+    <div class="plans">
+      <div class="plan">
+        <div class="pn">Free</div><div class="pp">$0</div>
+        <ul>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Every trade filed in the last 30 days</li>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Lawmaker and company profiles</li>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> 1 watchlist item</li>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Install as an app, works offline</li>
+          <li class="no"><svg class="i" viewBox="0 0 24 24"><use href="#i-x"/></svg> Full history since <span data-stat="since">2014</span></li>
+          <li class="no"><svg class="i" viewBox="0 0 24 24"><use href="#i-x"/></svg> Alerts and CSV export</li>
+        </ul>
+        <a class="btn block" href="/signup">Create free account</a>
+      </div>
+      <div class="plan pro">
+        <div class="pn">Pro</div><div class="pp">$300 <small>/ year · $25 a month</small></div>
+        <ul>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Full record since <span data-stat="since">2014</span>, every new filing</li>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Instant Telegram, WhatsApp and email alerts</li>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Activity-cluster notes with plain-English reasons</li>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Unlimited watchlist and CSV export</li>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Lawmaker filing-record leaderboard</li>
+          <li><svg class="i" viewBox="0 0 24 24"><use href="#i-check"/></svg> Priority support · 14-day refund</li>
+        </ul>
+        <a class="btn gold block" href="/signup?plan=pro">Start with Pro</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq">
+    <h2>Questions</h2>
+    <details><summary>Where does the data come from?</summary><p>From the public disclosures members of Congress must file under the STOCK Act with the Clerk of the House and the Secretary of the Senate, as published in open datasets built from those filings, plus the official congressional directory for names, parties and photos. Every trade traces back to an official filing.</p></details>
+    <details><summary>Is this legal and is it affiliated with Congress?</summary><p>Yes, it is legal: these records are published precisely so the public can read them. <span data-brand-short>PoliTrade</span> is independent and not affiliated with any government body, party or lawmaker.</p></details>
+    <details><summary>How fast do new filings appear?</summary><p>Usually within hours of publication. Note that the law gives lawmakers up to 45 days to file after a trade; we show that delay on every record and mark late filings.</p></details>
+    <details><summary>Is this investment advice?</summary><p>No. <span data-brand-short>PoliTrade</span> is a research and transparency tool about public records. Nothing on this site is a recommendation to buy or sell anything. Read our <a href="/disclaimer">Disclaimer</a>.</p></details>
+    <details><summary>Can I cancel Pro?</summary><p>Yes. Cancel any time before renewal and keep Pro until the end of the paid year. First-time Pro payments are refundable within 14 days.</p></details>
+    <p class="more"><a href="/faq">All 40+ answers in the Briefing Room →</a></p>
+  </section>
+
+  <section>
+    <div class="final">
+      <h2>Start reading the record today</h2>
+      <p class="sub center">Free account, no card, 30 seconds.</p>
+      <div class="ctas center">
+        <a class="btn gold" href="/signup"><svg class="i" viewBox="0 0 24 24"><use href="#i-user"/></svg> Create a free account</a>
+        <a class="btn" href="/login">Sign in</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="disc">
+    <svg class="i" viewBox="0 0 24 24"><use href="#i-info"/></svg>
+    <span><b data-brand>PoliTrade AI</b> republishes and organises public congressional disclosure records for research, journalism and education. It is not a broker, adviser or investment service and provides no financial advice. Amounts are the ranges lawmakers report. Filing data can contain errors or be amended by the filer. Not affiliated with the US Government or any lawmaker. <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/disclaimer">Disclaimer</a></span>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© <span data-year>2026</span> <span data-company>PoliTrade AI</span></span>
+    <nav>
+      <a href="/faq">Briefing Room</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/disclaimer">Disclaimer</a><a href="/contact">Contact</a><a data-mail href="mailto:hello@politrade.ai">hello@politrade.ai</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- inline icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/></symbol>
+</svg>
+
+<script src="app.js" defer></script>
+</body>
+</html>
