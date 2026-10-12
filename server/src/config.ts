@@ -32,7 +32,11 @@ export const config = {
   adminEmail: (process.env.ADMIN_EMAIL ?? "admin@politrade.ai").toLowerCase(),
   adminPassword: process.env.ADMIN_PASSWORD ?? "politrade123",
   // data ingest
-  dataFeedUrl: process.env.DATA_FEED_URL ?? "",          // public STOCK Act disclosure JSON feed
+  // public STOCK Act disclosure JSON feed(s); defaults to the open House + Senate datasets so a fresh install has real data
+  dataFeedUrl: process.env.DATA_FEED_URL ?? [
+    "https://house-stock-watcher-data.s3-us-west-2.amazonaws.com/data/all_transactions.json",
+    "https://senate-stock-watcher-data.s3-us-west-2.amazonaws.com/aggregate/all_transactions.json",
+  ].join("\n"),
   ingestCron: process.env.INGEST_CRON ?? "0 */6 * * *",  // every 6 hours
   demoData: process.env.DEMO_DATA ? process.env.DEMO_DATA === "1" : !isProduction,
   // AI (optional)

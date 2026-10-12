@@ -27,6 +27,17 @@ export default function Home() {
         <p className="text-sm text-slate-400">Live overview of publicly disclosed congressional trades.</p>
       </div>
 
+      {status && status.trades === 0 && (
+        <div className="card flex flex-wrap items-center gap-3 border-gold/40 p-4 text-sm">
+          <Radio size={18} className="shrink-0 animate-pulse text-gold" />
+          <div className="flex-1 basis-[260px]">
+            {status.lastIngest?.error ? <><b className="text-sell">Data load failed:</b> <span className="text-slate-300">{status.lastIngest.error}</span></>
+              : status.lastIngest && !status.lastIngest.finished_at ? <><b>Loading real disclosure data…</b> <span className="text-slate-400">first import of the full House + Senate history takes a minute or two. Refresh shortly.</span></>
+              : <><b>No trades yet.</b> <span className="text-slate-400">The data feed has not run.</span></>}
+          </div>
+          {user?.role === "admin" && <Link to="/admin/data" className="btn-gold px-3 py-2 text-xs">Open data feed</Link>}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat icon={<ArrowLeftRight size={18} />} label="Total trades" value={num(t?.trades)} to="/trades" />
         <Stat icon={<TrendingUp size={18} />} label="Buys / Sells" value={t ? `${t.buys ?? 0} / ${t.sells ?? 0}` : "…"} to="/trades" />

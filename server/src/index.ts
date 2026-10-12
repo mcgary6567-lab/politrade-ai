@@ -10,7 +10,7 @@ import { seedAdmin, login, requireAuth } from "./auth.js";
 import { data } from "./routes/data.js";
 import { alerts } from "./routes/alerts.js";
 import { admin } from "./routes/admin.js";
-import { ingestFromFeed, stats } from "./ingest.js";
+import { ingestFromFeed, stats, syncPoliticians } from "./ingest.js";
 import { seedDemo } from "./seed.js";
 import { legalPage } from "./legal.js";
 import { integ, aiOn } from "./settings.js";
@@ -72,6 +72,16 @@ function seedPlans() {
     run("INSERT INTO plans(name,price_cents,interval,features,active,created_at) VALUES(?,?,?,?,1,?)", name, price, interval, features, now);
 }
 
+async function bootstrapData() {
+  console.log("[ingest] empty database — fetching real disclosure data now…");
+  try {
+    const r = await ingestFromFeed();
+    console.log(`[ingest] first load: fetched ${r.fetched}, added ${r.added}${r.errors.length ? `, errors: ${r.errors.join(" | ")}` : ""}`);
+    const s = await syncPoliticians();
+    console.log(`[directory] ${s.matched} politicians matched, ${s.updated} updated`);
+  } catch (e: any) { console.error("[ingest] first load failed:", e.message); }
+}
+
 /** Scheduler: re-reads the cron + feed URL from settings every minute so admin changes apply without a restart. */
 function startScheduler() {
   let task: cron.ScheduledTask | null = null;
@@ -84,7 +94,7 @@ function startScheduler() {
     task?.stop(); task = null; current = key;
     if (!key || !cron.validate(expr)) { if (url) console.warn(`[ingest] invalid cron "${expr}"`); return; }
     task = cron.schedule(expr, () => {
-      ingestFromFeed().then((r) => console.log(`[ingest] fetched ${r.fetched}, added ${r.added}`)).catch((e) => console.error("[ingest]", e.message));
+      ingestFromFeed().then((r) => { console.log(`[ingest] fetched ${r.fetched}, added ${r.added}`); return r.added ? syncPoliticians() : null; }).catch((e) => console.error("[ingest]", e.message));
     });
     console.log(`[ingest] scheduled (${expr}) from ${url}`);
   };
@@ -99,5 +109,7 @@ if (process.env.NODE_ENV !== "test") {
       console.log(`${integ.brandName()} API on http://localhost:${config.port}  (AI: ${aiOn() ? "on" : "off"})`);
     });
     if (config.scheduler) startScheduler();
+    // first boot with an empty database: pull the real disclosure data right away instead of waiting for the cron
+    if (!get("SELECT 1 FROM trades LIMIT 1") && integ.feedUrls().length) bootstrapData();
   })();
 }

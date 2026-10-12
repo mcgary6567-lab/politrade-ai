@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { all, run } from "../db.js";
+import { all, get, run } from "../db.js";
 import { integ, aiOn } from "../settings.js";
 import { channelStatus } from "../notify.js";
 
@@ -12,6 +12,8 @@ alerts.get("/alerts/status", (_req, res) => {
     channels: channelStatus(),
     feed: { configured: Boolean(integ.feedUrl()), cron: integ.feedCron(), enabled: integ.alertsEnabled() },
     ai: aiOn(),
+    lastIngest: get("SELECT started_at, finished_at, fetched, added, error, source FROM ingest_log ORDER BY id DESC LIMIT 1") ?? null,
+    trades: get("SELECT COUNT(*) c FROM trades").c,
     recent: all("SELECT a.channel,a.ok,a.info,a.created_at,tr.id trade_id FROM alerts_sent a JOIN trades tr ON tr.id=a.trade_id ORDER BY a.id DESC LIMIT 20"),
   });
 });
