@@ -75,7 +75,7 @@ function seedPlans() {
 async function bootstrapData() {
   console.log("[ingest] empty database — fetching real disclosure data now…");
   try {
-    const r = await ingestFromFeed();
+    const r = await ingestFromFeed({ alerts: false });
     console.log(`[ingest] first load: fetched ${r.fetched}, added ${r.added}${r.errors.length ? `, errors: ${r.errors.join(" | ")}` : ""}`);
     const s = await syncPoliticians();
     console.log(`[directory] ${s.matched} politicians matched, ${s.updated} updated`);

@@ -34,8 +34,8 @@ export const config = {
   // data ingest
   // public STOCK Act disclosure JSON feed(s); defaults to the open House + Senate datasets so a fresh install has real data
   dataFeedUrl: process.env.DATA_FEED_URL ?? [
-    "https://house-stock-watcher-data.s3-us-west-2.amazonaws.com/data/all_transactions.json",
-    "https://senate-stock-watcher-data.s3-us-west-2.amazonaws.com/aggregate/all_transactions.json",
+    "https://raw.githubusercontent.com/jorgeamolinas19/congress-trades/main/web/public/data/members.json",
+    "https://raw.githubusercontent.com/LuxAlgo/market-trackers-data/main/congress/trades/snapshot.json.gz",
   ].join("\n"),
   ingestCron: process.env.INGEST_CRON ?? "0 */6 * * *",  // every 6 hours
   demoData: process.env.DEMO_DATA ? process.env.DEMO_DATA === "1" : !isProduction,

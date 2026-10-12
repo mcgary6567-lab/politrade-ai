@@ -27,7 +27,7 @@ export const integ = {
   feedUrls: (): string[] => integ.feedUrl().split(/[\n,]+/).map((x) => x.trim()).filter(Boolean),
   feedApiKey: () => s("feed.api_key", ""),
   feedCron: () => s("feed.cron", config.ingestCron),
-  polsSource: () => s("pols.source_url", "https://unitedstates.github.io/congress-legislators/legislators-current.json"),
+  polsSource: () => s("pols.source_url", "https://raw.githubusercontent.com/unitedstates/congress-legislators/gh-pages/legislators-current.json"),
   brandName: () => s("brand.name", config.brandName),
   contactEmail: () => s("brand.contact", config.contactEmail),
   socialX: () => s("social.x", config.social.x),
@@ -83,7 +83,7 @@ function envFallback(key: string): string {
     "wa.token": config.wa.token, "wa.phone_id": config.wa.phoneNumberId, "wa.to": config.wa.to,
     "email.webhook_url": config.email.webhookUrl, "email.api_key": config.email.apiKey, "email.from": config.email.from, "email.to": config.email.to,
     "feed.url": config.dataFeedUrl, "feed.cron": config.ingestCron, "alerts.enabled": "1", "feed.api_key": "",
-    "pols.source_url": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "pols.source_url": "https://raw.githubusercontent.com/unitedstates/congress-legislators/gh-pages/legislators-current.json",
     "brand.name": config.brandName, "brand.contact": config.contactEmail,
     "social.x": config.social.x, "social.telegram": config.social.telegram, "social.github": config.social.github,
   };

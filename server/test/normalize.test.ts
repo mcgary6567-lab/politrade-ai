@@ -44,3 +44,15 @@ test("name keys unify spellings; junk rows dropped; >$50M band", () => {
   const big = normalizeFeedRow({ senator: "A B", asset_description: "Z", type: "Sale (Full)", amount: "Over $50,000,000" })!;
   assert.equal(big.amount_min, 50000001);
 });
+
+test("LuxAlgo daily row + history member row map to the same content hash when they describe one filing", () => {
+  const a = normalizeFeedRow({ id: "senate:abc:0", chamber: "senate", member: { name: "David H McCormick", bioguideId: "M001243", party: "Republican", state: "PA" },
+    filedAt: "2026-08-27", transactedAt: "2026-08-19", ticker: "AAPL", assetDescription: "Apple Inc", assetType: "stock", side: "buy",
+    amountRange: { min: 50001, max: 100000, text: "$50,001 - $100,000" }, owner: "spouse", provenance: { sourceUrl: "https://efdsearch.senate.gov/x" } })!;
+  const b = normalizeFeedRow({ tx_date: "2026-08-19", filing_date: "2026-08-27", ticker: "AAPL", asset_name: "Apple Inc", side: "buy", owner: "Spouse",
+    amount_raw: "$50,001 -\n$100,000", source_url: "https://efdsearch.senate.gov/x", name: "David McCormick", chamber: "Senate", party: "Republican", state: "PA" })!;
+  assert.equal(a.politician.name, "Sen. David H McCormick"); assert.equal(a.politician.ext_id, "M001243"); assert.equal(a.politician.state, "PA");
+  assert.equal(a.amount_min, 50001); assert.equal(b.amount_max, 100000); assert.equal(b.owner, "spouse");
+  assert.equal(a.raw_id, b.raw_id, "deduped across sources");
+  assert.equal(normalizeFeedRow({ name: "Cisneros, Jr., Gilbert Ray", chamber: "House", side: "sell", asset_name: "X", tx_date: "2020-01-01" })!.politician.name, "Rep. Gilbert Ray Cisneros Jr.");
+});
