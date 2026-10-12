@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
-import { Linkedin, FileText, ShieldCheck, AlertTriangle, Mail, ArrowLeftRight, Landmark, Building2, Sparkles, TrendingUp, Wallet } from "lucide-react";
+import { Linkedin, HelpCircle, FileText, ShieldCheck, AlertTriangle, Mail, ArrowLeftRight, Landmark, Building2, Sparkles, TrendingUp, Wallet } from "lucide-react";
 import InstallApp from "./InstallApp";
 
 type Brand = { name: string; version: string; contact: string; social: { x?: string; telegram?: string; github?: string; linkedin?: string } };
@@ -30,8 +30,9 @@ export default function Footer() {
           </ul>
         </div>
         <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Legal</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Help &amp; Legal</h4>
           <ul className="mt-3 space-y-2 text-sm text-slate-300">
+            <li><a className="flex items-center gap-2 font-semibold text-slate-200 hover:text-gold" href="/faq"><HelpCircle size={14} className="text-gold" /> Help Center &amp; FAQ</a></li>
             <li><a className="flex items-center gap-2 hover:text-gold" href="/terms"><FileText size={14} className="text-slate-500" /> Terms &amp; Conditions</a></li>
             <li><a className="flex items-center gap-2 hover:text-gold" href="/disclaimer"><AlertTriangle size={14} className="text-slate-500" /> Disclaimer</a></li>
             <li><a className="flex items-center gap-2 hover:text-gold" href="/privacy"><ShieldCheck size={14} className="text-slate-500" /> Privacy Policy</a></li>

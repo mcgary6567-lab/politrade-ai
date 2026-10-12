@@ -25,6 +25,10 @@ const I: Record<string, string> = {
   send: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
   linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.5M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>',
   github: '<path d="M9 19c-4 1.5-4-2-6-2m12 4v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.7 11.7 0 0 0-6 0C6.8 2.8 5.8 3.1 5.8 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
+  phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+  key: '<circle cx="8" cy="14" r="4"/><path d="M11 11l9-9M16 6l2 2M19 3l2 2"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  rocket: '<path d="M5 15l-2 6 6-2M14 4c3 0 6 3 6 6l-8 8-4-4z"/><circle cx="15" cy="9" r="1.5"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7M12 17v.5"/>',
 };
 const ic = (k: string, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k] ?? I.info}</svg>`;
@@ -33,9 +37,10 @@ const UPDATED = "October 12, 2026";
 
 type Section = { id: string; icon: string; title: string; html: string };
 
-function layout(title: string, lead: string, sections: Section[], kind: string): string {
+type LayoutOpts = { css?: string; script?: string; heroExtra?: string; headExtra?: string; sectionsLabel?: string };
+function layout(title: string, lead: string, sections: Section[], kind: string, opts: LayoutOpts = {}): string {
   const name = integ.brandName();
-  const nav = [["terms", "Terms"], ["privacy", "Privacy"], ["disclaimer", "Disclaimer"], ["contact", "Contact"]]
+  const nav = [["faq", "FAQ"], ["terms", "Terms"], ["privacy", "Privacy"], ["disclaimer", "Disclaimer"], ["contact", "Contact"]]
     .map(([k, l]) => `<a href="/${k}" class="${k === kind ? "on" : ""}">${l}</a>`).join("");
   const toc = sections.map((s, i) => `<li><a href="#${s.id}"><span>${i + 1}</span>${s.title}</a></li>`).join("");
   const body = sections.map((s, i) => `<section id="${s.id}"><h2><span class="ico">${ic(s.icon)}</span><span class="num">${i + 1}.</span> ${s.title}</h2>${s.html}</section>`).join("");
@@ -63,21 +68,23 @@ table{width:100%;border-collapse:collapse;font-size:.92rem;margin:10px 0}th,td{t
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}.card{border:1px solid var(--line);border-radius:14px;padding:16px;background:rgba(255,255,255,.02)}.card h4{margin:0 0 6px;display:flex;align-items:center;gap:8px;font-size:1rem}.card p{margin:0;color:var(--mute);font-size:.9rem}
 .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;color:var(--ink);font-weight:600}.btn:hover{border-color:var(--gold);text-decoration:none}.btn.gold{background:var(--gold);color:#0a0f1c;border-color:var(--gold)}
 footer{border-top:1px solid var(--line);padding:22px 0;color:var(--mute);font-size:.85rem}footer .wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
-@media(max-width:860px){.grid{grid-template-columns:1fr}aside{position:static}.nav a{padding:6px 8px;font-size:.82rem}.hero h1{font-size:1.5rem}}
+@media(max-width:860px){.grid{grid-template-columns:1fr;gap:18px}aside{position:static}aside ol{display:flex;flex-wrap:wrap;gap:6px;border-left:0}aside li a{border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:.82rem;gap:6px}aside li a small{display:none}.nav a{padding:6px 8px;font-size:.82rem}.hero h1{font-size:1.5rem}}
 @media(max-width:600px){.bar{flex-wrap:wrap;height:auto;min-height:56px;padding:8px 0}.nav{margin-left:0;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.nav a{white-space:nowrap}.hero{padding:28px 0 20px}section{padding:16px 14px}table{display:block;overflow-x:auto}}
-</style></head><body>
+${opts.css ?? ""}</style>${opts.headExtra ?? ""}</head><body>
 <header><div class="wrap bar"><a class="brand" href="/"><img src="/icon-192.png" width="30" height="30" alt="" style="border-radius:8px">${name.replace(/ AI$/, "")} <b>AI</b></a><nav class="nav">${nav}</nav></div></header>
-<div class="wrap"><div class="hero"><h1>${title}</h1><p>${lead}</p><div class="meta"><span class="chip">${ic("clock", 14)} Last updated ${UPDATED}</span><span class="chip">${ic("file", 14)} ${sections.length} sections</span><span class="chip">${ic("globe", 14)} Applies worldwide</span></div></div>
+<div class="wrap"><div class="hero"><h1>${title}</h1><p>${lead}</p><div class="meta"><span class="chip">${ic("clock", 14)} Last updated ${UPDATED}</span><span class="chip">${ic("file", 14)} ${sections.length} ${opts.sectionsLabel ?? "sections"}</span><span class="chip">${ic("globe", 14)} Applies worldwide</span></div>${opts.heroExtra ?? ""}</div>
 <div class="grid"><aside><h3>On this page</h3><ol>${toc}</ol></aside><main>${body}</main></div></div>
 <footer><div class="wrap"><span>© ${new Date().getFullYear()} ${integ.companyName()} · ${name}. Data from public US congressional disclosures (STOCK Act).</span><span><a href="/">← Back to the app</a></span></div></footer>
-</body></html>`;
+${opts.script ?? ""}</body></html>`;
 }
 
 const note = (html: string, warn = false) => `<div class="note${warn ? " warn" : ""}">${ic(warn ? "alert" : "info", 18)}<div>${html}</div></div>`;
 
-export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact"): string {
+export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact" | "faq"): string {
   const name = integ.brandName(), co = integ.companyName(), mail = integ.contactEmail(), law = integ.jurisdiction();
   const url = config.publicUrl.replace(/^https?:\/\//, "");
+
+  if (kind === "faq") return faqPage(name, co, mail, law);
 
   if (kind === "terms") return layout("Terms & Conditions", `The agreement between you and ${co} for using ${name} — the website, the installable app, alerts and the API. Please read it; by creating an account you accept it.`, [
     { id: "acceptance", icon: "file", title: "Acceptance of these terms", html: `
@@ -240,6 +247,7 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact"):
       ${integ.companyAddress() ? `<p><b>${co}</b> · ${integ.companyAddress()}</p>` : ""}` },
     { id: "social", icon: "globe", title: "Follow us", html: soc.length ? `<p style="display:flex;flex-wrap:wrap;gap:10px">${soc.map(([k, l, u]) => `<a class="btn" href="${u}" target="_blank" rel="noreferrer">${ic(k, 18)} ${l}</a>`).join("")}</p>` : `<p>Social links will appear here once they are set by the administrator.</p>` },
     { id: "faq", icon: "help", title: "Quick answers", html: `
+      <p>The full <a href="/faq"><b>Help Center &amp; FAQ</b></a> answers 30+ questions about data, AI signals, plans, alerts and the app. The most common ones:</p>
       <ul><li><b>How fresh is the data?</b> New filings are imported several times a day; most appear within hours of publication by Congress.</li>
       <li><b>Why can't I see trades older than 30 days?</b> That is the Free plan window. Pro unlocks the full history since 2014.</li>
       <li><b>How do alerts work?</b> Connect Telegram, add a WhatsApp number or email in <a href="/settings">Settings</a>; Pro members receive new filings that match their watchlist and new AI signals.</li>
@@ -247,4 +255,109 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact"):
       <li><b>Is this financial advice?</b> No. Please read the <a href="/disclaimer">Disclaimer</a>.</li></ul>` },
     { id: "legal", icon: "file", title: "Legal documents", html: `<p style="display:flex;flex-wrap:wrap;gap:10px"><a class="btn" href="/terms">${ic("file", 18)} Terms &amp; Conditions</a><a class="btn" href="/privacy">${ic("lock", 18)} Privacy Policy</a><a class="btn" href="/disclaimer">${ic("alert", 18)} Disclaimer</a></p>` },
   ], "contact");
+}
+
+type QA = { q: string; a: string; tags?: string };
+type Group = { id: string; icon: string; title: string; blurb: string; items: QA[] };
+
+function faqPage(name: string, co: string, mail: string, law: string): string {
+  const groups: Group[] = [
+    { id: "start", icon: "rocket", title: "Getting started", blurb: "What the service is and how to begin in two minutes.", items: [
+      { q: `What is ${name}?`, a: `<p>${name} is a research tool that tracks the stock trades US senators and representatives are legally required to disclose under the <b>STOCK Act</b>. It turns tens of thousands of filings into a searchable database, politician and company profiles, performance track records, and <b>AI Signals</b> that highlight where several lawmakers are buying at the same time.</p><p>It is built for investors, journalists and researchers who want to follow "political smart money" without reading PDF filings by hand.</p>` },
+      { q: "How do I create an account?", a: `<p>Click <b>Create a free account</b> on the sign-in page, enter your first name, last name, email and a password (8+ characters), accept the Terms and you are in. No credit card is needed for Free.</p>` },
+      { q: "What is the fastest way to get value on day one?", a: `<ol><li>Open <b>Home</b> — the dashboard shows today's top AI signals, the latest filings and who is most active.</li><li>Open <b>Invest Plan</b> — see what following the signals would have been worth historically and run the profit calculator with your own numbers.</li><li>Add a stock or lawmaker to your <b>watchlist</b> in Settings and connect Telegram so you are told the moment a matching filing lands (Pro).</li></ol>` },
+      { q: "Do I need to install anything?", a: `<p>No. It works in any modern browser. If you want it on your home screen, the footer has one-tap <b>Android</b>, <b>iPhone</b> and <b>Desktop</b> install guides — it installs as an app (PWA) and keeps working offline with the last data you loaded.</p>` },
+    ]},
+    { id: "data", icon: "db", title: "Data & accuracy", blurb: "Where every number comes from and what its limits are.", items: [
+      { q: "Where does the trade data come from?", a: `<p>From the <b>official public disclosures</b> members of Congress file with the Clerk of the House and the Secretary of the Senate (Periodic Transaction Reports), as collected in public-domain and openly licensed datasets built from those filings. We also use the official <b>congress-legislators</b> directory for names, parties, chambers, states and photos.</p><p>We do not scrape commercial trackers. Every trade can be traced back to an official filing.</p>`, tags: "source official stock act" },
+      { q: "How far back does the history go?", a: `<p>Filings since <b>2014</b> — more than <b>57,000</b> transactions from <b>350+</b> current and former lawmakers, and growing every day.</p>` },
+      { q: "How quickly do new filings appear?", a: `<p>The feed is refreshed <b>several times a day</b>. A trade normally shows up within hours of Congress publishing the filing. Keep in mind the law itself gives lawmakers up to <b>45 days</b> to file after a trade, so the "Delay" column tells you how old a trade was when it became public — late filings (over 45 days) are marked in red.</p>` },
+      { q: "Why are amounts shown as ranges like $15,001 – $50,000?", a: `<p>Because that is how the law requires lawmakers to report them. Filings only state a band, never an exact dollar figure. Where we show a total "volume", it is an upper-bound estimate built from those bands and labelled as such.</p>` },
+      { q: "What do Owner values like \"self\", \"spouse\" or \"joint\" mean?", a: `<p>Who holds the asset according to the filing: the member themselves, their spouse, a dependent child, or a joint account. All of them must be disclosed and all are included.</p>` },
+      { q: "Some trades have no ticker or say \"—\". Why?", a: `<p>Lawmakers also report bonds, funds, private companies, crypto and other assets that have no stock ticker. We keep those trades (switch <b>All assets</b> on the dashboard) but they are excluded from stock-only statistics and signals.</p>` },
+      { q: "How are hit rate, excess return and track record calculated?", a: `<p>For every disclosed <b>buy</b> we look at the stock's price <b>6 months after the trade date</b> and compare it with the S&amp;P 500 over the same window.</p><ul><li><b>Hit rate</b> = share of a lawmaker's buys that beat the market.</li><li><b>Excess return</b> = average 6-month return minus the market's return.</li><li><b>Track record</b> on a profile combines both with the number of trades behind them — a 70% hit rate on 4 trades means little; on 150 trades it matters.</li></ul><p>These are historical measurements, not forecasts.</p>` },
+      { q: "I found a mistake. How do I report it?", a: `<p>Email <a href="mailto:${mail}?subject=Data%20correction">${mail}</a> with the lawmaker, date and ideally a link to the official filing. We review corrections within one business day. See the <a href="/disclaimer">Disclaimer</a> for known limitations of disclosure data.</p>` },
+    ]},
+    { id: "signals", icon: "spark", title: "AI Signals & Invest Plan", blurb: "How the signals are built, what the numbers mean, and what they are not.", items: [
+      { q: "What is an AI Signal?", a: `<p>A signal is a stock where the <b>pattern of congressional buying</b> looks unusually strong right now. For each ticker in the window (default 90 days) we score:</p><ul><li>how many different lawmakers bought it, and how recently;</li><li>whether buyers come from <b>both parties</b> (bipartisan clusters have historically been more reliable);</li><li>the <b>track record</b> of the people buying — a buy by someone with a 65% hit rate counts more than one by someone with 40%;</li><li>how past congressional buys of that same stock have performed;</li><li>sell-side pressure, which lowers the score.</li></ul><p>The result is a score out of 100 with a confidence tier (high / medium / watch), the reasons in plain English and, when AI insight is enabled, a short thesis.</p>` },
+      { q: "What does the back-test on the Invest Plan page actually measure?", a: `<p>We take every disclosed stock buy since 2014 with a known 6-month outcome (about 21,500 trades) and compare four rules, equal-weighted and before costs:</p><table><tr><th>Rule</th><th>Avg 6-month return</th><th>Beat market</th></tr><tr><td>Market (S&amp;P 500)</td><td>+9.3%</td><td>—</td></tr><tr><td>Any congressional buy</td><td>+9.3%</td><td>46%</td></tr><tr><td>Cluster buys (2+ lawmakers within 45 days)</td><td>+10.9%</td><td>47%</td></tr><tr><td><b>Smart clusters</b> (cluster + a buyer with ≥55% track record) — the rule our signals use</td><td><b>+17.1%</b></td><td><b>60%</b></td></tr></table><p>The exact figures are recomputed from the live database and shown on the page itself.</p>` },
+      { q: "Is the +17% figure guaranteed or a prediction?", a: `<p><b>No.</b> It is a historical average with real caveats, which we print on the page: it applies today's track records to past trades (which flatters results), it ignores fees, taxes and the filing delay, and averages hide big winners and losers. Past performance never guarantees future results. Treat it as evidence that the approach has been worth studying, not as a promise.</p>`, tags: "guarantee risk" },
+      { q: "How does the profit calculator work?", a: `<p>You set a starting amount, a monthly contribution and a time horizon. The calculator compounds your money monthly at two historical rates — the market's and the smart-cluster rule's — and shows both paths side by side, plus the difference. It also shows how many months of that historical edge would cover the <b>$300 / year</b> Pro price at your numbers. It is a what-if tool, not a forecast.</p>` },
+      { q: "What is the model portfolio on Invest Plan?", a: `<p>It splits a chosen amount across the current <b>buy signals</b>, weighted by signal score, so you can see what a signal-following allocation would look like today. Free members see the #1 position; Pro members see all of them with the reasons and top buyers behind each.</p>` },
+      { q: "Is any of this financial advice?", a: `<p>No. ${name} provides research and education about public records. We are not a broker or investment adviser, we do not know your situation, and nothing here is a recommendation to buy or sell anything. Please read the <a href="/disclaimer">Disclaimer</a> and decide for yourself or with a licensed adviser.</p>`, tags: "advice legal" },
+    ]},
+    { id: "plans", icon: "card", title: "Plans & billing", blurb: "Free vs Pro, pricing, refunds and cancellation.", items: [
+      { q: "What is the difference between Free and Pro?", a: `<table><tr><th></th><th>Free</th><th>Pro — $300 / year</th></tr><tr><td>Trades, politicians, issuers</td><td>Last 30 days</td><td>Full history since 2014</td></tr><tr><td>AI Signals</td><td>#1 signal only</td><td>Every signal + reasons + AI thesis</td></tr><tr><td>Invest Plan</td><td>Back-test, calculator, #1 position</td><td>Full model portfolio</td></tr><tr><td>Alerts (Telegram / WhatsApp / Email)</td><td>—</td><td>Instant, on watchlist filings and new signals</td></tr><tr><td>Watchlist</td><td>1 item</td><td>Unlimited</td></tr><tr><td>CSV export</td><td>—</td><td>Yes</td></tr><tr><td>Track-record leaderboard</td><td>—</td><td>Yes</td></tr><tr><td>Support</td><td>Email</td><td>Priority</td></tr></table>` },
+      { q: "How much does Pro cost and how is it billed?", a: `<p><b>$300 per year</b>, billed annually in advance in US dollars. There is no monthly plan — the yearly price works out to $25 a month and keeps the service independent of ads and data resale.</p>` },
+      { q: "How do I upgrade?", a: `<p>Click <b>Upgrade to Pro</b> anywhere in the app or email <a href="mailto:${mail}?subject=Upgrade%20to%20Pro">${mail}</a> with your account email. We activate Pro on your account as soon as payment is confirmed; your plan badge in the header changes to <b>PRO</b>.</p>` },
+      { q: "Can I get a refund?", a: `<p>Yes — a <b>full refund within 14 days</b> of your first Pro payment, provided you have not exported data or received more than 10 alerts. After that, payments are non-refundable except where the law requires otherwise. Details are in the <a href="/terms#plans">Terms</a>.</p>` },
+      { q: "How do I cancel?", a: `<p>Email us before your renewal date. Cancelling stops the next renewal; you keep every Pro feature until the end of the year you paid for, then the account moves to Free — nothing is deleted.</p>` },
+      { q: "Do you offer team or company accounts?", a: `<p>Yes, for newsrooms, funds and research teams. Email <a href="mailto:${mail}?subject=Team%20plan">${mail}</a> with the number of seats and we will send a quote.</p>` },
+    ]},
+    { id: "alerts", icon: "bell", title: "Alerts & watchlist", blurb: "Getting told the moment something happens.", items: [
+      { q: "What alerts can I receive?", a: `<ul><li><b>Trade alerts</b> — a lawmaker files a trade in a stock or a politician on your watchlist.</li><li><b>Signal alerts</b> — a new AI buy signal forms, or an existing one gets materially stronger (higher tier or more buyers).</li></ul><p>You choose which of the two you want in <a href="/settings">Settings</a>. Delivery is a Pro feature; Free members can set everything up in advance.</p>` },
+      { q: "How do I connect Telegram?", a: `<p>Settings → Alert channels → <b>Connect Telegram</b>. You get a one-time code and a link to our bot; send the code to the bot and the channel shows as <b>connected</b> within a few seconds. Use <b>Send test</b> to confirm.</p>` },
+      { q: "How do WhatsApp and email alerts work?", a: `<p>Add your WhatsApp number (international format, e.g. +1…) or an alert email in Settings and save. WhatsApp requires the administrator to have enabled a WhatsApp provider on the server; if a channel says "not enabled on this server yet", email us.</p>` },
+      { q: "Why did I not receive an alert?", a: `<ol><li>Check that your plan is <b>Pro</b> — alerts are only delivered to Pro members.</li><li>Check the channel is <b>connected</b> and the alert type is ticked in Settings.</li><li>Use <b>Send test</b>; if the test arrives, the earlier filing simply did not match your watchlist.</li><li>Alerts are only sent for filings published in the last 30 days, so historical imports never flood you.</li></ol>` },
+      { q: "How many items can I watch?", a: `<p>Free: 1 stock or lawmaker. Pro: unlimited.</p>` },
+    ]},
+    { id: "app", icon: "phone", title: "App, devices & offline", blurb: "Install it, use it on the go, and what works without internet.", items: [
+      { q: "How do I install the app on my phone?", a: `<p><b>Android (Chrome):</b> tap <b>Android</b> in the footer, or Chrome menu → <i>Install app</i>.<br><b>iPhone (Safari):</b> tap the Share button → <i>Add to Home Screen</i>.<br><b>Desktop (Chrome / Edge):</b> click the install icon in the address bar or <b>Desktop</b> in the footer.</p><p>Installed, it opens full-screen with its own icon like any native app and updates itself automatically.</p>` },
+      { q: "Does it work offline?", a: `<p>Yes, for reading. Pages and the data you have already opened are kept on the device, so Home, Trades, profiles and signals you looked at still open on a plane or in the subway, with an "offline" bar at the top. Searching new data, saving settings and alerts need a connection and resume automatically when you are back online.</p>` },
+      { q: "Is there a native App Store / Play Store version?", a: `<p>The installable web app is the official app on all platforms today and gets every feature first. Store listings may follow; installing from the footer gives you the same experience now without waiting for store approval.</p>` },
+      { q: "Which browsers are supported?", a: `<p>Current versions of Chrome, Edge, Safari, Firefox and Samsung Internet on Android, iOS, Windows, macOS and Linux. The interface adapts from a 4-inch phone to a 4K monitor.</p>` },
+    ]},
+    { id: "account", icon: "key", title: "Account & security", blurb: "Sign-in options, PIN, passwords and your data.", items: [
+      { q: "What is the 4-digit PIN sign-in?", a: `<p>A faster way to sign in on your own devices: email + a 4-digit PIN instead of your full password. Set or change it in Settings (your current password is required). Your password keeps working, and the PIN locks for <b>15 minutes after 5 wrong attempts</b>. Do not use a PIN on shared computers.</p>` },
+      { q: "I forgot my password.", a: `<p>If you set a PIN, sign in with email + PIN and set a new password in Settings. Otherwise email <a href="mailto:${mail}?subject=Password%20reset">${mail}</a> from your account address and we will send a reset.</p>` },
+      { q: "How do I change my email, name or password?", a: `<p>Settings → Account. Changing the email or password asks for your current password as a safety check. Changes apply immediately.</p>` },
+      { q: "How is my data protected?", a: `<p>Passwords and PINs are stored only as salted hashes, all traffic is encrypted with HTTPS, sign-in sessions use signed tokens that expire, and alert credentials are stored masked. We collect the minimum needed to run the service and never sell personal data — see the <a href="/privacy">Privacy Policy</a>.</p>` },
+      { q: "How do I delete my account?", a: `<p>Email <a href="mailto:${mail}?subject=Delete%20my%20account">${mail}</a> from your account address. We delete the account, watchlist and alert channels within 30 days and confirm by email.</p>` },
+    ]},
+    { id: "legal", icon: "scale", title: "Legal & company", blurb: "The short version of the fine print.", items: [
+      { q: "Who operates the service and which law applies?", a: `<p>${name} is operated by <b>${co}</b>. The Terms are governed by the laws of <b>${law}</b>. Full details, including dispute resolution, are in the <a href="/terms#law">Terms &amp; Conditions</a>.</p>` },
+      { q: "Is tracking congressional trades legal?", a: `<p>Yes. The STOCK Act of 2012 requires these disclosures precisely so the public can see them. We republish public records, add analysis, and never access any private information.</p>` },
+      { q: "Are you affiliated with Congress or any lawmaker?", a: `<p>No. ${name} is an independent service and is not affiliated with, endorsed by or connected to any government body, political party or lawmaker. Photos come from the official public congressional image repository.</p>` },
+      { q: "Can I use the data in an article, newsletter or research paper?", a: `<p>Yes, with attribution to ${name} and a link. Bulk redistribution or reselling of the database is not permitted; Pro members may export CSV for their own analysis. For commercial data licensing, email us.</p>` },
+    ]},
+  ];
+
+  const esc = (t: string) => t.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const total = groups.reduce((a, g) => a + g.items.length, 0);
+  const sections: Section[] = groups.map((g) => ({
+    id: g.id, icon: g.icon, title: g.title,
+    html: `<p class="blurb">${g.blurb}</p>` + g.items.map((it, i) => `<details class="qa" id="${g.id}-${i + 1}" data-t="${esc(it.q + " " + it.a + " " + (it.tags ?? "")).toLowerCase().replace(/"/g, "&quot;")}"><summary><span class="q">${it.q}</span><span class="chev">${ic("x", 16)}</span></summary><div class="a">${it.a}<a class="perma" href="#${g.id}-${i + 1}">#</a></div></details>`).join(""),
+  }));
+  const ld = JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: groups.flatMap((g) => g.items.map((it) => ({ "@type": "Question", name: esc(it.q), acceptedAnswer: { "@type": "Answer", text: esc(it.a) } }))) }).replace(/</g, "\\u003c");
+  const css = `
+.blurb{color:var(--mute);margin:0 0 10px!important}
+.qa{border-top:1px solid var(--line);scroll-margin-top:90px}.qa:first-of-type{border-top:0}
+.qa summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 2px;font-weight:600;color:var(--ink)}.qa summary::-webkit-details-marker{display:none}
+.qa .q{flex:1}.qa summary:hover .q{color:var(--gold)}.qa .chev{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.04);color:var(--mute);transform:rotate(45deg);transition:transform .2s}
+.qa[open] .chev{transform:rotate(0);color:var(--gold);background:rgba(231,178,60,.12)}.qa .a{position:relative;padding:0 2px 14px 2px;color:#d5dced}.qa .a p:first-child{margin-top:0}
+.qa .perma{position:absolute;right:0;bottom:12px;color:var(--mute);font-size:.8rem;opacity:0;transition:opacity .2s}.qa:hover .perma{opacity:1}
+.qa[hidden]{display:none}
+.search{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}.search label{position:relative;flex:1;min-width:240px}.search svg.i{position:absolute;left:14px;top:14px;color:var(--mute)}
+.search input{width:100%;padding:12px 14px 12px 42px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;outline:none}.search input:focus{border-color:var(--gold)}
+.search .btn{padding:9px 13px;font-size:.9rem}.count{color:var(--mute);font-size:.88rem}
+.cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px;background:linear-gradient(135deg,rgba(231,178,60,.12),rgba(34,197,139,.08));border:1px solid rgba(231,178,60,.35);border-radius:16px;padding:18px 20px;margin-top:6px}
+.cta b{font-size:1.05rem}.cta p{margin:2px 0 0;color:var(--mute)}.cta .btns{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+aside li a small{margin-left:auto;color:var(--mute);font-family:ui-monospace,monospace;font-size:.75rem}
+.nores{display:none;background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:20px;text-align:center;color:var(--mute)}
+@media(max-width:600px){.cta .btns{margin-left:0}}`;
+  const heroExtra = `<div class="search"><label>${ic("search", 18).replace("<svg", '<svg class="i"')}<input id="q" type="search" placeholder="Search ${total} answers — try &quot;refund&quot;, &quot;Telegram&quot;, &quot;hit rate&quot;…" autocomplete="off"></label><a class="btn" href="#" id="expand">Expand all</a><span class="count" id="count">${total} answers in ${groups.length} topics</span></div>`;
+  const script = `<script>
+(function(){var q=document.getElementById('q'),all=[].slice.call(document.querySelectorAll('.qa')),secs=[].slice.call(document.querySelectorAll('main section')),count=document.getElementById('count'),exp=document.getElementById('expand'),nores=document.getElementById('nores'),total=all.length,open=false;
+function filter(){var t=q.value.trim().toLowerCase(),n=0;all.forEach(function(d){var hit=!t||d.dataset.t.indexOf(t)>-1;d.hidden=!hit;if(hit){n++;if(t)d.open=true;}});secs.forEach(function(s){s.style.display=s.querySelector('.qa:not([hidden])')?'':'none';});count.textContent=t?(n+' of '+total+' answers match'):(total+' answers in '+secs.length+' topics');nores.style.display=n?'none':'block';}
+q.addEventListener('input',filter);exp.addEventListener('click',function(e){e.preventDefault();open=!open;all.forEach(function(d){d.open=open;});exp.textContent=open?'Collapse all':'Expand all';});
+if(location.hash){var el=document.querySelector(location.hash);if(el&&el.classList.contains('qa')){el.open=true;el.scrollIntoView();}}
+var p=new URLSearchParams(location.search).get('q');if(p){q.value=p;filter();}})();
+</script>`;
+  const html = layout("Help Center & FAQ", `Straight answers about the data, the AI signals, plans, alerts and the app. Can't find it? Email <a href="mailto:${mail}">${mail}</a> — we reply within one business day.`, sections, "faq", {
+    css, heroExtra, script, sectionsLabel: "topics", headExtra: `<script type="application/ld+json">${ld}</script>`,
+  });
+  // per-topic counts in the sidebar + a closing CTA + empty state
+  return html
+    .replace(/<li><a href="#([a-z]+)"><span>(\d+)<\/span>([^<]+)<\/a><\/li>/g, (m, id, n, t) => { const g = groups.find((x) => x.id === id); return `<li><a href="#${id}"><span>${n}</span>${t}<small>${g?.items.length ?? ""}</small></a></li>`; })
+    .replace("</main>", `<div class="nores" id="nores">No answer matches that search. Try a shorter word, or <a href="mailto:${mail}">ask us directly</a>.</div><div class="cta">${ic("help", 28)}<div><b>Still have a question?</b><p>Real humans answer, usually within one business day.</p></div><div class="btns"><a class="btn gold" href="mailto:${mail}?subject=Question">${ic("mail", 16)} Email support</a><a class="btn" href="/contact">${ic("globe", 16)} Contact page</a></div></div></main>`);
 }

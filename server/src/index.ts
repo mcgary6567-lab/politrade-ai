@@ -63,6 +63,7 @@ app.get("/privacy", (_req, res) => res.type("html").send(legalPage("privacy")));
 app.get("/terms", (_req, res) => res.type("html").send(legalPage("terms")));
 app.get("/disclaimer", (_req, res) => res.type("html").send(legalPage("disclaimer")));
 app.get("/contact", (_req, res) => res.type("html").send(legalPage("contact")));
+app.get(["/faq", "/help"], (_req, res) => res.type("html").send(legalPage("faq")));
 
 // everything below requires sign-in
 const api = express.Router();
