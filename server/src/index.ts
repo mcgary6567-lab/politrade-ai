@@ -5,7 +5,7 @@ import fs from "node:fs";
 import cron from "node-cron";
 import { z } from "zod";
 import { config, APP_VERSION } from "./config.js";
-import { migrate, get, run } from "./db.js";
+import { migrate, get, run, getSetting, setSetting } from "./db.js";
 import { seedAdmin, login, requireAuth } from "./auth.js";
 import { data } from "./routes/data.js";
 import { alerts } from "./routes/alerts.js";
@@ -59,17 +59,26 @@ if (fs.existsSync(webDist)) {
   app.get(/^\/(?!api).*/, (_req, res) => res.sendFile(path.join(webDist, "index.html")));
 }
 
-/** Default subscription plans so the admin panel is not empty on first boot. */
+/** Default subscription plans: Free and Pro ($300 / year). Existing installs seeded with the old trio are migrated once. */
 function seedPlans() {
-  if (get("SELECT 1 FROM plans LIMIT 1")) return;
   const now = new Date().toISOString();
-  const rows: [string, number, string, string][] = [
-    ["Free", 0, "month", "Browse trades, politicians, issuers\nDaily digest\n1 watchlist item"],
-    ["Pro", 1900, "month", "Everything in Free\nInstant Telegram / WhatsApp / Email alerts\nUnlimited watchlist\nAI insight on every trade"],
-    ["Team", 4900, "month", "Everything in Pro\n5 seats\nCSV / API access\nPriority support"],
-  ];
-  for (const [name, price, interval, features] of rows)
-    run("INSERT INTO plans(name,price_cents,interval,features,active,created_at) VALUES(?,?,?,?,1,?)", name, price, interval, features, now);
+  const FREE = "Browse every disclosed trade, politician and issuer\nLast 30 days of filings\n1 watchlist item";
+  const PRO = "Full history since 2014 + every new filing\nInstant Telegram / WhatsApp / Email alerts\nUnlimited watchlist\nAI insight on every trade\nCSV export\nPriority support";
+  if (!get("SELECT 1 FROM plans LIMIT 1")) {
+    run("INSERT INTO plans(name,price_cents,interval,features,active,created_at) VALUES(?,?,?,?,1,?)", "Free", 0, "year", FREE, now);
+    run("INSERT INTO plans(name,price_cents,interval,features,active,created_at) VALUES(?,?,?,?,1,?)", "Pro", 30000, "year", PRO, now);
+    setSetting("plans.v2", "1");
+    return;
+  }
+  if (getSetting("plans.v2")) return;
+  // one-time: old defaults (Free $0/mo, Pro $19/mo, Team $49/mo) → Free + Pro $300/yr
+  const pro = get("SELECT id FROM plans WHERE name='Pro' AND price_cents=1900 AND interval='month'");
+  if (pro) run("UPDATE plans SET price_cents=30000, interval='year', features=? WHERE id=?", PRO, pro.id);
+  const free = get("SELECT id FROM plans WHERE name='Free' AND price_cents=0");
+  if (free) run("UPDATE plans SET interval='year', features=? WHERE id=?", FREE, free.id);
+  const team = get("SELECT id FROM plans WHERE name='Team' AND price_cents=4900");
+  if (team) { run("UPDATE users SET plan_id=? WHERE plan_id=?", pro?.id ?? null, team.id); run("DELETE FROM plans WHERE id=?", team.id); }
+  setSetting("plans.v2", "1");
 }
 
 async function bootstrapData() {

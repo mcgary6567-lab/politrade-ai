@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../App";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Sparkles, Download, SlidersHorizontal, X } from "lucide-react";
 import { api, money, ago, getToken } from "../lib/api";
@@ -8,7 +9,9 @@ import { Select, AMOUNT_BANDS } from "../components/ui";
 const KEYS = ["q", "type", "party", "chamber", "state", "sector", "owner", "ticker", "politician", "issuer", "from", "to", "pub_from", "pub_to", "days", "amount_min", "amount_max", "sort"] as const;
 
 export default function Trades() {
+  const { user } = useAuth();
   const [sp, setSp] = useSearchParams();
+  const [branding, setBranding] = useState<any>(null);
   const [rows, setRows] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -33,7 +36,9 @@ export default function Trades() {
     api<any>(`/trades?${p}`).then((r) => { setRows(r.rows); setTotal(r.total); }).finally(() => setLoading(false));
   }, [deps, offset]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => { if (!user?.pro) fetch("/api/branding").then((r) => r.json()).then(setBranding).catch(() => {}); }, [user?.pro]);
   const exportCsv = async () => {
+    if (!user?.pro) return;
     const res = await fetch(`/api/trades.csv?${query()}`, { headers: { authorization: `Bearer ${getToken()}` } });
     const blob = await res.blob(); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "trades.csv"; a.click();
   };
@@ -46,10 +51,16 @@ export default function Trades() {
         <div><h1 className="font-display text-2xl font-700">Trades</h1><p className="text-sm text-slate-400">{total.toLocaleString()} disclosed transactions{active.length ? ` · ${active.length} filter${active.length > 1 ? "s" : ""} on` : ""}</p></div>
         <div className="flex gap-2">
           <button className="btn-ghost px-3 py-2 text-sm" onClick={() => setMore(!more)}><SlidersHorizontal size={15} /> {more ? "Less filters" : "More filters"}</button>
-          <button className="btn-ghost px-3 py-2 text-sm" onClick={exportCsv} title="Download CSV of current filter"><Download size={15} /> CSV</button>
+          <button className="btn-ghost px-3 py-2 text-sm disabled:opacity-50" disabled={!user?.pro} onClick={exportCsv} title={user?.pro ? "Download CSV of current filter" : "CSV export is a Pro feature"}><Download size={15} /> CSV{!user?.pro && <span className="text-[10px] text-gold">PRO</span>}</button>
         </div>
       </div>
 
+      {!user?.pro && (
+        <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 p-4 text-sm">
+          <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> <span className="text-slate-300">you are seeing the last 30 days of filings. <b>Pro ($300 / year)</b> unlocks the full history since 2014, instant Telegram / WhatsApp / Email alerts, unlimited watchlist and CSV export.</span></div>
+          <a href={`mailto:${branding?.contact ?? "hello@politrade.ai"}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Upgrade to Pro</a>
+        </div>
+      )}
       <div className="card space-y-2 p-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[200px] flex-1">

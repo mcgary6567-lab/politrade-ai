@@ -40,19 +40,29 @@ const TRADE_SELECT = `SELECT tr.id, tr.tx_type, tr.tx_date, tr.published_date, t
      FROM trades tr JOIN politicians p ON p.id=tr.politician_id JOIN issuers i ON i.id=tr.issuer_id`;
 
 /** GET /api/trades — filterable, sortable, paginated feed. */
+const FREE_DAYS = 30;
+/** Free plan sees only the most recent filings; Pro (or admin) sees everything. */
+function planWindow(req: { user?: { pro?: boolean } }, qs: Record<string, string>): Record<string, string> {
+  if (req.user?.pro) return qs;
+  const capped: Record<string, string> = { ...qs, days: String(Math.min(Number(qs.days) || FREE_DAYS, FREE_DAYS)) };
+  delete capped.pub_from; delete capped.pub_to; delete capped.from; delete capped.to;
+  return capped;
+}
+
 data.get("/trades", (req, res) => {
-  const qs = req.query as Record<string, string>;
+  const qs = planWindow(req, req.query as Record<string, string>);
   const limit = Math.min(Number(qs.limit ?? 50), 200);
   const offset = Math.max(Number(qs.offset ?? 0), 0);
   const order = SORTS[qs.sort ?? "published"] ?? SORTS.published;
   const { w, p } = tradeFilters(qs);
   const rows = all(`${TRADE_SELECT} ${w} ORDER BY ${order} LIMIT ? OFFSET ?`, ...p, limit, offset);
   const total = get(`SELECT COUNT(*) c FROM trades tr JOIN politicians p ON p.id=tr.politician_id JOIN issuers i ON i.id=tr.issuer_id ${w}`, ...p).c;
-  res.json({ rows, total, limit, offset });
+  res.json({ rows, total, limit, offset, plan: req.user?.pro ? "pro" : "free", window_days: req.user?.pro ? null : FREE_DAYS });
 });
 
-/** GET /api/trades.csv — same filters, CSV download. */
+/** GET /api/trades.csv — same filters, CSV download (Pro). */
 data.get("/trades.csv", (req, res) => {
+  if (!req.user?.pro) return res.status(402).json({ error: "CSV export is a Pro feature" });
   const { w, p } = tradeFilters(req.query as Record<string, string>);
   const rows = all(`${TRADE_SELECT} ${w} ORDER BY ${SORTS.published} LIMIT 5000`, ...p);
   const cols = ["published_date", "tx_date", "politician", "party", "chamber", "state", "ticker", "issuer", "sector", "tx_type", "amount_min", "amount_max", "filed_after_days", "owner"];

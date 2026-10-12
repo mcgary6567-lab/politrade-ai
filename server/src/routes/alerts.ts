@@ -24,6 +24,8 @@ alerts.get("/watchlist", (req, res) => {
 });
 alerts.post("/watchlist", (req, res) => {
   const b = z.object({ kind: z.enum(["politician", "ticker", "party", "any"]), value: z.string().min(1) }).parse(req.body);
+  if (!req.user!.pro && get("SELECT COUNT(*) c FROM watchlist WHERE user_id=?", req.user!.id).c >= 1)
+    return res.status(402).json({ error: "Free plan allows 1 watchlist item — upgrade to Pro for unlimited" });
   run("INSERT INTO watchlist(user_id,kind,value,created_at) VALUES(?,?,?,?)", req.user!.id, b.kind, b.value, new Date().toISOString());
   res.json({ ok: true });
 });

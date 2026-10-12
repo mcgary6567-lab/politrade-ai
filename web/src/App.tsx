@@ -11,7 +11,7 @@ import Insights from "./pages/Insights";
 import Admin from "./pages/Admin";
 import { Toasts } from "./components/ui";
 
-type User = { id: number; email: string; name?: string; role: string };
+type User = { id: number; email: string; name?: string; role: string; plan?: string; pro?: boolean };
 type Auth = { user: User | null; ready: boolean; login: (t: string) => Promise<void>; logout: () => void };
 const Ctx = createContext<Auth>(null as any);
 export const useAuth = () => useContext(Ctx);

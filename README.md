@@ -19,7 +19,7 @@ Built with the same stack as a production app: **Node.js 22 + TypeScript + Expre
 Everything is controlled from the browser — no redeploy or secrets needed after first boot:
 - **Overview** — users, plans, trades, alerts, channel status, last ingest.
 - **Users** — add / edit / suspend / delete members, reset passwords, assign a plan, admin or member role. Suspended users are cut off immediately.
-- **Plans** — payment plans (name, price, monthly / yearly / lifetime, feature list, visible flag).
+- **Plans** — Free and Pro ($300 / year) by default; edit price, billing period, feature list, visibility. Free members see the last 30 days of filings and 1 watchlist item; Pro (assigned by an admin, or any paid active plan) unlocks full history, alerts, unlimited watchlist and CSV.
 - **Integrations** — AI keys (Claude or Gemini), Telegram bot, WhatsApp Cloud API, email provider, branding & social links. Each has a **Test** button; secrets are stored masked.
 - **Data feed** — feed URL, cron schedule, alerts on/off, **Run now**, manual JSON import, ingest history, **Clear demo data**.
 - **Alerts log** — every delivery per channel with the provider's error text and a re-send button.

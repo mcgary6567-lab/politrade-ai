@@ -35,9 +35,11 @@ after(() => { server.close(); fs.rmSync(dir, { recursive: true, force: true }); 
 test("overview + default plans seeded", async () => {
   const o = await call(admin, "GET", "/api/admin/overview");
   assert.equal(o.status, 200);
-  assert.ok(o.data.trades >= 400 && o.data.users >= 1 && o.data.plans >= 3);
+  assert.ok(o.data.trades >= 400 && o.data.users >= 1 && o.data.plans === 2);
   const plans = await call(admin, "GET", "/api/admin/plans");
-  assert.ok(plans.data.rows.some((p: any) => p.name === "Pro"));
+  const pro = plans.data.rows.find((p: any) => p.name === "Pro");
+  assert.equal(pro.price_cents, 30000); assert.equal(pro.interval, "year");
+  assert.ok(plans.data.rows.some((p: any) => p.name === "Free" && p.price_cents === 0));
 });
 
 test("users: create member, member cannot access admin, suspend blocks login, plan assign, delete", async () => {
@@ -135,4 +137,22 @@ test("test-alert endpoint reports simulated when unconfigured", async () => {
   assert.equal(r.status, 200);
   assert.match(r.data.results.whatsapp, /simulated/);
   assert.equal((await call(admin, "POST", "/api/admin/test/ai")).status, 400);
+});
+
+test("plan gating: free member sees 30-day window, no CSV, 1 watchlist item; Pro unlocks", async () => {
+  const c = await call(admin, "POST", "/api/admin/users", { email: "free@example.com", password: "secret12", name: "Free" });
+  const tok = (await call("", "POST", "/api/auth/login", { email: "free@example.com", password: "secret12" })).data.token;
+  const me = (await call(tok, "GET", "/api/me")).data.user;
+  assert.equal(me.plan, "Free"); assert.equal(me.pro, false);
+  const all = (await call(admin, "GET", "/api/trades?limit=1")).data.total;
+  const free = await call(tok, "GET", "/api/trades?limit=1");
+  assert.equal(free.data.window_days, 30); assert.ok(free.data.total < all);
+  assert.equal((await call(tok, "GET", "/api/trades.csv")).status, 402);
+  assert.equal((await call(tok, "POST", "/api/watchlist", { kind: "ticker", value: "AAPL" })).status, 200);
+  assert.equal((await call(tok, "POST", "/api/watchlist", { kind: "ticker", value: "MSFT" })).status, 402);
+  const pro = (await call(admin, "GET", "/api/admin/plans")).data.rows.find((p: any) => p.name === "Pro");
+  await call(admin, "PUT", `/api/admin/users/${c.data.id}`, { plan_id: pro.id });
+  assert.equal((await call(tok, "GET", "/api/me")).data.user.pro, true, "plan change applies to existing token");
+  assert.equal((await call(tok, "GET", "/api/trades?limit=1")).data.total, all);
+  assert.equal((await call(tok, "GET", "/api/trades.csv")).status, 200);
 });

@@ -34,7 +34,8 @@ export default function Layout() {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <span className="hidden text-sm text-slate-400 sm:block">{user?.name ?? user?.email}</span>
+            <span className="hidden items-center gap-2 text-sm text-slate-400 sm:flex">{user?.name ?? user?.email}
+              <span className={`chip py-0.5 text-[10px] ${user?.pro ? "border-gold/50 text-gold" : ""}`}>{user?.role === "admin" ? "ADMIN" : user?.pro ? "PRO" : "FREE"}</span></span>
             <button onClick={signOut} className="btn-ghost px-3 py-2 text-sm" title="Sign out"><LogOut size={15} /></button>
             <button onClick={() => setOpen(!open)} className="btn-ghost px-2.5 py-2 md:hidden" aria-label="Menu">{open ? <X size={18} /> : <Menu size={18} />}</button>
           </div>
