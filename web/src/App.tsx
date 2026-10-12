@@ -3,6 +3,7 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { api, getToken, setToken, prefetch } from "./lib/api";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import Trades from "./pages/Trades";
 import Politicians from "./pages/Politicians";
@@ -37,6 +38,7 @@ export default function App() {
     <Ctx.Provider value={{ user, ready, login, logout }}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route element={<Protected />}>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />

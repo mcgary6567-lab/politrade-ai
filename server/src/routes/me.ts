@@ -3,7 +3,7 @@ import { z } from "zod";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { all, get, run } from "../db.js";
-import { planOf } from "../auth.js";
+import { planOf, hashPin } from "../auth.js";
 import { sendToUser, telegramBotUsername, transports, pollTelegramLinks } from "../notify.js";
 import { integ } from "../settings.js";
 
@@ -11,7 +11,7 @@ import { integ } from "../settings.js";
 export const me = Router();
 
 const profile = (id: number) => {
-  const u = get("SELECT id,email,name,role,plan_id,tg_chat_id,wa_to,alert_email,notify,notify_signals,created_at,last_login FROM users WHERE id=?", id);
+  const u = get("SELECT id,email,name,first_name,last_name,role,plan_id,tg_chat_id,wa_to,alert_email,notify,notify_signals,created_at,last_login,(pin_hash IS NOT NULL) has_pin FROM users WHERE id=?", id);
   const plan = get("SELECT name, price_cents, interval, features FROM plans WHERE id=?", u.plan_id);
   return { ...u, ...planOf(u), planInfo: plan ?? null, tg_chat_id: u.tg_chat_id ? "connected" : null };
 };
@@ -24,24 +24,30 @@ me.get("/me", async (req, res) => {
 
 me.put("/me", (req, res) => {
   const b = z.object({
-    name: z.string().max(80).optional(), email: z.string().email().optional(),
+    name: z.string().max(80).optional(), first_name: z.string().max(40).optional(), last_name: z.string().max(40).optional(), email: z.string().email().optional(),
+    pin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits").or(z.literal("")).optional(),
     password: z.string().min(6).optional(), current_password: z.string().optional(),
     wa_to: z.string().max(30).nullable().optional(), alert_email: z.string().email().or(z.literal("")).nullable().optional(),
     notify: z.boolean().optional(), notify_signals: z.boolean().optional(), disconnect_telegram: z.boolean().optional(),
   }).safeParse(req.body);
   if (!b.success) return res.status(400).json({ error: b.error.issues.map((i) => i.message).join(", ") });
   const v = b.data; const u = get("SELECT * FROM users WHERE id=?", req.user!.id);
+  if (v.pin !== undefined && (!v.current_password || !bcrypt.compareSync(v.current_password, u.password_hash))) return res.status(400).json({ error: "Enter your current password to change the PIN" });
+  if (v.pin && /^(\d)\1{3}$|^(0123|1234|2345|3456|4567|5678|6789|9876|8765|7654|6543|5432|4321|3210)$/.test(v.pin)) return res.status(400).json({ error: "Choose a less obvious PIN" });
   if (v.password || (v.email && v.email.toLowerCase() !== u.email)) {
     if (!v.current_password || !bcrypt.compareSync(v.current_password, u.password_hash)) return res.status(400).json({ error: "Current password is wrong" });
   }
   if (v.email && v.email.toLowerCase() !== u.email && get("SELECT 1 FROM users WHERE email=? AND id<>?", v.email.toLowerCase(), u.id)) return res.status(400).json({ error: "Email already in use" });
-  run("UPDATE users SET name=?, email=?, wa_to=?, alert_email=?, notify=?, notify_signals=? WHERE id=?",
-    v.name ?? u.name, (v.email ?? u.email).toLowerCase(),
+  const first = v.first_name ?? u.first_name, last = v.last_name ?? u.last_name;
+  const name = v.first_name !== undefined || v.last_name !== undefined ? `${first ?? ""} ${last ?? ""}`.trim() : (v.name ?? u.name);
+  run("UPDATE users SET name=?, first_name=?, last_name=?, email=?, wa_to=?, alert_email=?, notify=?, notify_signals=? WHERE id=?",
+    name, first ?? null, last ?? null, (v.email ?? u.email).toLowerCase(),
     v.wa_to === undefined ? u.wa_to : (v.wa_to?.replace(/[^0-9]/g, "") || null),
     v.alert_email === undefined ? u.alert_email : (v.alert_email || null),
     v.notify === undefined ? u.notify : (v.notify ? 1 : 0),
     v.notify_signals === undefined ? u.notify_signals : (v.notify_signals ? 1 : 0), u.id);
   if (v.password) run("UPDATE users SET password_hash=? WHERE id=?", bcrypt.hashSync(v.password, 10), u.id);
+  if (v.pin !== undefined) run("UPDATE users SET pin_hash=?, pin_fails=0, pin_locked_until=NULL WHERE id=?", v.pin ? hashPin(v.pin) : null, u.id);
   if (v.disconnect_telegram) run("UPDATE users SET tg_chat_id=NULL WHERE id=?", u.id);
   res.json({ ok: true, user: profile(u.id) });
 });

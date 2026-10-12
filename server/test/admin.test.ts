@@ -222,3 +222,28 @@ test("signal alerts: first run seeds silently, forced run announces to pro membe
   await call(tok, "PUT", "/api/me", { notify_signals: false });
   assert.equal((await call(tok, "GET", "/api/me")).data.user.notify_signals, 0);
 });
+
+test("signup + PIN login: register, set PIN with password, log in with PIN, lockout after 5 wrong PINs", async () => {
+  const bad = await call("", "POST", "/api/auth/signup", { first_name: "Ali", last_name: "Khan", email: "ali@example.com", password: "short", accept: true });
+  assert.equal(bad.status, 400);
+  const s = await call("", "POST", "/api/auth/signup", { first_name: "Ali", last_name: "Khan", email: "Ali@Example.com", password: "longenough1", accept: true });
+  assert.equal(s.status, 200, JSON.stringify(s.data)); assert.equal(s.data.user.name, "Ali Khan"); assert.equal(s.data.user.plan, "Free");
+  assert.equal((await call("", "POST", "/api/auth/signup", { first_name: "A", last_name: "K", email: "ali@example.com", password: "longenough1", accept: true })).status, 409);
+  const tok = s.data.token;
+  // PIN needs the current password; obvious PINs rejected
+  assert.equal((await call(tok, "PUT", "/api/me", { pin: "2468" })).status, 400);
+  assert.equal((await call(tok, "PUT", "/api/me", { pin: "1234", current_password: "longenough1" })).status, 400);
+  assert.equal((await call(tok, "PUT", "/api/me", { pin: "2468", current_password: "longenough1" })).status, 200);
+  assert.equal((await call(tok, "GET", "/api/me")).data.user.has_pin, 1);
+  const p = await call("", "POST", "/api/auth/login", { email: "ali@example.com", pin: "2468" });
+  assert.equal(p.status, 200); assert.ok(p.data.token);
+  for (let i = 0; i < 5; i++) assert.equal((await call("", "POST", "/api/auth/login", { email: "ali@example.com", pin: "0000" })).status, 401);
+  const locked = await call("", "POST", "/api/auth/login", { email: "ali@example.com", pin: "2468" });
+  assert.equal(locked.status, 401); assert.match(locked.data.error, /Too many/);
+  // password still works while PIN is locked; sign-up can be closed by admin
+  assert.equal((await call("", "POST", "/api/auth/login", { email: "ali@example.com", password: "longenough1" })).status, 200);
+  await call(admin, "PUT", "/api/admin/settings", { values: { "auth.signup": "0" } });
+  assert.equal((await call("", "GET", "/api/auth/options")).data.signup, false);
+  assert.equal((await call("", "POST", "/api/auth/signup", { first_name: "B", last_name: "C", email: "bc@example.com", password: "longenough1", accept: true })).status, 403);
+  await call(admin, "PUT", "/api/admin/settings", { values: { "auth.signup": "1" } });
+});

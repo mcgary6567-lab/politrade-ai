@@ -27,14 +27,46 @@ export function signToken(u: AuthUser): string {
   return jwt.sign({ uid: u.id, email: u.email, role: u.role, name: u.name }, config.jwtSecret, { expiresIn: "30d" });
 }
 
+function finishLogin(row: any) {
+  run("UPDATE users SET last_login=?, pin_fails=0 WHERE id=?", new Date().toISOString(), row.id);
+  const user: AuthUser = { id: row.id, email: row.email, name: row.name, role: row.role, ...planOf(row) };
+  return { token: signToken(user), user };
+}
+
 export function login(email: string, password: string): { token: string; user: AuthUser } | null {
   const row = get("SELECT * FROM users WHERE email=?", String(email).toLowerCase());
   if (!row || !bcrypt.compareSync(password, row.password_hash)) return null;
   if (row.status && row.status !== "active") return null;
-  run("UPDATE users SET last_login=? WHERE id=?", new Date().toISOString(), row.id);
-  const user: AuthUser = { id: row.id, email: row.email, name: row.name, role: row.role, ...planOf(row) };
-  return { token: signToken(user), user };
+  return finishLogin(row);
 }
+
+const PIN_MAX_FAILS = 5, PIN_LOCK_MIN = 15;
+/** Sign in with email + 4-digit PIN. Locked for 15 minutes after 5 wrong PINs (a 4-digit code needs brute-force protection). */
+export function loginWithPin(email: string, pin: string): { token: string; user: AuthUser } | { error: string } {
+  const row = get("SELECT * FROM users WHERE email=?", String(email).toLowerCase());
+  if (!row || !row.pin_hash) return { error: "No PIN is set for this account — sign in with your password and set one in Settings" };
+  if (row.status && row.status !== "active") return { error: "Account is not active" };
+  if (row.pin_locked_until && row.pin_locked_until > new Date().toISOString()) return { error: `Too many wrong PINs — try again in ${PIN_LOCK_MIN} minutes or use your password` };
+  if (!/^\d{4}$/.test(pin) || !bcrypt.compareSync(pin, row.pin_hash)) {
+    const fails = (row.pin_fails ?? 0) + 1;
+    const lock = fails >= PIN_MAX_FAILS ? new Date(Date.now() + PIN_LOCK_MIN * 60000).toISOString() : null;
+    run("UPDATE users SET pin_fails=?, pin_locked_until=? WHERE id=?", lock ? 0 : fails, lock, row.id);
+    return { error: lock ? `Too many wrong PINs — locked for ${PIN_LOCK_MIN} minutes` : `Wrong PIN (${PIN_MAX_FAILS - fails} attempts left)` };
+  }
+  return finishLogin(row);
+}
+
+/** Public sign-up: creates a Free member. */
+export function signup(d: { first_name: string; last_name: string; email: string; password: string }): { token: string; user: AuthUser } | { error: string } {
+  const email = d.email.toLowerCase().trim();
+  if (get("SELECT 1 FROM users WHERE email=?", email)) return { error: "An account with this email already exists — sign in instead" };
+  const name = `${d.first_name.trim()} ${d.last_name.trim()}`.trim();
+  const id = Number(run("INSERT INTO users(email,password_hash,name,first_name,last_name,role,status,created_at) VALUES(?,?,?,?,?,'member','active',?)",
+    email, bcrypt.hashSync(d.password, 10), name, d.first_name.trim(), d.last_name.trim(), new Date().toISOString()).lastInsertRowid);
+  return finishLogin(get("SELECT * FROM users WHERE id=?", id));
+}
+
+export const hashPin = (pin: string) => bcrypt.hashSync(pin, 10);
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const h = req.headers.authorization ?? "";

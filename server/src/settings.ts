@@ -39,6 +39,7 @@ export const integ = {
   jurisdiction: () => s("brand.jurisdiction", "the United States of America"),
   alertsEnabled: () => s("alerts.enabled", "1") === "1",
   signalMin: () => (s("signals.min", "medium") as "low" | "medium" | "high"),
+  signupOpen: () => s("auth.signup", "1") === "1",
 };
 
 export const aiOn = () => Boolean(integ.anthropicKey() || integ.geminiKey());
@@ -63,6 +64,7 @@ export const SETTING_KEYS: { key: string; label: string; secret?: boolean; group
   { key: "pols.source_url", label: "Politicians directory source (JSON)", group: "feed" },
   { key: "alerts.enabled", label: "Alerts enabled (1/0)", group: "feed" },
   { key: "signals.min", label: "Signal alerts: minimum confidence (low / medium / high)", group: "feed" },
+  { key: "auth.signup", label: "Public sign-up open (1/0)", group: "brand" },
   { key: "brand.name", label: "Brand name", group: "brand" },
   { key: "brand.contact", label: "Contact email", group: "brand" },
   { key: "social.x", label: "X / Twitter URL", group: "brand" },
@@ -96,7 +98,7 @@ function envFallback(key: string): string {
     "pols.source_url": "https://raw.githubusercontent.com/unitedstates/congress-legislators/gh-pages/legislators-current.json",
     "brand.name": config.brandName, "brand.contact": config.contactEmail,
     "social.x": config.social.x, "social.telegram": config.social.telegram, "social.github": config.social.github, "social.linkedin": config.social.linkedin,
-    "brand.company": config.brandName, "brand.address": "", "brand.jurisdiction": "the United States of America",
+    "brand.company": config.brandName, "brand.address": "", "brand.jurisdiction": "the United States of America", "auth.signup": "1",
   };
   return m[key] ?? "";
 }

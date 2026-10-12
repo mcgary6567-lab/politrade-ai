@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Send, MessageCircle, Mail, Eye, EyeOff, Trash2, Plus, CheckCircle2, XCircle, Crown, UserCog, Bell, ListChecks, UserRound, History, Save, Link2, Unlink, FlaskConical, Zap } from "lucide-react";
+import { Send, MessageCircle, Mail, Eye, EyeOff, Trash2, Plus, CheckCircle2, XCircle, Crown, UserCog, Bell, ListChecks, UserRound, History, Save, Link2, Unlink, FlaskConical, Zap, KeyRound } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../App";
 import { Field, Select, toast } from "../components/ui";
@@ -140,13 +140,19 @@ function Watchlist({ pro }: { pro: boolean }) {
 }
 
 function Profile({ u, onChange }: { u: any; onChange: () => void }) {
-  const [f, setF] = useState({ name: u.name ?? "", email: u.email, password: "", current_password: "" });
+  const [f, setF] = useState({ first_name: u.first_name ?? (u.name ?? "").split(" ")[0] ?? "", last_name: u.last_name ?? (u.name ?? "").split(" ").slice(1).join(" "), email: u.email, password: "", current_password: "" });
+  const [pin, setPin] = useState({ pin: "", current_password: "", busy: false });
+  const savePin = async (clear = false) => {
+    setPin({ ...pin, busy: true });
+    try { await api("/me", { method: "PUT", body: { pin: clear ? "" : pin.pin, current_password: pin.current_password } }); toast.ok(clear ? "PIN removed" : "PIN set — you can now sign in with email + PIN"); setPin({ pin: "", current_password: "", busy: false }); onChange(); }
+    catch (e: any) { toast.err(e.message); setPin({ ...pin, busy: false }); }
+  };
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true);
     try {
-      const body: any = { name: f.name, email: f.email, current_password: f.current_password };
+      const body: any = { first_name: f.first_name, last_name: f.last_name, email: f.email, current_password: f.current_password };
       if (f.password) body.password = f.password;
       await api("/me", { method: "PUT", body }); toast.ok("Profile saved"); setF({ ...f, password: "", current_password: "" }); onChange();
     } catch (e: any) { toast.err(e.message); } finally { setBusy(false); }
@@ -155,12 +161,25 @@ function Profile({ u, onChange }: { u: any; onChange: () => void }) {
     <form className="card p-5" onSubmit={save}>
       <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-600"><UserRound size={17} className="text-gold" /> Account</h2>
       <div className="grid gap-3 md:grid-cols-2">
-        <Field label="Name"><input className="input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="First name"><input className="input" value={f.first_name} onChange={(e) => setF({ ...f, first_name: e.target.value })} /></Field>
+          <Field label="Last name"><input className="input" value={f.last_name} onChange={(e) => setF({ ...f, last_name: e.target.value })} /></Field>
+        </div>
         <Field label="Email (sign-in)"><input className="input" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
         <Field label="New password" hint="Leave blank to keep the current one"><div className="relative"><input className="input pr-10" type={show ? "text" : "password"} minLength={6} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} autoComplete="new-password" /><button type="button" className="absolute right-3 top-3 text-slate-400" onClick={() => setShow(!show)}>{show ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></Field>
         <Field label="Current password" hint="Required to change email or password"><input className="input" type="password" value={f.current_password} onChange={(e) => setF({ ...f, current_password: e.target.value })} autoComplete="current-password" /></Field>
       </div>
       <div className="mt-3 flex justify-end"><button className="btn-gold text-sm" disabled={busy}><Save size={14} /> Save account</button></div>
+      <div className="mt-5 rounded-xl border border-line p-4">
+        <h3 className="flex items-center gap-2 font-display font-600"><KeyRound size={16} className="text-gold" /> Quick sign-in PIN {u.has_pin ? <span className="chip border-buy/40 py-0 text-[10px] text-buy">set</span> : <span className="chip py-0 text-[10px]">not set</span>}</h3>
+        <p className="mt-1 text-xs text-slate-400">A 4-digit PIN lets you sign in fast on your own phone or computer (email + PIN). Your password still works, and the PIN locks for 15 minutes after 5 wrong tries.</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-[120px_1fr_auto_auto]">
+          <input className="input text-center font-mono text-lg tracking-[0.4em]" inputMode="numeric" maxLength={4} placeholder="••••" value={pin.pin} onChange={(e) => setPin({ ...pin, pin: e.target.value.replace(/\D/g, "").slice(0, 4) })} />
+          <input className="input" type="password" placeholder="Current password" autoComplete="current-password" value={pin.current_password} onChange={(e) => setPin({ ...pin, current_password: e.target.value })} />
+          <button type="button" className="btn-gold text-sm" disabled={pin.busy || pin.pin.length !== 4 || !pin.current_password} onClick={() => savePin(false)}><Save size={14} /> {u.has_pin ? "Change PIN" : "Set PIN"}</button>
+          {u.has_pin && <button type="button" className="btn-ghost text-sm" disabled={pin.busy || !pin.current_password} onClick={() => savePin(true)}>Remove</button>}
+        </div>
+      </div>
     </form>
   );
 }

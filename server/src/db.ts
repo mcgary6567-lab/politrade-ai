@@ -84,6 +84,11 @@ export function migrate() {
   addColumn("users", "alert_email", "TEXT");
   addColumn("users", "notify", "INTEGER NOT NULL DEFAULT 1");
   addColumn("users", "notify_signals", "INTEGER NOT NULL DEFAULT 1");
+  addColumn("users", "first_name", "TEXT");
+  addColumn("users", "last_name", "TEXT");
+  addColumn("users", "pin_hash", "TEXT");
+  addColumn("users", "pin_fails", "INTEGER NOT NULL DEFAULT 0");
+  addColumn("users", "pin_locked_until", "TEXT");
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_alerts (
       id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), trade_id INTEGER NOT NULL REFERENCES trades(id),

@@ -6,7 +6,7 @@ import cron from "node-cron";
 import { z } from "zod";
 import { config, APP_VERSION } from "./config.js";
 import { migrate, get, run, getSetting, setSetting } from "./db.js";
-import { seedAdmin, login, requireAuth } from "./auth.js";
+import { seedAdmin, login, loginWithPin, signup, requireAuth } from "./auth.js";
 import { data } from "./routes/data.js";
 import { alerts } from "./routes/alerts.js";
 import { me } from "./routes/me.js";
@@ -35,11 +35,27 @@ app.get("/api/branding", (_req, res) => res.json({
 }));
 
 app.post("/api/auth/login", (req, res) => {
-  const b = z.object({ email: z.string().email(), password: z.string().min(1) }).safeParse(req.body);
-  if (!b.success) return res.status(400).json({ error: "Email and password required" });
-  const r = login(b.data.email, b.data.password);
+  const b = z.object({ email: z.string().email(), password: z.string().min(1).optional(), pin: z.string().regex(/^\d{4}$/, "PIN must be 4 digits").optional() }).safeParse(req.body);
+  if (!b.success || (!b.data.password && !b.data.pin)) return res.status(400).json({ error: "Email and password (or PIN) required" });
+  if (b.data.pin) {
+    const r = loginWithPin(b.data.email, b.data.pin);
+    return "error" in r ? res.status(401).json(r) : res.json(r);
+  }
+  const r = login(b.data.email, b.data.password!);
   if (!r) return res.status(401).json({ error: "Wrong email or password" });
   res.json(r);
+});
+app.get("/api/auth/options", (_req, res) => res.json({ signup: integ.signupOpen(), brand: integ.brandName() }));
+app.post("/api/auth/signup", (req, res) => {
+  if (!integ.signupOpen()) return res.status(403).json({ error: "Sign-up is currently closed — contact us for an account" });
+  const b = z.object({
+    first_name: z.string().trim().min(1, "First name required").max(40), last_name: z.string().trim().min(1, "Last name required").max(40),
+    email: z.string().email("Valid email required"), password: z.string().min(8, "Password must be at least 8 characters").max(100),
+    accept: z.literal(true, { errorMap: () => ({ message: "Please accept the Terms and Privacy Policy" }) }),
+  }).safeParse(req.body);
+  if (!b.success) return res.status(400).json({ error: b.error.issues[0]?.message ?? "Invalid input" });
+  const r = signup(b.data);
+  return "error" in r ? res.status(409).json(r) : res.json(r);
 });
 
 // public legal pages
