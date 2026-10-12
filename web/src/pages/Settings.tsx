@@ -11,7 +11,7 @@ export default function Settings() {
   const [branding, setBranding] = useState<any>(null);
   const load = () => api<any>("/me").then(setData).catch((e) => toast.err(e.message));
   useEffect(() => { load(); fetch("/api/branding").then((r) => r.json()).then(setBranding).catch(() => {}); }, []);
-  if (!data) return <p className="text-slate-500">Loading…</p>;
+  if (!data) return <div className="grid gap-4 md:grid-cols-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className="card h-40 animate-pulse" />)}</div>;
   const u = data.user;
   return (
     <div className="space-y-5">

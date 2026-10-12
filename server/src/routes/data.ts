@@ -1,5 +1,10 @@
 import { Router } from "express";
 import { all, get } from "../db.js";
+import { cached } from "../perf.js";
+
+/** Serve politician photos from our own origin (disk-cached proxy) instead of 350 cross-origin GitHub requests. */
+export const photoUrl = (p: any) => p?.ext_id ? `/api/photo/${p.ext_id}` : p?.photo_url ?? null;
+const withPhoto = <T extends { ext_id?: string; photo_url?: string }>(rows: T[]) => rows.map((r) => ({ ...r, photo_url: photoUrl(r) }));
 
 export const data = Router();
 
@@ -35,7 +40,7 @@ function tradeFilters(qs: Record<string, string>) {
 }
 
 const TRADE_SELECT = `SELECT tr.id, tr.tx_type, tr.tx_date, tr.published_date, tr.amount_min, tr.amount_max, tr.filed_after_days, tr.owner, tr.ai_note,
-            p.id politician_id, p.name politician, p.party, p.chamber, p.state,
+            p.id politician_id, p.name politician, p.party, p.chamber, p.state, p.ext_id, p.photo_url,
             i.id issuer_id, i.ticker, i.name issuer, i.sector
      FROM trades tr JOIN politicians p ON p.id=tr.politician_id JOIN issuers i ON i.id=tr.issuer_id`;
 
@@ -71,7 +76,7 @@ data.get("/trades.csv", (req, res) => {
 });
 
 /** GET /api/filters — distinct values to populate the filter controls. */
-data.get("/filters", (_req, res) => {
+data.get("/filters", cached(300_000), (_req, res) => {
   res.json({
     parties: all("SELECT DISTINCT party v FROM politicians WHERE party IS NOT NULL ORDER BY v").map((r) => r.v),
     chambers: all("SELECT DISTINCT chamber v FROM politicians WHERE chamber IS NOT NULL ORDER BY v").map((r) => r.v),
@@ -89,7 +94,7 @@ data.get("/trades/:id", (req, res) => {
 });
 
 /** GET /api/politicians — with trade counts + filters. */
-data.get("/politicians", (req, res) => {
+data.get("/politicians", cached(120_000), (req, res) => {
   const { q, party, chamber, state, sort } = req.query as Record<string, string>;
   const where: string[] = []; const p: any[] = [];
   if (q) { where.push("p.name LIKE ?"); p.push(`%${q}%`); }
@@ -107,11 +112,12 @@ data.get("/politicians", (req, res) => {
      FROM politicians p LEFT JOIN trades tr ON tr.politician_id=p.id
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
      GROUP BY p.id ORDER BY ${order}`, ...p);
-  res.json({ rows });
+  res.json({ rows: withPhoto(rows) });
 });
 
 data.get("/politicians/:id", (req, res) => {
-  const p = get("SELECT * FROM politicians WHERE id=?", req.params.id);
+  const p0 = get("SELECT * FROM politicians WHERE id=?", req.params.id);
+  const p = p0 ? { ...p0, photo_url: photoUrl(p0) } : null;
   if (!p) return res.status(404).json({ error: "Not found" });
   const trades = all(
     `SELECT tr.*, i.ticker, i.name issuer, i.sector FROM trades tr JOIN issuers i ON i.id=tr.issuer_id
@@ -127,8 +133,10 @@ data.get("/politicians/:id", (req, res) => {
 });
 
 /** GET /api/issuers — companies with trade counts + filters. */
-data.get("/issuers", (req, res) => {
+data.get("/issuers", cached(120_000), (req, res) => {
   const { q, sector, sort } = req.query as Record<string, string>;
+  const limit = Math.min(Number(req.query.limit ?? 60), 500);
+  const offset = Math.max(Number(req.query.offset ?? 0), 0);
   const where: string[] = []; const p: any[] = [];
   if (q) { where.push("(i.name LIKE ? OR i.ticker LIKE ?)"); p.push(`%${q}%`, `%${q}%`); }
   if (sector) { where.push("COALESCE(i.sector,'Other')=?"); p.push(sector); }
@@ -142,8 +150,9 @@ data.get("/issuers", (req, res) => {
             MAX(tr.published_date) last_traded
      FROM issuers i LEFT JOIN trades tr ON tr.issuer_id=i.id
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-     GROUP BY i.id ORDER BY ${order}`, ...p);
-  res.json({ rows });
+     GROUP BY i.id ORDER BY ${order} LIMIT ? OFFSET ?`, ...p, limit, offset);
+  const total = get(`SELECT COUNT(*) c FROM issuers i ${where.length ? `WHERE ${where.join(" AND ")}` : ""}`, ...p).c;
+  res.json({ rows, total, limit, offset });
 });
 
 data.get("/issuers/:id", (req, res) => {
@@ -161,7 +170,7 @@ data.get("/issuers/:id", (req, res) => {
 });
 
 /** GET /api/insights — aggregates for the dashboard + insights page. */
-data.get("/insights", (req, res) => {
+data.get("/insights", cached(120_000), (req, res) => {
   const days = Math.max(0, Number(req.query.days ?? 0));
   const w = days ? `WHERE tr.published_date >= date('now','-${days} days')` : "";
   const totals = get(`SELECT COUNT(*) trades,
@@ -199,7 +208,7 @@ data.get("/insights", (req, res) => {
 });
 
 /** GET /api/dashboard — the post-login overview: latest trades, notable filings, featured politicians / issuers, states. */
-data.get("/dashboard", (req, res) => {
+data.get("/dashboard", cached(60_000), (req, res) => {
   const stocksOnly = req.query.assets !== "all";
   const win = req.user?.pro ? "" : "AND tr.published_date >= date('now','-30 days')";
   const latest = all(`${TRADE_SELECT} WHERE 1=1 ${stocksOnly ? "AND i.ticker IS NOT NULL" : ""} ${win} ORDER BY tr.published_date DESC, tr.id DESC LIMIT 8`);
@@ -207,7 +216,7 @@ data.get("/dashboard", (req, res) => {
   const notable = all(`${TRADE_SELECT} WHERE tr.published_date >= date('now','-45 days') ${win}
       ORDER BY COALESCE(tr.amount_max,tr.amount_min,0) DESC, tr.published_date DESC LIMIT 6`);
   const months = all(`WITH RECURSIVE m(d) AS (SELECT date('now','start of month','-11 months') UNION ALL SELECT date(d,'+1 month') FROM m WHERE d < date('now','start of month')) SELECT substr(d,1,7) month FROM m`).map((r) => r.month);
-  const featuredPols = all(`SELECT p.id, p.name, p.party, p.chamber, p.state, p.photo_url, COUNT(*) trades, COUNT(DISTINCT tr.published_date) filings,
+  const featuredPols = all(`SELECT p.id, p.name, p.party, p.chamber, p.state, p.photo_url, p.ext_id, COUNT(*) trades, COUNT(DISTINCT tr.published_date) filings,
         COUNT(DISTINCT tr.issuer_id) issuers, SUM(COALESCE(tr.amount_max,tr.amount_min,0)) volume
       FROM trades tr JOIN politicians p ON p.id=tr.politician_id WHERE tr.published_date >= date('now','-12 months')
       GROUP BY p.id ORDER BY volume DESC LIMIT 3`).map((p) => ({
@@ -224,7 +233,7 @@ data.get("/dashboard", (req, res) => {
         SUM(p.party='Democrat') dem, SUM(p.party='Republican') rep
       FROM trades tr JOIN politicians p ON p.id=tr.politician_id WHERE p.state IS NOT NULL AND tr.published_date >= date('now','-3 years')
       GROUP BY p.state ORDER BY trades DESC`);
-  res.json({ latest, notable, featuredPols, featuredIssuers, states, months, window: req.user?.pro ? null : 30 });
+  res.json({ latest: withPhoto(latest as any), notable: withPhoto(notable as any), featuredPols: withPhoto(featuredPols as any), featuredIssuers, states, months, window: req.user?.pro ? null : 30 });
 });
 
 function fillMonths(months: string[], rows: any[]) {

@@ -8,6 +8,7 @@ import { readSettingsForAdmin, writeSettings, integ, aiOn } from "../settings.js
 import { channelStatus, sendAlert } from "../notify.js";
 import { ingestFromFeed, ingestRows, fireAlert, stats, syncPoliticians } from "../ingest.js";
 import { FEED_PRESETS } from "../sources.js";
+import { bumpCache } from "../perf.js";
 import { tradeInsight } from "../ai.js";
 
 export const admin = Router();
@@ -151,14 +152,14 @@ admin.post("/admin/test/:channel", wrap(async (req, res) => {
 }));
 
 /* ---------- data feed & alerts ---------- */
-admin.post("/admin/ingest/run", wrap(async (_req, res) => res.json(await ingestFromFeed())));
+admin.post("/admin/ingest/run", wrap(async (_req, res) => { const r = await ingestFromFeed(); bumpCache(); res.json(r); }));
 admin.get("/admin/ingest/presets", (_req, res) => res.json({ presets: FEED_PRESETS }));
 /** Fill party / state / chamber / photo for our politicians from the public legislators directory. */
-admin.post("/admin/politicians/sync", wrap(async (_req, res) => res.json(await syncPoliticians())));
+admin.post("/admin/politicians/sync", wrap(async (_req, res) => { const r = await syncPoliticians(); bumpCache(); res.json(r); }));
 admin.post("/admin/ingest/import", wrap(async (req, res) => {
   const rows = Array.isArray(req.body) ? req.body : req.body?.rows;
   if (!Array.isArray(rows)) throw new Error("Body must be a JSON array of trade records");
-  res.json(await ingestRows(rows.slice(0, 5000), "manual import"));
+  const r = await ingestRows(rows.slice(0, 5000), "manual import"); bumpCache(); res.json(r);
 }));
 admin.get("/admin/ingest/log", (_req, res) => res.json({ rows: all("SELECT * FROM ingest_log ORDER BY id DESC LIMIT 50") }));
 admin.get("/admin/alerts/log", (_req, res) => res.json({
@@ -201,5 +202,6 @@ admin.post("/admin/demo/clear", wrap((_req, res) => {
   const r = run("DELETE FROM trades WHERE raw_id LIKE 'demo-%'");
   run("DELETE FROM politicians WHERE id NOT IN (SELECT DISTINCT politician_id FROM trades)");
   run("DELETE FROM issuers WHERE id NOT IN (SELECT DISTINCT issuer_id FROM trades)");
+  bumpCache();
   res.json({ ok: true, removed: Number(r.changes) });
 }));

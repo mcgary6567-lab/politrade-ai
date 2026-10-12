@@ -13,18 +13,21 @@ import { me } from "./routes/me.js";
 import { admin } from "./routes/admin.js";
 import { ingestFromFeed, stats, syncPoliticians } from "./ingest.js";
 import { pollTelegramLinks } from "./notify.js";
+import { compress, photo, bumpCache } from "./perf.js";
 import { seedDemo } from "./seed.js";
 import { legalPage } from "./legal.js";
 import { integ, aiOn } from "./settings.js";
 
 export const app = express();
 app.use(cors());
+app.use(compress);
 app.use(express.json({ limit: "5mb" }));
 
 migrate();
 seedAdmin();
 seedPlans();
 
+app.get("/api/photo/:bioguide", photo);
 app.get("/api/health", (_req, res) => res.json({ ok: true, version: APP_VERSION, ai: aiOn(), ...stats() }));
 app.get("/api/branding", (_req, res) => res.json({
   name: integ.brandName(), version: APP_VERSION, contact: integ.contactEmail(),
@@ -57,8 +60,9 @@ app.use("/api", api);
 // serve the built web app in production
 const webDist = path.resolve(config.webDist);
 if (fs.existsSync(webDist)) {
-  app.use(express.static(webDist));
-  app.get(/^\/(?!api).*/, (_req, res) => res.sendFile(path.join(webDist, "index.html")));
+  // hashed assets are immutable; index.html must always be fresh so new deploys show up
+  app.use(express.static(webDist, { maxAge: "365d", immutable: true, index: false, setHeaders: (res, p) => { if (p.endsWith(".html") || p.endsWith(".webmanifest")) res.setHeader("cache-control", "no-cache"); } }));
+  app.get(/^\/(?!api).*/, (_req, res) => res.sendFile(path.join(webDist, "index.html"), { headers: { "cache-control": "no-cache" } }));
 }
 
 /** Default subscription plans: Free and Pro ($300 / year). Existing installs seeded with the old trio are migrated once. */
@@ -87,6 +91,7 @@ async function bootstrapData() {
   console.log("[ingest] empty database — fetching real disclosure data now…");
   try {
     const r = await ingestFromFeed({ alerts: false });
+    bumpCache();
     console.log(`[ingest] first load: fetched ${r.fetched}, added ${r.added}${r.errors.length ? `, errors: ${r.errors.join(" | ")}` : ""}`);
     const s = await syncPoliticians();
     console.log(`[directory] ${s.matched} politicians matched, ${s.updated} updated`);
@@ -105,7 +110,7 @@ function startScheduler() {
     task?.stop(); task = null; current = key;
     if (!key || !cron.validate(expr)) { if (url) console.warn(`[ingest] invalid cron "${expr}"`); return; }
     task = cron.schedule(expr, () => {
-      ingestFromFeed().then((r) => { console.log(`[ingest] fetched ${r.fetched}, added ${r.added}`); return r.added ? syncPoliticians() : null; }).catch((e) => console.error("[ingest]", e.message));
+      ingestFromFeed().then((r) => { console.log(`[ingest] fetched ${r.fetched}, added ${r.added}`); if (r.added) { bumpCache(); return syncPoliticians(); } return null; }).catch((e) => console.error("[ingest]", e.message));
     });
     console.log(`[ingest] scheduled (${expr}) from ${url}`);
   };

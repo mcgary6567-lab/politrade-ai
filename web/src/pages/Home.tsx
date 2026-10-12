@@ -14,7 +14,7 @@ export default function Home() {
   const [d, setD] = useState<any>(null);
   const [assets, setAssets] = useState<"stocks" | "all">("stocks");
   useEffect(() => { api(`/dashboard?assets=${assets}`).then(setD).catch(() => {}); }, [assets]);
-  if (!d) return <p className="text-slate-500">Loading…</p>;
+  if (!d) return <div className="grid gap-5 lg:grid-cols-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className="card h-80 animate-pulse" />)}</div>;
 
   return (
     <div className="space-y-5">

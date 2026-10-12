@@ -2,7 +2,27 @@ const KEY = "pt_token";
 export const getToken = () => { try { return localStorage.getItem(KEY); } catch { return null; } };
 export const setToken = (t: string | null) => { try { t ? localStorage.setItem(KEY, t) : localStorage.removeItem(KEY); } catch { /* ignore */ } };
 
-export async function api<T = any>(path: string, opts: { method?: string; body?: any } = {}): Promise<T> {
+/** GET responses are kept for a short while so moving between pages does not re-download the same data. */
+const memo = new Map<string, { at: number; p: Promise<any> }>();
+const TTL = 60_000;
+export const invalidate = (prefix = "") => { for (const k of [...memo.keys()]) if (k.startsWith(prefix)) memo.delete(k); };
+export function prefetch(path: string) { api(path).catch(() => {}); }
+
+export async function api<T = any>(path: string, opts: { method?: string; body?: any; fresh?: boolean } = {}): Promise<T> {
+  const method = opts.method ?? (opts.body ? "POST" : "GET");
+  if (method === "GET" && !opts.fresh) {
+    const hit = memo.get(path);
+    if (hit && Date.now() - hit.at < TTL) return hit.p;
+    const p = request<T>(path, opts).catch((e) => { memo.delete(path); throw e; });
+    memo.set(path, { at: Date.now(), p });
+    return p;
+  }
+  const r = await request<T>(path, opts);
+  if (method !== "GET") invalidate();   // a write may change any list
+  return r;
+}
+
+async function request<T>(path: string, opts: { method?: string; body?: any }): Promise<T> {
   const res = await fetch("/api" + path, {
     method: opts.method ?? (opts.body ? "POST" : "GET"),
     headers: { "content-type": "application/json", ...(getToken() ? { authorization: `Bearer ${getToken()}` } : {}) },

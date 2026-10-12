@@ -1,15 +1,15 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, lazy, Suspense, useContext, useEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import { api, getToken, setToken } from "./lib/api";
+import { api, getToken, setToken, prefetch } from "./lib/api";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Trades from "./pages/Trades";
 import Politicians from "./pages/Politicians";
 import Issuers from "./pages/Issuers";
-import Insights from "./pages/Insights";
-import Admin from "./pages/Admin";
-import Settings from "./pages/Settings";
+const Insights = lazy(() => import("./pages/Insights"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Settings = lazy(() => import("./pages/Settings"));
 import { Toasts } from "./components/ui";
 
 type User = { id: number; email: string; name?: string; role: string; plan?: string; pro?: boolean };
@@ -23,7 +23,7 @@ export default function App() {
 
   const loadMe = async () => {
     if (!getToken()) { setUser(null); setReady(true); return; }
-    try { const r = await api<{ user: User }>("/me"); setUser(r.user); }
+    try { const r = await api<{ user: User }>("/me"); setUser(r.user); prefetch("/dashboard?assets=stocks"); prefetch("/filters"); }
     catch { setToken(null); setUser(null); }
     finally { setReady(true); }
   };
@@ -44,9 +44,9 @@ export default function App() {
             <Route path="/politicians/:id" element={<Politicians />} />
             <Route path="/issuers" element={<Issuers />} />
             <Route path="/issuers/:id" element={<Issuers />} />
-            <Route path="/insights" element={<Insights />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/admin/*" element={<Admin />} />
+            <Route path="/insights" element={<Suspense fallback={<Fallback />}><Insights /></Suspense>} />
+            <Route path="/settings" element={<Suspense fallback={<Fallback />}><Settings /></Suspense>} />
+            <Route path="/admin/*" element={<Suspense fallback={<Fallback />}><Admin /></Suspense>} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -55,6 +55,8 @@ export default function App() {
     </Ctx.Provider>
   );
 }
+
+const Fallback = () => <div className="space-y-3">{Array.from({ length: 4 }, (_, i) => <div key={i} className="card h-24 animate-pulse" />)}</div>;
 
 function Protected() {
   const { user, ready } = useAuth();

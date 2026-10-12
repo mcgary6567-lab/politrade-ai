@@ -2,9 +2,13 @@ import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog } from "lucide-react";
 import { useAuth } from "../App";
+import { prefetch } from "../lib/api";
+import { Search } from "lucide-react";
 import Footer from "./Footer";
 import Logo from "./Logo";
 
+/** Warm the cache for a page when its nav link is hovered. */
+const PREFETCH: Record<string, string[]> = { "/": ["/dashboard?assets=stocks"], "/trades": ["/trades?limit=50&offset=0", "/filters"], "/politicians": ["/politicians?"], "/issuers": ["/issuers?limit=60"], "/insights": ["/insights"] };
 const BASE_NAV: { to: string; label: string; icon: any; end?: boolean }[] = [
   { to: "/", label: "Home", icon: LayoutGrid, end: true },
   { to: "/trades", label: "Trades", icon: ArrowLeftRight },
@@ -27,14 +31,18 @@ export default function Layout() {
           <Link to="/" className="flex items-center gap-2.5"><Logo className="h-8 w-8" /><span className="whitespace-nowrap font-display text-lg font-700 tracking-tight">Poli<span className="text-gold">Trade</span> <span className="text-slate-400">AI</span></span></Link>
           <nav className="ml-4 hidden items-center gap-0.5 md:flex">
             {NAV.filter((n) => n.to !== "/settings").map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) =>
+              <NavLink key={n.to} to={n.to} end={n.end} onMouseEnter={() => PREFETCH[n.to]?.forEach(prefetch)} className={({ isActive }) =>
                 `flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-semibold transition lg:px-3 ${isActive ? "bg-gold/15 text-gold" : "text-slate-300 hover:bg-ink-700"}`}>
                 <n.icon size={16} /> {n.label}
               </NavLink>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
-            <Link to="/settings" className="hidden items-center gap-2 text-sm text-slate-400 hover:text-gold sm:flex" title="Your settings"><UserCog size={15} />{user?.name ?? user?.email}
+          <form className="relative ml-auto hidden lg:block" onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem("q") as HTMLInputElement).value.trim(); if (q) nav(`/trades?q=${encodeURIComponent(q)}`); }}>
+            <Search size={14} className="pointer-events-none absolute left-2.5 top-2.5 text-slate-500" />
+            <input name="q" className="input w-40 py-1.5 pl-8 text-sm xl:w-52" placeholder="Politician or ticker…" />
+          </form>
+          <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <Link to="/settings" className="hidden max-w-[180px] items-center gap-2 truncate text-sm text-slate-400 hover:text-gold sm:flex" title="Your settings"><UserCog size={15} className="shrink-0" /><span className="truncate">{user?.name ?? user?.email}</span>
               <span className={`chip py-0.5 text-[10px] ${user?.pro ? "border-gold/50 text-gold" : ""}`}>{user?.role === "admin" ? "ADMIN" : user?.pro ? "PRO" : "FREE"}</span></Link>
             <button onClick={signOut} className="btn-ghost px-3 py-2 text-sm" title="Sign out"><LogOut size={15} /></button>
             <button onClick={() => setOpen(!open)} className="btn-ghost px-2.5 py-2 md:hidden" aria-label="Menu">{open ? <X size={18} /> : <Menu size={18} />}</button>

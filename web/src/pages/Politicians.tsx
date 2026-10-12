@@ -15,8 +15,9 @@ function List() {
   const [rows, setRows] = useState<any[]>([]);
   const [filters, setFilters] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [shown, setShown] = useState(48);
   const get = (k: string) => sp.get(k) ?? "";
-  const set = (k: string, v: string) => { const n = new URLSearchParams(sp); v ? n.set(k, v) : n.delete(k); setSp(n, { replace: true }); };
+  const set = (k: string, v: string) => { const n = new URLSearchParams(sp); v ? n.set(k, v) : n.delete(k); setSp(n, { replace: true }); setShown(48); };
   const deps = ["q", "party", "chamber", "state", "sort"].map(get).join("|");
 
   useEffect(() => { api("/filters").then(setFilters).catch(() => {}); }, []);
@@ -42,7 +43,7 @@ function List() {
         <Select value={get("sort")} onChange={(v) => set("sort", v)} opts={[["", "Most trades"], ["volume", "Largest volume"], ["recent", "Most recent"], ["name", "Name A–Z"]]} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((p, idx) => (
+        {rows.slice(0, shown).map((p, idx) => (
           <Link key={p.id} to={`/politicians/${p.id}`} className="card p-4 transition hover:border-gold/40">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
@@ -63,9 +64,10 @@ function List() {
             </div>
           </Link>
         ))}
-        {loading && <p className="text-sm text-slate-500">Loading…</p>}
+        {loading && !rows.length && Array.from({ length: 6 }, (_, i) => <div key={i} className="card h-36 animate-pulse" />)}
         {!loading && !rows.length && <p className="text-sm text-slate-500">No politicians match.</p>}
       </div>
+      {rows.length > shown && <button className="btn-ghost w-full" onClick={() => setShown(shown + 48)}>Show more ({rows.length - shown} left)</button>}
     </div>
   );
 }
@@ -75,7 +77,7 @@ const initials = (n: string) => n.replace(/^(Rep|Sen)\.\s*/, "").split(" ").map(
 /** Official photo when the directory sync has one; initials otherwise (and if the image 404s). */
 export function Avatar({ p, size }: { p: any; size: string }) {
   const [broken, setBroken] = useState(false);
-  if (p.photo_url && !broken) return <img src={p.photo_url} alt="" onError={() => setBroken(true)} className={`${size} shrink-0 rounded-full object-cover object-top ring-2 ring-ink-600`} />;
+  if (p.photo_url && !broken) return <img src={p.photo_url} alt="" loading="lazy" decoding="async" onError={() => setBroken(true)} className={`${size} shrink-0 rounded-full object-cover object-top ring-2 ring-ink-600`} />;
   return <span className={`grid ${size} shrink-0 place-items-center rounded-full bg-ink-600 font-display font-700 ${partyTone(p.party)}`}>{initials(p.name)}</span>;
 }
 

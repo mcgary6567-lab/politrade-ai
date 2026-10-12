@@ -13,6 +13,7 @@ export default function Issuers() {
 function List() {
   const [sp, setSp] = useSearchParams();
   const [rows, setRows] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const get = (k: string) => sp.get(k) ?? "";
@@ -21,14 +22,18 @@ function List() {
   useEffect(() => { api("/filters").then(setFilters).catch(() => {}); }, []);
   useEffect(() => {
     setLoading(true);
-    const p = new URLSearchParams(); for (const k of ["q", "sector", "sort"]) if (get(k)) p.set(k, get(k));
-    const t = setTimeout(() => api<any>(`/issuers?${p}`).then((r) => setRows(r.rows)).finally(() => setLoading(false)), 200);
+    const p = new URLSearchParams({ limit: "60" }); for (const k of ["q", "sector", "sort"]) if (get(k)) p.set(k, get(k));
+    const t = setTimeout(() => api<any>(`/issuers?${p}`).then((r) => { setRows(r.rows); setTotal(r.total); }).finally(() => setLoading(false)), 200);
     return () => clearTimeout(t);
   }, [deps]); // eslint-disable-line react-hooks/exhaustive-deps
+  const more = async () => {
+    const p = new URLSearchParams({ limit: "60", offset: String(rows.length) }); for (const k of ["q", "sector", "sort"]) if (get(k)) p.set(k, get(k));
+    const r = await api<any>(`/issuers?${p}`); setRows([...rows, ...r.rows]);
+  };
 
   return (
     <div className="space-y-5">
-      <div><h1 className="font-display text-2xl font-700">Issuers</h1><p className="text-sm text-slate-400">{rows.length} companies most traded by lawmakers</p></div>
+      <div><h1 className="font-display text-2xl font-700">Issuers</h1><p className="text-sm text-slate-400">{total.toLocaleString()} companies most traded by lawmakers</p></div>
       <div className="card flex flex-wrap items-center gap-2 p-3">
         <div className="relative min-w-[200px] flex-1">
           <Search size={16} className="pointer-events-none absolute left-3 top-3 text-slate-500" />
@@ -58,12 +63,13 @@ function List() {
                   <td className="td text-sm text-slate-400">{ago(i.last_traded)}</td>
                 </tr>
               ))}
-              {loading && <tr><td className="td py-8 text-center text-slate-500" colSpan={9}>Loading…</td></tr>}
+              {loading && !rows.length && <tr><td className="td py-8 text-center text-slate-500" colSpan={9}>Loading…</td></tr>}
               {!loading && !rows.length && <tr><td className="td py-8 text-center text-slate-500" colSpan={9}>No issuers found.</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
+      {rows.length < total && <button className="btn-ghost w-full" onClick={more}>Show more ({(total - rows.length).toLocaleString()} left)</button>}
     </div>
   );
 }

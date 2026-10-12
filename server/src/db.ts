@@ -40,6 +40,12 @@ export function migrate() {
     CREATE INDEX IF NOT EXISTS idx_trades_pub ON trades(published_date DESC);
     CREATE INDEX IF NOT EXISTS idx_trades_pol ON trades(politician_id);
     CREATE INDEX IF NOT EXISTS idx_trades_iss ON trades(issuer_id);
+    CREATE INDEX IF NOT EXISTS idx_trades_type ON trades(tx_type);
+    CREATE INDEX IF NOT EXISTS idx_trades_txd ON trades(tx_date);
+    CREATE INDEX IF NOT EXISTS idx_trades_amt ON trades(amount_max);
+    CREATE INDEX IF NOT EXISTS idx_pol_party ON politicians(party, chamber, state);
+    CREATE INDEX IF NOT EXISTS idx_iss_ticker ON issuers(ticker);
+    CREATE INDEX IF NOT EXISTS idx_iss_sector ON issuers(sector);
     CREATE TABLE IF NOT EXISTS watchlist (
       id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id),
       kind TEXT NOT NULL,               -- politician | ticker | party | any

@@ -12,7 +12,7 @@ export default function Insights() {
   const [d, setD] = useState<any>(null);
   const [days, setDays] = useState("");
   useEffect(() => { api(`/insights${days ? `?days=${days}` : ""}`).then(setD).catch(() => {}); }, [days]);
-  if (!d) return <p className="text-slate-500">Loading…</p>;
+  if (!d) return <div className="grid gap-4 md:grid-cols-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className="card h-40 animate-pulse" />)}</div>;
 
   const t = d.totals ?? {}; const buys = t.buys ?? 0, sells = t.sells ?? 0;
   const ratio = sells ? (buys / sells).toFixed(2) : "—";

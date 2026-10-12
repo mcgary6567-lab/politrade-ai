@@ -28,7 +28,8 @@ export default function Trades() {
   const deps = KEYS.map(get).join("|");
 
   const [pols, setPols] = useState<any[]>([]);
-  useEffect(() => { api("/filters").then(setFilters).catch(() => {}); api<any>("/politicians?sort=name").then((r) => setPols(r.rows)).catch(() => {}); }, []);
+  useEffect(() => { api("/filters").then(setFilters).catch(() => {}); }, []);
+  useEffect(() => { if (more || get("politician")) api<any>("/politicians?sort=name").then((r) => setPols(r.rows)).catch(() => {}); }, [more]); // eslint-disable-line react-hooks/exhaustive-deps
   const polName = pols.find((p) => String(p.id) === get("politician"))?.name;
   useEffect(() => {
     setLoading(true);
@@ -121,7 +122,7 @@ export default function Trades() {
                   <td className={`td text-right font-mono text-sm ${r.filed_after_days > 45 ? "text-sell" : "text-slate-400"}`}>{r.filed_after_days != null ? `${r.filed_after_days}d` : "—"}</td>
                 </tr>
               ))}
-              {loading && <tr><td className="td py-8 text-center text-slate-500" colSpan={8}>Loading…</td></tr>}
+              {loading && !rows.length && Array.from({ length: 8 }, (_, i) => <tr key={i}><td className="td" colSpan={8}><div className="h-8 animate-pulse rounded bg-ink-600/60" /></td></tr>)}
               {!loading && !rows.length && <tr><td className="td py-8 text-center text-slate-500" colSpan={8}>No trades match these filters.</td></tr>}
             </tbody>
           </table>
