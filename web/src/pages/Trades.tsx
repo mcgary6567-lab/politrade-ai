@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../App";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, Sparkles, Download, SlidersHorizontal, X } from "lucide-react";
+import { Search, Sparkles, Download, SlidersHorizontal, X, ArrowLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { api, money, ago, getToken } from "../lib/api";
 import { pill } from "./Home";
 import { Select, AMOUNT_BANDS } from "../components/ui";
@@ -49,7 +49,7 @@ export default function Trades() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div><h1 className="font-display text-2xl font-700">Trades</h1><p className="text-sm text-slate-400">{total.toLocaleString()} disclosed transactions{active.length ? ` · ${active.length} filter${active.length > 1 ? "s" : ""} on` : ""}</p></div>
+        <div><h1 className="flex items-center gap-2 font-display text-2xl font-700"><ArrowLeftRight size={22} className="text-gold" /> Trades</h1><p className="text-sm text-slate-400">{total.toLocaleString()} disclosed transactions{active.length ? ` · ${active.length} filter${active.length > 1 ? "s" : ""} on` : ""}</p></div>
         <div className="flex gap-2">
           <button className="btn-ghost px-3 py-2 text-sm" onClick={() => setMore(!more)}><SlidersHorizontal size={15} /> {more ? "Less filters" : "More filters"}</button>
           <button className="btn-ghost px-3 py-2 text-sm disabled:opacity-50" disabled={!user?.pro} onClick={exportCsv} title={user?.pro ? "Download CSV of current filter" : "CSV export is a Pro feature"}><Download size={15} /> CSV{!user?.pro && <span className="text-[10px] text-gold">PRO</span>}</button>
@@ -130,9 +130,9 @@ export default function Trades() {
       </div>
 
       <div className="flex items-center justify-between">
-        <button className="btn-ghost text-sm disabled:opacity-40" disabled={offset <= 0} onClick={() => set("offset", String(Math.max(0, offset - 50)))}>← Previous</button>
+        <button className="btn-ghost text-sm disabled:opacity-40" disabled={offset <= 0} onClick={() => set("offset", String(Math.max(0, offset - 50)))}><ChevronLeft size={15} /> Previous</button>
         <span className="text-sm text-slate-500">{total ? offset + 1 : 0}–{Math.min(offset + 50, total)} of {total.toLocaleString()}</span>
-        <button className="btn-ghost text-sm disabled:opacity-40" disabled={offset + 50 >= total} onClick={() => set("offset", String(offset + 50))}>Next →</button>
+        <button className="btn-ghost text-sm disabled:opacity-40" disabled={offset + 50 >= total} onClick={() => set("offset", String(offset + 50))}>Next <ChevronRight size={15} /></button>
       </div>
       <p className="text-xs text-slate-500">Delay = days between the trade and its public filing (STOCK Act requires ≤45 days). Red marks late filings.</p>
     </div>

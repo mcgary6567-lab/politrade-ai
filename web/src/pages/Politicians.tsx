@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, Landmark, Star, PieChart, History, ExternalLink } from "lucide-react";
 import { api, money, ago } from "../lib/api";
 import { pill } from "./Home";
 import { Select, KPI, partyTone, compact } from "../components/ui";
@@ -31,7 +31,7 @@ function List() {
 
   return (
     <div className="space-y-5">
-      <div><h1 className="font-display text-2xl font-700">Politicians</h1><p className="text-sm text-slate-400">{rows.length} lawmakers · ranked by disclosed trades</p></div>
+      <div><h1 className="flex items-center gap-2 font-display text-2xl font-700"><Landmark size={22} className="text-gold" /> Politicians</h1><p className="text-sm text-slate-400">{rows.length} lawmakers · ranked by disclosed trades</p></div>
       <div className="card flex flex-wrap items-center gap-2 p-3">
         <div className="relative min-w-[200px] flex-1">
           <Search size={16} className="pointer-events-none absolute left-3 top-3 text-slate-500" />
@@ -99,7 +99,7 @@ function Detail({ id }: { id: string }) {
           <h1 className="font-display text-2xl font-700">{p.name}</h1>
           <p className="mt-1"><span className={partyTone(p.party)}>{p.party ?? "—"}</span> <span className="text-slate-500">· {p.chamber ?? "—"} {p.state ? `· ${p.state}` : ""}</span></p>
         </div>
-        <Link to={`/trades?politician=${p.id}`} className="btn-ghost text-sm">Open in Trades →</Link>
+        <Link to={`/trades?politician=${p.id}`} className="btn-ghost text-sm"><ExternalLink size={14} /> Open in Trades</Link>
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <KPI label="Trades" value={s.trades ?? 0} />
@@ -120,15 +120,15 @@ function Detail({ id }: { id: string }) {
       )}
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="card p-4">
-          <h2 className="mb-3 font-display font-600">Favourite issuers</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-display font-600"><Star size={15} className="text-gold" /> Favourite issuers</h2>
           <ul className="space-y-2 text-sm">
             {data.topIssuers?.map((i: any) => <li key={i.ticker + i.name} className="flex items-center justify-between"><span><span className="font-mono text-gold-300">{i.ticker}</span> <span className="text-slate-400">{i.name}</span></span><span className="font-mono">{i.trades}</span></li>)}
           </ul>
-          <h2 className="mb-2 mt-5 font-display font-600">Sectors</h2>
+          <h2 className="mb-2 mt-5 flex items-center gap-2 font-display font-600"><PieChart size={15} className="text-gold" /> Sectors</h2>
           <div className="flex flex-wrap gap-1.5">{data.bySector?.map((x: any) => <span key={x.sector} className="chip">{x.sector} <span className="text-gold">{x.trades}</span></span>)}</div>
         </div>
         <div className="card overflow-hidden lg:col-span-2">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3"><span className="font-display font-600">Trade history ({trades.length})</span>
+          <div className="flex items-center justify-between border-b border-line px-4 py-3"><span className="flex items-center gap-2 font-display font-600"><History size={15} className="text-gold" /> Trade history ({trades.length})</span>
             <Select value={type} onChange={setType} opts={[["", "All types"], ["buy", "Buys"], ["sell", "Sells"], ["exchange", "Exchanges"]]} className="py-1.5" /></div>
           <div className="max-h-[560px] overflow-auto">
             <table className="w-full min-w-[560px]">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
-import { Sparkles } from "lucide-react";
+import { Sparkles, BarChart3 } from "lucide-react";
 import { api } from "../lib/api";
 import { KPI, Select, compact, partyTone } from "../components/ui";
 
@@ -20,7 +20,7 @@ export default function Insights() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div><h1 className="font-display text-2xl font-700">Insights</h1><p className="text-sm text-slate-400">Patterns across disclosed congressional trades</p></div>
+        <div><h1 className="flex items-center gap-2 font-display text-2xl font-700"><Sparkles size={22} className="text-gold" /> Insights</h1><p className="text-sm text-slate-400">Patterns across disclosed congressional trades</p></div>
         <Select value={days} onChange={setDays} opts={[["", "All time"], ["30", "Last 30 days"], ["90", "Last 90 days"], ["180", "Last 6 months"], ["365", "Last year"]]} />
       </div>
 
@@ -157,5 +157,5 @@ export default function Insights() {
 
 const tip = { contentStyle: { background: "#121a2e", border: "1px solid #223052", borderRadius: 10, color: "#e7ecf5" }, cursor: { fill: "rgba(231,178,60,.08)" } } as any;
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="card p-4"><h2 className="mb-3 font-display font-600">{title}</h2>{children}</div>;
+  return <div className="card p-4"><h2 className="mb-3 flex items-center gap-2 font-display font-600"><BarChart3 size={15} className="text-gold" /> {title}</h2>{children}</div>;
 }

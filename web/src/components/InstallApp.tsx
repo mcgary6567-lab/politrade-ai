@@ -30,7 +30,6 @@ export default function InstallApp() {
   return (
     <div>
       <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Get the app</h4>
-      <p className="mt-2 text-xs text-slate-400">Install on your phone or computer — opens like an app, works offline with your last-loaded data, no app store needed.</p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button onClick={() => click("android")} className="btn-ghost gap-2 px-3 py-2 text-sm"><Smartphone size={16} className="text-buy" /> Android</button>
         <button onClick={() => click("ios")} className="btn-ghost gap-2 px-3 py-2 text-sm"><Apple size={16} /> iPhone</button>

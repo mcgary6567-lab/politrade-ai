@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Send, MessageCircle, Mail, Eye, EyeOff, Trash2, Plus, CheckCircle2, XCircle, Crown } from "lucide-react";
+import { Send, MessageCircle, Mail, Eye, EyeOff, Trash2, Plus, CheckCircle2, XCircle, Crown, UserCog, Bell, ListChecks, UserRound, History, Save, Link2, Unlink, FlaskConical, Zap } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../App";
 import { Field, Select, toast } from "../components/ui";
@@ -15,7 +15,7 @@ export default function Settings() {
   const u = data.user;
   return (
     <div className="space-y-5">
-      <div><h1 className="font-display text-2xl font-700">Your settings</h1><p className="text-sm text-slate-400">Account, alert channels and watchlist.</p></div>
+      <div><h1 className="flex items-center gap-2 font-display text-2xl font-700"><UserCog size={22} className="text-gold" /> Your settings</h1><p className="text-sm text-slate-400">Account, alert channels and watchlist.</p></div>
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           <Channels u={u} transports={data.transports} bot={data.bot} onChange={load} />
@@ -36,7 +36,7 @@ export default function Settings() {
             )}
           </div>
           <div className="card p-5">
-            <h2 className="mb-2 font-display font-600">Your recent alerts</h2>
+            <h2 className="mb-2 flex items-center gap-2 font-display font-600"><History size={15} className="text-gold" /> Your recent alerts</h2>
             <ul className="space-y-1.5 text-xs">
               {data.alerts.map((a: any, i: number) => <li key={i} className="flex items-center gap-2"><span className={a.ok ? "text-buy" : "text-sell"}>{a.ok ? <CheckCircle2 size={12} /> : <XCircle size={12} />}</span><span className="capitalize text-slate-400">{a.channel}</span><span className="truncate">{a.politician} {a.tx_type} {a.ticker}</span><span className="ml-auto whitespace-nowrap text-slate-500">{a.created_at?.slice(5, 16).replace("T", " ")}</span></li>)}
               {data.signalAlerts?.map((a: any, i: number) => <li key={"s" + i} className="flex items-center gap-2"><span className={a.ok ? "text-buy" : "text-sell"}>{a.ok ? <CheckCircle2 size={12} /> : <XCircle size={12} />}</span><span className="capitalize text-slate-400">{a.channel}</span><span className="truncate">🚦 Signal {a.ticker} {a.score}/100</span><span className="ml-auto whitespace-nowrap text-slate-500">{a.created_at?.slice(5, 16).replace("T", " ")}</span></li>)}
@@ -72,7 +72,7 @@ function Channels({ u, transports, bot, onChange }: { u: any; transports: any; b
   return (
     <div className="card p-5">
       <div className="mb-3 flex items-center justify-between">
-        <div><h2 className="font-display text-lg font-600">Alert channels</h2><p className="text-sm text-slate-400">Where to send you a message the moment a lawmaker files a trade that matches your watchlist.{!u.pro && <> <b className="text-gold">Pro feature</b> — you can set them up now; delivery starts when your plan is Pro.</>}</p></div>
+        <div><h2 className="flex items-center gap-2 font-display text-lg font-600"><Bell size={17} className="text-gold" /> Alert channels</h2><p className="text-sm text-slate-400">Where to send you a message the moment a lawmaker files a trade that matches your watchlist.{!u.pro && <> <b className="text-gold">Pro feature</b> — you can set them up now; delivery starts when your plan is Pro.</>}</p></div>
         <div className="space-y-1 text-sm">
           <label className="flex items-center gap-2"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Trade alerts <span className="text-xs text-slate-500">(watchlist filings)</span></label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={notifySig} onChange={(e) => setNotifySig(e.target.checked)} /> Signal alerts <span className="text-xs text-slate-500">(new / stronger buy signals)</span></label>
@@ -82,9 +82,9 @@ function Channels({ u, transports, bot, onChange }: { u: any; transports: any; b
         <div className="rounded-xl border border-line p-4">
           <div className="mb-2 flex items-center gap-2 font-semibold"><Send size={16} className="text-sky-400" /> Telegram {u.tg_chat_id && <span className="chip ml-auto border-buy/40 py-0 text-[10px] text-buy">connected</span>}</div>
           {!transports.telegram ? <p className="text-xs text-slate-500">Not enabled on this server yet.</p>
-            : u.tg_chat_id ? <button className="btn-ghost w-full text-xs" onClick={disconnectTg}>Disconnect</button>
+            : u.tg_chat_id ? <button className="btn-ghost w-full text-xs" onClick={disconnectTg}><Unlink size={13} /> Disconnect</button>
             : <>
-              <button className="btn-gold w-full text-xs" onClick={connectTg}>Connect Telegram</button>
+              <button className="btn-gold w-full text-xs" onClick={connectTg}><Link2 size={13} /> Connect Telegram</button>
               <p className="mt-2 text-xs text-slate-500">{link ? <>Waiting… open <a className="text-gold underline" href={link.url} target="_blank" rel="noreferrer">@{link.bot}</a> and press <b>Start</b>.</> : <>Opens @{bot ?? "our bot"} — press Start and you are linked.</>}</p>
             </>}
         </div>
@@ -100,9 +100,9 @@ function Channels({ u, transports, bot, onChange }: { u: any; transports: any; b
         </div>
       </div>
       <div className="mt-3 flex justify-end gap-2">
-        <button className="btn-ghost text-sm" disabled={busy === "test"} onClick={test}>Send test</button>
-        <button className="btn-ghost text-sm" disabled={busy === "sig"} onClick={testSignal} title="Sends the current #1 buy signal to your channels">Send test signal</button>
-        <button className="btn-gold text-sm" disabled={busy === "save"} onClick={save}>Save channels</button>
+        <button className="btn-ghost text-sm" disabled={busy === "test"} onClick={test}><FlaskConical size={14} /> Send test</button>
+        <button className="btn-ghost text-sm" disabled={busy === "sig"} onClick={testSignal} title="Sends the current #1 buy signal to your channels"><Zap size={14} /> Send test signal</button>
+        <button className="btn-gold text-sm" disabled={busy === "save"} onClick={save}><Save size={14} /> Save channels</button>
       </div>
     </div>
   );
@@ -122,7 +122,7 @@ function Watchlist({ pro }: { pro: boolean }) {
   const label = (w: any) => w.kind === "politician" ? (pols.find((p) => String(p.id) === w.value)?.name ?? w.value) : w.kind === "any" ? "Every new filing" : w.value;
   return (
     <div className="card p-5">
-      <h2 className="font-display text-lg font-600">Watchlist</h2>
+      <h2 className="flex items-center gap-2 font-display text-lg font-600"><ListChecks size={17} className="text-gold" /> Watchlist</h2>
       <p className="mb-3 text-sm text-slate-400">Get alerted only for these. Leave it empty to be alerted on every new filing.{!pro && " Free plan: 1 item."}</p>
       <div className="flex flex-wrap gap-2">
         <Select value={kind} onChange={(v) => { setKind(v); setValue(""); }} opts={[["politician", "Politician"], ["ticker", "Ticker"], ["party", "Party"], ["any", "Everything"]]} />
@@ -153,14 +153,14 @@ function Profile({ u, onChange }: { u: any; onChange: () => void }) {
   };
   return (
     <form className="card p-5" onSubmit={save}>
-      <h2 className="mb-3 font-display text-lg font-600">Account</h2>
+      <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-600"><UserRound size={17} className="text-gold" /> Account</h2>
       <div className="grid gap-3 md:grid-cols-2">
         <Field label="Name"><input className="input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
         <Field label="Email (sign-in)"><input className="input" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
         <Field label="New password" hint="Leave blank to keep the current one"><div className="relative"><input className="input pr-10" type={show ? "text" : "password"} minLength={6} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} autoComplete="new-password" /><button type="button" className="absolute right-3 top-3 text-slate-400" onClick={() => setShow(!show)}>{show ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></Field>
         <Field label="Current password" hint="Required to change email or password"><input className="input" type="password" value={f.current_password} onChange={(e) => setF({ ...f, current_password: e.target.value })} autoComplete="current-password" /></Field>
       </div>
-      <div className="mt-3 flex justify-end"><button className="btn-gold text-sm" disabled={busy}>Save account</button></div>
+      <div className="mt-3 flex justify-end"><button className="btn-gold text-sm" disabled={busy}><Save size={14} /> Save account</button></div>
     </form>
   );
 }

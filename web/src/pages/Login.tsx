@@ -1,3 +1,4 @@
+import { LogIn } from "lucide-react";
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
@@ -32,7 +33,7 @@ export default function Login() {
           {err && <div className="rounded-lg bg-sell/10 px-3 py-2 text-sm text-sell">{err}</div>}
           <div><label className="label">Email</label><input className="input" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
           <div><label className="label">Password</label><input className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
-          <button className="btn-gold w-full" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
+          <button className="btn-gold w-full" disabled={busy}><LogIn size={16} /> {busy ? "Signing in…" : "Sign in"}</button>
           <p className="text-center text-xs text-slate-500">Demo: admin@politrade.ai · politrade123</p>
         </form>
         <p className="mt-4 text-center text-xs text-slate-600"><a className="underline" href="/privacy">Privacy</a> · <a className="underline" href="/terms">Terms</a> · <a className="underline" href="/disclaimer">Disclaimer</a></p>

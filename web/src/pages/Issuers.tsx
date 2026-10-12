@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, Building2, Users, History, ExternalLink } from "lucide-react";
 import { api, ago, money } from "../lib/api";
 import { pill } from "./Home";
 import { Select, KPI, partyTone, compact } from "../components/ui";
@@ -33,7 +33,7 @@ function List() {
 
   return (
     <div className="space-y-5">
-      <div><h1 className="font-display text-2xl font-700">Issuers</h1><p className="text-sm text-slate-400">{total.toLocaleString()} companies most traded by lawmakers</p></div>
+      <div><h1 className="flex items-center gap-2 font-display text-2xl font-700"><Building2 size={22} className="text-gold" /> Issuers</h1><p className="text-sm text-slate-400">{total.toLocaleString()} companies most traded by lawmakers</p></div>
       <div className="card flex flex-wrap items-center gap-2 p-3">
         <div className="relative min-w-[200px] flex-1">
           <Search size={16} className="pointer-events-none absolute left-3 top-3 text-slate-500" />
@@ -86,7 +86,7 @@ function Detail({ id }: { id: string }) {
       <div className="card flex flex-wrap items-center gap-4 p-5">
         <span className="grid h-16 w-16 place-items-center rounded-2xl bg-ink-600 font-mono text-lg font-700 text-gold">{i.ticker ?? "?"}</span>
         <div className="flex-1"><h1 className="font-display text-2xl font-700">{i.name}</h1><p className="mt-1 text-slate-400">{i.sector ?? "Other"}</p></div>
-        <Link to={`/trades?issuer=${i.id}`} className="btn-ghost text-sm">Open in Trades →</Link>
+        <Link to={`/trades?issuer=${i.id}`} className="btn-ghost text-sm"><ExternalLink size={14} /> Open in Trades</Link>
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <KPI label="Trades" value={s.trades ?? 0} />
@@ -96,13 +96,13 @@ function Detail({ id }: { id: string }) {
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="card p-4">
-          <h2 className="mb-3 font-display font-600">Who trades it</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-display font-600"><Users size={15} className="text-gold" /> Who trades it</h2>
           <ul className="space-y-2 text-sm">
             {data.topPols?.map((p: any) => <li key={p.id} className="flex items-center justify-between"><Link to={`/politicians/${p.id}`} className="hover:text-gold"><span className={`mr-1 ${partyTone(p.party)}`}>●</span>{p.name}</Link><span className="font-mono">{p.trades}</span></li>)}
           </ul>
         </div>
         <div className="card overflow-hidden lg:col-span-2">
-          <div className="border-b border-line px-4 py-3 font-display font-600">Trade history ({data.trades.length})</div>
+          <div className="flex items-center gap-2 border-b border-line px-4 py-3 font-display font-600"><History size={15} className="text-gold" /> Trade history ({data.trades.length})</div>
           <div className="max-h-[560px] overflow-auto">
             <table className="w-full min-w-[560px]">
               <thead className="sticky top-0 border-b border-line bg-ink-700"><tr><th className="th">Politician</th><th className="th">Type</th><th className="th text-right">Amount</th><th className="th">Traded</th><th className="th">Published</th></tr></thead>

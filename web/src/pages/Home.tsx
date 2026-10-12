@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, LineChart, Line, ResponsiveContainer, XAxis, Tooltip } from "recharts";
-import { Sparkles, TrendingUp, Lock } from "lucide-react";
+import { Sparkles, TrendingUp, Lock, ArrowLeftRight, Lightbulb, Landmark, Building2, Map as MapIcon } from "lucide-react";
 import { api, money, ago } from "../lib/api";
 import { useAuth } from "../App";
 import { compact, partyTone } from "../components/ui";
@@ -54,7 +54,7 @@ export default function Home() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Latest trades */}
-        <Panel title="Latest trades" to="/trades" extra={
+        <Panel title="Latest trades" icon={<ArrowLeftRight size={14} />} to="/trades" extra={
           <div className="flex rounded-lg border border-line p-0.5 text-xs">
             {(["stocks", "all"] as const).map((k) => <button key={k} onClick={() => setAssets(k)} className={`rounded-md px-2.5 py-1 font-semibold ${assets === k ? "bg-ink-500 text-slate-100" : "text-slate-400"}`}>{k === "stocks" ? "Stocks" : "All assets"}</button>)}
           </div>}>
@@ -72,7 +72,7 @@ export default function Home() {
         </Panel>
 
         {/* Latest insights */}
-        <Panel title="Latest insights" to="/insights">
+        <Panel title="Latest insights" icon={<Lightbulb size={14} />} to="/insights">
           <div className="divide-y divide-line">
             {d.notable.map((r: any) => (
               <Link key={r.id} to={`/politicians/${r.politician_id}`} className="flex items-start gap-3 py-2.5 hover:bg-ink-700/40">
@@ -89,7 +89,7 @@ export default function Home() {
         </Panel>
 
         {/* Featured politicians */}
-        <Panel title="Featured politicians" to="/politicians" sub="last 12 months">
+        <Panel title="Featured politicians" icon={<Landmark size={14} />} to="/politicians" sub="last 12 months">
           <div className="divide-y divide-line">
             {d.featuredPols.map((p: any) => (
               <div key={p.id} className="py-3">
@@ -114,7 +114,7 @@ export default function Home() {
 
         <div className="space-y-5">
           {/* Featured issuers */}
-          <Panel title="Featured issuers" to="/issuers" sub="3 years">
+          <Panel title="Featured issuers" icon={<Building2 size={14} />} to="/issuers" sub="3 years">
             <div className="divide-y divide-line">
               {d.featuredIssuers.map((i: any) => (
                 <Link key={i.id} to={`/issuers/${i.id}`} className="grid grid-cols-[40px_minmax(0,1fr)_auto_auto] items-center gap-3 py-2.5 hover:bg-ink-700/40 sm:grid-cols-[40px_1fr_auto_auto_110px]">
@@ -131,7 +131,7 @@ export default function Home() {
           </Panel>
 
           {/* States */}
-          <Panel title="States" to="/trades" sub="3 years">
+          <Panel title="States" icon={<MapIcon size={14} />} to="/trades" sub="3 years">
             <StateTiles states={d.states} />
             <div className="mt-3 divide-y divide-line">
               {d.states.slice(0, 3).map((s: any) => (
@@ -155,11 +155,11 @@ const tip = { contentStyle: { background: "#121a2e", border: "1px solid #223052"
 const band = (a?: number | null, b?: number | null) => a == null ? "—" : `${k(a)}–${k(b ?? a)}`;
 const k = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(n % 1e6 ? 1 : 0)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n);
 
-function Panel({ title, to, sub, extra, children }: { title: string; to: string; sub?: string; extra?: React.ReactNode; children: React.ReactNode }) {
+function Panel({ title, icon, to, sub, extra, children }: { title: string; icon?: React.ReactNode; to: string; sub?: string; extra?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="card min-w-0 overflow-hidden p-4">
       <div className="mb-2 flex items-center gap-3">
-        <h2 className="font-display text-xs font-700 uppercase tracking-wider">{title}</h2>
+        <h2 className="flex items-center gap-2 font-display text-xs font-700 uppercase tracking-wider">{icon && <span className="text-gold">{icon}</span>}{title}</h2>
         {sub && <span className="chip py-0 text-[10px]">{sub}</span>}
         {extra}
         <Link to={to} className="ml-auto text-xs font-semibold text-slate-400 hover:text-gold">View all</Link>

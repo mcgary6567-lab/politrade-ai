@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
-import { Linkedin, Github, Send, FileText, ShieldCheck, AlertTriangle, Mail } from "lucide-react";
+import { Linkedin, FileText, ShieldCheck, AlertTriangle, Mail, ArrowLeftRight, Landmark, Building2, Sparkles, TrendingUp } from "lucide-react";
 import InstallApp from "./InstallApp";
 
 type Brand = { name: string; version: string; contact: string; social: { x?: string; telegram?: string; github?: string; linkedin?: string } };
@@ -21,10 +21,11 @@ export default function Footer() {
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Explore</h4>
           <ul className="mt-3 space-y-2 text-sm text-slate-300">
-            <li><Link className="hover:text-gold" to="/trades">Trades</Link></li>
-            <li><Link className="hover:text-gold" to="/politicians">Politicians</Link></li>
-            <li><Link className="hover:text-gold" to="/issuers">Issuers</Link></li>
-            <li><Link className="hover:text-gold" to="/insights">Insights</Link></li>
+            <li><Link className="flex items-center gap-2 hover:text-gold" to="/trades"><ArrowLeftRight size={14} className="text-slate-500" /> Trades</Link></li>
+            <li><Link className="flex items-center gap-2 hover:text-gold" to="/politicians"><Landmark size={14} className="text-slate-500" /> Politicians</Link></li>
+            <li><Link className="flex items-center gap-2 hover:text-gold" to="/issuers"><Building2 size={14} className="text-slate-500" /> Issuers</Link></li>
+            <li><Link className="flex items-center gap-2 hover:text-gold" to="/signals"><TrendingUp size={14} className="text-slate-500" /> AI Signals</Link></li>
+            <li><Link className="flex items-center gap-2 hover:text-gold" to="/insights"><Sparkles size={14} className="text-slate-500" /> Insights</Link></li>
           </ul>
         </div>
         <div>
@@ -39,7 +40,7 @@ export default function Footer() {
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Follow</h4>
           <div className="mt-3 flex flex-wrap gap-2">
-            {([["x", "X / Twitter", <XIcon />], ["linkedin", "LinkedIn", <Linkedin size={15} />], ["telegram", "Telegram", <Send size={15} />], ["github", "GitHub", <Github size={15} />]] as const).map(([k, label, icon]) => {
+            {([["x", "X / Twitter", <XIcon />], ["linkedin", "LinkedIn", <Linkedin size={15} />]] as const).map(([k, label, icon]) => {
               const href = (b?.social as any)?.[k];
               return <a key={k} className={`btn-ghost gap-1.5 px-2.5 py-1.5 text-xs ${href ? "" : "opacity-40"}`} href={href || "#"} target={href ? "_blank" : undefined} rel="noreferrer" title={href ? label : `${label} — not set yet`} onClick={(e) => { if (!href) e.preventDefault(); }}>{icon}<span className="hidden sm:inline">{label}</span></a>;
             })}
