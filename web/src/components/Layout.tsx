@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X } from "lucide-react";
+import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck } from "lucide-react";
 import { useAuth } from "../App";
 import Footer from "./Footer";
 import Logo from "./Logo";
 
-const NAV = [
+const BASE_NAV: { to: string; label: string; icon: any; end?: boolean }[] = [
   { to: "/", label: "Home", icon: LayoutGrid, end: true },
   { to: "/trades", label: "Trades", icon: ArrowLeftRight },
   { to: "/politicians", label: "Politicians", icon: Landmark },
@@ -18,6 +18,7 @@ export default function Layout() {
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const signOut = () => { logout(); nav("/login"); };
+  const NAV = user?.role === "admin" ? [...BASE_NAV, { to: "/admin", label: "Admin", icon: ShieldCheck }] : BASE_NAV;
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-900">

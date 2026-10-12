@@ -51,7 +51,18 @@ export function migrate() {
       UNIQUE(trade_id, channel)
     );
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
+    CREATE TABLE IF NOT EXISTS plans (
+      id INTEGER PRIMARY KEY, name TEXT NOT NULL, price_cents INTEGER NOT NULL DEFAULT 0,
+      interval TEXT NOT NULL DEFAULT 'month', features TEXT, active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS ingest_log (
+      id INTEGER PRIMARY KEY, started_at TEXT NOT NULL, finished_at TEXT, fetched INTEGER, added INTEGER, error TEXT, source TEXT
+    );
   `);
+  addColumn("users", "plan_id", "INTEGER");
+  addColumn("users", "status", "TEXT NOT NULL DEFAULT 'active'");
+  addColumn("users", "last_login", "TEXT");
 }
 
 export const get = (sql: string, ...p: any[]) => db.prepare(sql).get(...p) as any;

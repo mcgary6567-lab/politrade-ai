@@ -8,6 +8,8 @@ import Trades from "./pages/Trades";
 import Politicians from "./pages/Politicians";
 import Issuers from "./pages/Issuers";
 import Insights from "./pages/Insights";
+import Admin from "./pages/Admin";
+import { Toasts } from "./components/ui";
 
 type User = { id: number; email: string; name?: string; role: string };
 type Auth = { user: User | null; ready: boolean; login: (t: string) => Promise<void>; logout: () => void };
@@ -40,11 +42,14 @@ export default function App() {
             <Route path="/politicians" element={<Politicians />} />
             <Route path="/politicians/:id" element={<Politicians />} />
             <Route path="/issuers" element={<Issuers />} />
+            <Route path="/issuers/:id" element={<Issuers />} />
             <Route path="/insights" element={<Insights />} />
+            <Route path="/admin/*" element={<Admin />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <Toasts />
     </Ctx.Provider>
   );
 }

@@ -3,6 +3,7 @@ import { config } from "./config.js";
 import { get, run, all } from "./db.js";
 import { tradeInsight } from "./ai.js";
 import { sendAlert, recordAlert } from "./notify.js";
+import { integ } from "./settings.js";
 
 const now = () => new Date().toISOString();
 
@@ -57,47 +58,91 @@ export async function fireAlert(tradeId: number) {
                  FROM trades tr JOIN politicians p ON p.id=tr.politician_id JOIN issuers i ON i.id=tr.issuer_id
                  WHERE tr.id=?`, tradeId);
   if (!t) return;
+  if (!integ.alertsEnabled()) return;
+  const brand = integ.brandName();
   const note = await tradeInsight({ politician: t.pol, party: t.party, chamber: t.chamber, ticker: t.ticker, issuer: t.issuer, tx_type: t.tx_type, amount_min: t.amount_min, amount_max: t.amount_max, tx_date: t.tx_date });
   run("UPDATE trades SET ai_note=? WHERE id=?", note, tradeId);
   const emoji = t.tx_type === "buy" ? "🟢 BUY" : t.tx_type === "sell" ? "🔴 SELL" : "🔄 EXCHANGE";
   const link = `${config.publicUrl}/trades`;
-  const text = `<b>${config.brandName} · ${emoji}</b>\n${note}\n\n${t.ticker ? `Ticker: ${t.ticker}\n` : ""}Filed: ${t.published_date ?? "-"}\n${link}`;
-  const results = await sendAlert(text, `${config.brandName}: ${t.pol} ${t.tx_type} ${t.ticker || t.issuer}`);
+  const text = `<b>${brand} · ${emoji}</b>\n${note}\n\n${t.ticker ? `Ticker: ${t.ticker}\n` : ""}Filed: ${t.published_date ?? "-"}\n${link}`;
+  const results = await sendAlert(text, `${brand}: ${t.pol} ${t.tx_type} ${t.ticker || t.issuer}`);
   recordAlert(tradeId, results);
   return results;
 }
 
 /** Pull the configured public disclosure feed and ingest new trades (firing alerts for each new one). */
-export async function ingestFromFeed(): Promise<{ fetched: number; added: number }> {
-  if (!config.dataFeedUrl) return { fetched: 0, added: 0 };
-  const res = await fetch(config.dataFeedUrl, { headers: { accept: "application/json" } });
-  if (!res.ok) throw new Error(`feed ${res.status}`);
-  const data = await res.json() as any[];
-  const rows = Array.isArray(data) ? data : (data as any).transactions ?? [];
+export async function ingestFromFeed(): Promise<{ fetched: number; added: number; source: string }> {
+  const url = integ.feedUrl();
+  if (!url) throw new Error("No data feed URL set. Add one in Admin → Data feed.");
+  const logId = Number(run("INSERT INTO ingest_log(started_at,source) VALUES(?,?)", now(), url).lastInsertRowid);
+  try {
+    const res = await fetch(url, { headers: { accept: "application/json", "user-agent": `${integ.brandName()}/1.0` } });
+    if (!res.ok) throw new Error(`feed responded ${res.status}`);
+    const data = await res.json() as any;
+    const rows: any[] = Array.isArray(data) ? data : data.transactions ?? data.data ?? data.results ?? data.rows ?? [];
+    let added = 0;
+    for (const r of rows) {
+      const t = normalizeFeedRow(r);
+      if (!t) continue;
+      const id = await recordTrade(t, { alert: true });
+      if (id) added++;
+    }
+    run("UPDATE ingest_log SET finished_at=?, fetched=?, added=? WHERE id=?", now(), rows.length, added, logId);
+    return { fetched: rows.length, added, source: url };
+  } catch (e: any) {
+    run("UPDATE ingest_log SET finished_at=?, error=? WHERE id=?", now(), String(e.message ?? e), logId);
+    throw e;
+  }
+}
+
+/** Import an array of records supplied by the admin (JSON upload) — same normalizer as the feed. */
+export async function ingestRows(rows: any[], source = "manual"): Promise<{ fetched: number; added: number; source: string }> {
+  const logId = Number(run("INSERT INTO ingest_log(started_at,source) VALUES(?,?)", now(), source).lastInsertRowid);
   let added = 0;
   for (const r of rows) {
     const t = normalizeFeedRow(r);
     if (!t) continue;
-    const id = await recordTrade(t, { alert: true });
-    if (id) added++;
+    if (await recordTrade(t, { alert: false })) added++;
   }
-  return { fetched: rows.length, added };
+  run("UPDATE ingest_log SET finished_at=?, fetched=?, added=? WHERE id=?", now(), rows.length, added, logId);
+  return { fetched: rows.length, added, source };
 }
 
 /** Map a public STOCK-Act-style disclosure record to our shape (tolerant of common field names). */
-function normalizeFeedRow(r: any): Parameters<typeof recordTrade>[0] | null {
-  const name = r.representative || r.senator || r.politician || r.name;
+export function normalizeFeedRow(r: any): Parameters<typeof recordTrade>[0] | null {
+  if (!r || typeof r !== "object") return null;
+  const name = r.representative || r.senator || r.politician || r.politician_name || r.name;
   const ticker = (r.ticker || r.symbol || "").toString().replace(/[^A-Za-z.\-]/g, "").toUpperCase() || undefined;
-  const issuer = r.asset_description || r.issuer || r.company || ticker || "Unknown";
+  const issuer = r.asset_description || r.issuer || r.issuer_name || r.company || ticker || "Unknown";
   const type = r.type || r.transaction_type || r.tx_type || "";
-  if (!name || !issuer || !type) return null;
+  if (!name || !issuer || !type || ticker === "--") return null;
   const amt = parseAmount(r.amount || r.amount_range || "");
+  const party = normParty(r.party);
   return {
-    politician: { name, party: r.party, chamber: r.chamber || (r.senator ? "Senate" : r.representative ? "House" : undefined), state: r.state },
-    issuer: { ticker, name: String(issuer) },
-    tx_type: type, tx_date: r.transaction_date || r.tx_date, published_date: r.disclosure_date || r.published_date || r.filing_date,
-    amount_min: amt?.min, amount_max: amt?.max, owner: r.owner,
+    raw_id: r.id || r.raw_id || r.ptr_link ? String(r.id || r.raw_id || `${r.ptr_link}|${ticker}|${r.transaction_date}|${type}|${amt?.min}`) : undefined,
+    politician: { ext_id: r.politician_id || r.bioguide_id, name, party, chamber: r.chamber || (r.senator ? "Senate" : r.representative ? "House" : undefined), state: r.state || r.district?.slice(0, 2) },
+    issuer: { ticker, name: String(issuer).slice(0, 120), sector: r.sector || r.industry },
+    tx_type: type, tx_date: normDate(r.transaction_date || r.tx_date), published_date: normDate(r.disclosure_date || r.published_date || r.filing_date),
+    amount_min: amt?.min, amount_max: amt?.max, owner: r.owner, comment: r.comment,
   };
+}
+
+function normParty(p: any): string | undefined {
+  const x = String(p ?? "").toLowerCase();
+  if (!x) return undefined;
+  if (x.startsWith("d")) return "Democrat";
+  if (x.startsWith("r")) return "Republican";
+  if (x.startsWith("i")) return "Independent";
+  return String(p);
+}
+
+/** Accept 2024-01-31 or 01/31/2024 and return ISO date. */
+function normDate(s: any): string | undefined {
+  if (!s) return undefined;
+  const str = String(s);
+  const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+  return str.slice(0, 10);
 }
 
 function parseAmount(s: string): { min: number; max: number } | undefined {

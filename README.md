@@ -15,8 +15,21 @@ Built with the same stack as a production app: **Node.js 22 + TypeScript + Expre
 - **AI automation** — when a new trade is ingested, an AI one-line summary is generated and **pushed to every connected channel** (Telegram / WhatsApp / email). Unconfigured channels are logged as "simulated" so the app always works.
 - **Footer** — Terms & Conditions, Disclaimer, Privacy Policy, Contact Us, social links.
 
+## Admin panel (`/admin`, admin role only)
+Everything is controlled from the browser — no redeploy or secrets needed after first boot:
+- **Overview** — users, plans, trades, alerts, channel status, last ingest.
+- **Users** — add / edit / suspend / delete members, reset passwords, assign a plan, admin or member role. Suspended users are cut off immediately.
+- **Plans** — payment plans (name, price, monthly / yearly / lifetime, feature list, visible flag).
+- **Integrations** — AI keys (Claude or Gemini), Telegram bot, WhatsApp Cloud API, email provider, branding & social links. Each has a **Test** button; secrets are stored masked.
+- **Data feed** — feed URL, cron schedule, alerts on/off, **Run now**, manual JSON import, ingest history, **Clear demo data**.
+- **Alerts log** — every delivery per channel with the provider's error text and a re-send button.
+
+Values saved in the panel override the environment variables below (`settings` table), and the scheduler picks up changes within a minute.
+
 ## Data
-The app ingests from a **configurable public feed** (`DATA_FEED_URL`) of congressional disclosures (STOCK Act). It ships with **demo sample data** (fictional sample politicians — we never attach fabricated trades to real people) so it runs out of the box. Point `DATA_FEED_URL` at a public disclosure JSON source to ingest real records on a schedule (`INGEST_CRON`, default every 6 hours).
+The app ingests from a **configurable public feed** (Admin → Data feed, or `DATA_FEED_URL`) of congressional disclosures (STOCK Act). It accepts a JSON array (or `{transactions:[…]}`) and auto-detects common field names (`representative`/`senator`, `ticker`, `asset_description`, `type`, `amount`, `transaction_date`, `disclosure_date`, `party`, `state`, `owner`). It ships with **demo sample data** (fictional sample politicians — we never attach fabricated trades to real people) so it runs out of the box; once real data flows, press **Clear demo data**.
+
+Filters: trades by type, party, chamber, state, sector, owner, amount band, trade-date range, recency and sort (newest, largest, slowest filers) with CSV export; politicians by party / chamber / state; issuers by sector; insights by time window.
 
 ## Run locally
 ```bash

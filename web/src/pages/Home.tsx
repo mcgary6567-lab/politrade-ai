@@ -70,7 +70,7 @@ export default function Home() {
                 <li className="flex items-center justify-between text-slate-400"><span>Data feed</span><span className={status.feed.configured ? "text-buy" : "text-slate-500"}>{status.feed.configured ? "connected" : "demo data"}</span></li>
               </ul>
             ) : <p className="text-sm text-slate-500">…</p>}
-            <p className="mt-3 text-xs text-slate-500">New disclosures are pushed to connected channels automatically.</p>
+            <p className="mt-3 text-xs text-slate-500">New disclosures are pushed to connected channels automatically.{user?.role === "admin" && <> <Link to="/admin/integrations" className="text-gold hover:underline">Configure →</Link></>}</p>
           </div>
           <div className="card p-4">
             <h2 className="mb-3 flex items-center gap-2 font-display font-600"><Bell size={16} className="text-gold" /> Most active</h2>
