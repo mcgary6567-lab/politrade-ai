@@ -32,7 +32,7 @@ export default function Footer() {
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Help &amp; Legal</h4>
           <ul className="mt-3 space-y-2 text-sm text-slate-300">
-            <li><a className="flex items-center gap-2 font-semibold text-slate-200 hover:text-gold" href="/faq"><HelpCircle size={14} className="text-gold" /> Help Center &amp; FAQ</a></li>
+            <li><a className="flex items-center gap-2 font-semibold text-slate-200 hover:text-gold" href="/faq"><HelpCircle size={14} className="text-gold" /> Briefing Room <span className="font-normal text-slate-500">· Help &amp; FAQ</span></a></li>
             <li><a className="flex items-center gap-2 hover:text-gold" href="/terms"><FileText size={14} className="text-slate-500" /> Terms &amp; Conditions</a></li>
             <li><a className="flex items-center gap-2 hover:text-gold" href="/disclaimer"><AlertTriangle size={14} className="text-slate-500" /> Disclaimer</a></li>
             <li><a className="flex items-center gap-2 hover:text-gold" href="/privacy"><ShieldCheck size={14} className="text-slate-500" /> Privacy Policy</a></li>

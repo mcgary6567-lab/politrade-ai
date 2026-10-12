@@ -71,7 +71,7 @@ export function Shell({ children, title }: { children: React.ReactNode; title?: 
           <p className="mt-1 text-sm text-slate-400">{title ?? "Congressional stock trades, with AI signals & alerts."}</p>
         </div>
         {children}
-        <p className="mt-4 text-center text-xs text-slate-600"><a className="underline" href="/faq">FAQ</a> · <a className="underline" href="/privacy">Privacy</a> · <a className="underline" href="/terms">Terms</a> · <a className="underline" href="/disclaimer">Disclaimer</a></p>
+        <p className="mt-4 text-center text-xs text-slate-600"><a className="underline" href="/faq">Briefing Room</a> · <a className="underline" href="/privacy">Privacy</a> · <a className="underline" href="/terms">Terms</a> · <a className="underline" href="/disclaimer">Disclaimer</a></p>
       </div>
     </div>
   );
