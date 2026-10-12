@@ -247,3 +247,16 @@ test("signup + PIN login: register, set PIN with password, log in with PIN, lock
   assert.equal((await call("", "POST", "/api/auth/signup", { first_name: "B", last_name: "C", email: "bc@example.com", password: "longenough1", accept: true })).status, 403);
   await call(admin, "PUT", "/api/admin/settings", { values: { "auth.signup": "1" } });
 });
+
+test("invest plan: strategy stats + model portfolio, locked rows for free members", async () => {
+  const pro = await call(admin, "GET", "/api/invest");
+  assert.equal(pro.status, 200);
+  assert.ok(pro.data.strategy.market && pro.data.strategy.smart && typeof pro.data.strategy.smart.annual === "number");
+  assert.ok(Array.isArray(pro.data.portfolio) && pro.data.portfolio.length > 0 && pro.data.portfolio[0].weight > 0);
+  assert.equal(pro.data.locked, false);
+  await call(admin, "POST", "/api/admin/users", { email: "inv@example.com", password: "secret12" });
+  const tok = (await call("", "POST", "/api/auth/login", { email: "inv@example.com", password: "secret12" })).data.token;
+  const free = await call(tok, "GET", "/api/invest");
+  assert.equal(free.data.locked, true);
+  assert.ok(!free.data.portfolio[0].locked && free.data.portfolio.slice(1).every((x: any) => x.locked));
+});

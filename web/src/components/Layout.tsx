@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog, TrendingUp } from "lucide-react";
+import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog, TrendingUp, Wallet } from "lucide-react";
 import { useAuth } from "../App";
 import { prefetch } from "../lib/api";
 import { Search } from "lucide-react";
@@ -9,7 +9,7 @@ import { OfflineBar, InstallNudge } from "./InstallApp";
 import Logo from "./Logo";
 
 /** Warm the cache for a page when its nav link is hovered. */
-const PREFETCH: Record<string, string[]> = { "/": ["/dashboard?assets=stocks"], "/trades": ["/trades?limit=50&offset=0", "/filters"], "/politicians": ["/politicians?"], "/issuers": ["/issuers?limit=60"], "/insights": ["/insights"], "/signals": ["/signals?days=90"] };
+const PREFETCH: Record<string, string[]> = { "/": ["/dashboard?assets=stocks"], "/trades": ["/trades?limit=50&offset=0", "/filters"], "/politicians": ["/politicians?"], "/issuers": ["/issuers?limit=60"], "/insights": ["/insights"], "/signals": ["/signals?days=90"], "/invest": ["/invest"] };
 const BASE_NAV: { to: string; label: string; icon: any; end?: boolean }[] = [
   { to: "/", label: "Home", icon: LayoutGrid, end: true },
   { to: "/trades", label: "Trades", icon: ArrowLeftRight },
@@ -17,6 +17,7 @@ const BASE_NAV: { to: string; label: string; icon: any; end?: boolean }[] = [
   { to: "/issuers", label: "Issuers", icon: Building2 },
   { to: "/insights", label: "Insights", icon: Sparkles },
   { to: "/signals", label: "Signals", icon: TrendingUp },
+  { to: "/invest", label: "Invest Plan", icon: Wallet },
 ];
 
 export default function Layout() {
@@ -35,7 +36,7 @@ export default function Layout() {
           <nav className="ml-4 hidden items-center gap-0.5 md:flex">
             {NAV.filter((n) => n.to !== "/settings").map((n) => (
               <NavLink key={n.to} to={n.to} end={n.end} onMouseEnter={() => PREFETCH[n.to]?.forEach(prefetch)} className={({ isActive }) =>
-                `flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-semibold transition lg:px-3 ${isActive ? "bg-gold/15 text-gold" : "text-slate-300 hover:bg-ink-700"}`}>
+                `flex items-center gap-1.5 rounded-lg px-2 py-2 text-[13px] font-semibold transition lg:px-2.5 lg:text-sm ${isActive ? "bg-gold/15 text-gold" : "text-slate-300 hover:bg-ink-700"}`}>
                 <n.icon size={16} /> {n.label}
               </NavLink>
             ))}
@@ -47,7 +48,7 @@ export default function Layout() {
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
             <Link to="/settings" className="hidden max-w-[180px] items-center gap-2 truncate text-sm text-slate-400 hover:text-gold sm:flex" title="Your settings"><UserCog size={15} className="shrink-0" /><span className="truncate">{user?.name ?? user?.email}</span>
               <span className={`chip py-0.5 text-[10px] ${user?.pro ? "border-gold/50 text-gold" : ""}`}>{user?.role === "admin" ? "ADMIN" : user?.pro ? "PRO" : "FREE"}</span></Link>
-            <button onClick={signOut} className="btn-ghost px-3 py-2 text-sm" title="Sign out"><LogOut size={15} /></button>
+            <button onClick={signOut} className="btn-ghost gap-1.5 px-3 py-2 text-sm" title="Logout"><LogOut size={15} /> <span className="hidden sm:inline">Logout</span></button>
             <button onClick={() => setOpen(!open)} className="btn-ghost px-2.5 py-2 md:hidden" aria-label="Menu">{open ? <X size={18} /> : <Menu size={18} />}</button>
           </div>
         </div>

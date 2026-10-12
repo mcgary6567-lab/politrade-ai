@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, LineChart, Line, ResponsiveContainer, XAxis, Tooltip } from "recharts";
-import { Sparkles, TrendingUp, Lock, ArrowLeftRight, Lightbulb, Landmark, Building2, Map as MapIcon } from "lucide-react";
+import { Sparkles, TrendingUp, Lock, ArrowLeftRight, Lightbulb, Landmark, Building2, Map as MapIcon, Wallet } from "lucide-react";
 import { api, money, ago } from "../lib/api";
 import { useAuth } from "../App";
 import { compact, partyTone } from "../components/ui";
@@ -32,7 +32,8 @@ export default function Home() {
         <div className="mb-2 flex items-center gap-3">
           <h2 className="flex items-center gap-2 font-display text-xs font-700 uppercase tracking-wider"><TrendingUp size={14} className="text-gold" /> AI Signals — where Congress is buying</h2>
           <span className="chip py-0 text-[10px]">last 90 days</span>
-          <Link to="/signals" className="ml-auto text-xs font-semibold text-gold hover:underline">All signals →</Link>
+          <Link to="/invest" className="ml-auto flex items-center gap-1 text-xs font-semibold text-gold hover:underline"><Wallet size={13} /> Invest Plan & profit calculator →</Link>
+          <Link to="/signals" className="text-xs font-semibold text-slate-400 hover:text-gold">All signals →</Link>
         </div>
         {!sig ? <div className="h-20 animate-pulse rounded-xl bg-ink-600/40" /> : (
           <div className="grid gap-3 sm:grid-cols-3">

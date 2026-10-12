@@ -254,3 +254,23 @@ data.get("/signals", cached(600_000, (req) => `/signals?days=${req.query.days ??
   const lock = (s: any) => ({ ticker: "•••", issuer: "Locked — Pro members see every signal", issuer_id: 0, sector: s.sector, direction: s.direction, score: s.score, confidence: s.confidence, buyers: s.buyers, sellers: s.sellers, locked: true, reasons: [], topBuyers: [], volume: 0, bipartisan: s.bipartisan, lastFiled: s.lastFiled, days: s.days });
   res.json({ ...r, buy: r.buy.map((s, i) => (i === 0 ? s : lock(s))), sell: r.sell.map(lock), leaderboard: lb.slice(0, 3), stats, locked: true });
 });
+
+/** GET /api/invest — back-tested strategy stats + a model allocation across the current buy signals (Pro sees all rows). */
+data.get("/invest", cached(600_000, () => "/invest"), async (req, res) => {
+  const { strategyStats } = await import("../strategy.js");
+  const { computeSignals } = await import("../signals.js");
+  const strategy = strategyStats();
+  const sigs = computeSignals(90, 8).buy;
+  const total = sigs.reduce((a, s) => a + s.score, 0) || 1;
+  const portfolio = sigs.map((s, i) => ({
+    rank: i + 1, ticker: s.ticker, issuer: s.issuer, issuer_id: s.issuer_id, sector: s.sector, score: s.score, confidence: s.confidence,
+    buyers: s.buyers, histHit: s.histHit, bipartisan: s.bipartisan, weight: Math.round((s.score / total) * 1000) / 10,
+    topBuyer: s.topBuyers[0] ? { name: s.topBuyers[0].name, hit_rate: s.topBuyers[0].hit_rate } : null,
+  }));
+  const locked = !req.user?.pro;
+  res.json({
+    strategy, locked,
+    portfolio: locked ? portfolio.map((p, i) => (i === 0 ? p : { ...p, ticker: "•••", issuer: "Locked — Pro", issuer_id: 0, topBuyer: null, locked: true })) : portfolio,
+    proPriceCents: 30000,
+  });
+});

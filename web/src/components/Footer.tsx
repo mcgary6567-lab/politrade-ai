@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
-import { Linkedin, FileText, ShieldCheck, AlertTriangle, Mail, ArrowLeftRight, Landmark, Building2, Sparkles, TrendingUp } from "lucide-react";
+import { Linkedin, FileText, ShieldCheck, AlertTriangle, Mail, ArrowLeftRight, Landmark, Building2, Sparkles, TrendingUp, Wallet } from "lucide-react";
 import InstallApp from "./InstallApp";
 
 type Brand = { name: string; version: string; contact: string; social: { x?: string; telegram?: string; github?: string; linkedin?: string } };
@@ -25,6 +25,7 @@ export default function Footer() {
             <li><Link className="flex items-center gap-2 hover:text-gold" to="/politicians"><Landmark size={14} className="text-slate-500" /> Politicians</Link></li>
             <li><Link className="flex items-center gap-2 hover:text-gold" to="/issuers"><Building2 size={14} className="text-slate-500" /> Issuers</Link></li>
             <li><Link className="flex items-center gap-2 hover:text-gold" to="/signals"><TrendingUp size={14} className="text-slate-500" /> AI Signals</Link></li>
+            <li><Link className="flex items-center gap-2 hover:text-gold" to="/invest"><Wallet size={14} className="text-slate-500" /> Invest Plan</Link></li>
             <li><Link className="flex items-center gap-2 hover:text-gold" to="/insights"><Sparkles size={14} className="text-slate-500" /> Insights</Link></li>
           </ul>
         </div>
