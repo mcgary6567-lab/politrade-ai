@@ -182,6 +182,7 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact" |
       <li><b>Legal</b> — if required by law, court order, or to protect rights, safety or the integrity of the Service.</li></ul>
       <p>We never share your email, number or watchlist with lawmakers, data vendors, advertisers or other members.</p>` },
     { id: "cookies", icon: "cookie", title: "Cookies & local storage", html: `
+      <p><b>Advertising and analytics on our public website.</b> Pages on hillradar.com may use privacy-respecting analytics and may show advertising served by Google AdSense. Google and its partners may use cookies or device identifiers to show ads based on your visits to this and other sites, and to measure them. You can opt out of personalised advertising at <a href="https://adssettings.google.com" rel="noopener" target="_blank">Google Ads Settings</a>, and where the law requires it we ask for your consent before any advertising cookie is set. The signed-in app does not show advertising.</p>
       <ul><li>We do not use advertising or third-party tracking cookies.</li>
       <li>Your browser keeps a <b>sign-in token</b> (so you stay logged in), small UI preferences, and — for offline use — copies of the pages and data you recently loaded. Clearing site data in your browser removes them.</li>
       <li>Fonts may be loaded from Google Fonts; Google may see your IP address when they are fetched.</li></ul>` },

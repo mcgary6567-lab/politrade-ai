@@ -12,7 +12,7 @@ const { legalPage } = await import("../src/legal.js");
 
 const SITE = process.env.SITE_URL ?? "https://hillradar.com";
 const META: Record<string, { title: string; desc: string; crumb: string }> = {
-  faq: { title: "Help Center & FAQ — Congress Stock Trades Tracker | Hillradar AI", crumb: "Help Center & FAQ", desc: "Answers on where Hillradar AI's congressional trade data comes from, filing speed, AI Scanning, the Investment Plan, Free vs Pro pricing, alerts and your account." },
+  faq: { title: "Help Center & FAQ — Congress Stock Trades Tracker | Hillradar AI", crumb: "Help Center & FAQ", desc: "Answers on where Hillradar AI's congressional trade data comes from, filing speed, AI Scanning, the Investment Plan, Free vs Pro pricing and alerts." },
   terms: { title: "Terms & Conditions | Hillradar AI", crumb: "Terms & Conditions", desc: "Terms for using Hillradar AI: accounts, Free and Pro plans, billing and refunds, acceptable use, data sources, no financial advice, liability, governing law." },
   privacy: { title: "Privacy Policy | Hillradar AI", crumb: "Privacy Policy", desc: "What Hillradar AI collects, how it is used and protected, cookies, retention, your rights and how to reach us. We never sell personal data." },
   disclaimer: { title: "Disclaimer — Not Financial Advice | Hillradar AI", crumb: "Disclaimer", desc: "Hillradar AI republishes public STOCK Act disclosures for research and education. Not financial advice; known data limitations, no warranty, corrections." },
@@ -37,7 +37,7 @@ for (const kind of pages) {
     .replace(/src="\/icon-192\.png"/g, 'src="/assets/icon-192.png"')
     .replace(/href="\/favicon\.png"/g, 'href="/assets/favicon.png"')
     // app links (/settings, /signup, /login, /invest …) are rewritten at runtime by app.js using config.js
-    .replace("</body>", '<script src="/config.js"></script>\n<script src="/app.js" defer></script>\n</body>');
+    .replace("</body>", '<div class="cookie" id="cookie" hidden style="position:fixed;left:12px;right:12px;bottom:12px;z-index:40;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:#121a2e;border:1px solid #223052;border-radius:14px;padding:12px 14px;font-size:.88rem;color:#c3ccdd;max-width:720px;margin:0 auto"><span>We use cookies for analytics and, where shown, advertising. See our <a href="/privacy/">Privacy Policy</a>.</span><button type="button" id="cookie-ok" class="btn">OK</button></div>\n<script src="/config.js"></script>\n<script src="/app.js" defer></script>\n</body>');
   // SEO head: canonical, strong description, robots, social cards, breadcrumb + WebPage schema
   const m = META[kind]; const url = `${SITE}/${kind}/`;
   html = html
