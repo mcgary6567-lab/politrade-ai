@@ -47,15 +47,15 @@ function Guide({ kind, canPrompt, onPrompt, onClose }: { kind: "android" | "ios"
     ["Open this site in Safari", `${url} — Chrome on iPhone cannot install apps.`, <Apple size={18} />],
     ["Tap the Share button", "The square with an arrow at the bottom of Safari.", <Share size={18} />],
     ["Tap “Add to Home Screen”", "Scroll the list a little if you don't see it, then tap Add.", <PlusSquare size={18} />],
-    ["Done", "PoliTrade AI appears on your home screen and opens full-screen.", <Download size={18} />],
+    ["Done", "Hillradar appears on your home screen and opens full-screen.", <Download size={18} />],
   ] : kind === "android" ? [
     ["Open this site in Chrome", url, <Smartphone size={18} />],
-    ["Tap the ⋮ menu (top right)", "Or wait for the “Add PoliTrade AI to Home screen” bar at the bottom.", <MoreVertical size={18} />],
+    ["Tap the ⋮ menu (top right)", "Or wait for the “Add Hillradar to Home screen” bar at the bottom.", <MoreVertical size={18} />],
     ["Tap “Install app” / “Add to Home screen”", "Then tap Install.", <Download size={18} />],
     ["Done", "The app icon is on your home screen and in the app drawer.", <PlusSquare size={18} />],
   ] : [
     ["Open this site in Chrome or Edge", url, <Monitor size={18} />],
-    ["Click the install icon in the address bar", "A small monitor-with-arrow icon at the right end of the address bar — or menu ⋮ → “Install PoliTrade AI”.", <Download size={18} />],
+    ["Click the install icon in the address bar", "A small monitor-with-arrow icon at the right end of the address bar — or menu ⋮ → “Install Hillradar”.", <Download size={18} />],
     ["Click Install", "It opens in its own window and gets a Start-menu / Dock icon.", <PlusSquare size={18} />],
   ];
   return (
@@ -97,7 +97,7 @@ export function InstallNudge() {
   return (
     <div className="fixed inset-x-3 bottom-3 z-40 flex items-center gap-3 rounded-2xl border border-gold/40 bg-ink-700/95 p-3 shadow-xl backdrop-blur md:hidden">
       <img src="/icon-192.png" alt="" className="h-10 w-10 rounded-xl" />
-      <div className="min-w-0 flex-1 text-sm"><b>Install PoliTrade AI</b><div className="text-xs text-slate-400">Opens like an app · works offline</div></div>
+      <div className="min-w-0 flex-1 text-sm"><b>Install Hillradar</b><div className="text-xs text-slate-400">Opens like an app · works offline</div></div>
       {canPrompt ? <button className="btn-gold px-3 py-1.5 text-xs" onClick={async () => { if (await prompt()) dismiss(); }}>Install</button>
         : <a href="#install" className="btn-gold px-3 py-1.5 text-xs" onClick={dismiss}>How</a>}
       <button className="btn-ghost px-2 py-1.5" onClick={dismiss}><X size={14} /></button>

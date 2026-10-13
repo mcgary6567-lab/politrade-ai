@@ -1,8 +1,8 @@
-// PoliTrade AI service worker — the app shell and hashed assets are cached so the app opens without internet,
+// Hillradar service worker — the app shell and hashed assets are cached so the app opens without internet,
 // and GET API responses are kept (stale-while-revalidate) so the last-loaded trades, politicians and dashboard
 // stay readable offline. Writes (login, settings, watchlist) always need the network.
-const SHELL = "politrade-shell-v1";
-const DATA = "politrade-data-v1";
+const SHELL = "hillradar-shell-v2";
+const DATA = "hillradar-data-v2";
 const DATA_MAX = 300;
 const NEVER_CACHE = /^\/api\/(auth|admin|me\/telegram|me\/test|trades\.csv)/;
 const SERVER_PAGES = /^\/(privacy|terms|disclaimer|contact)(\/|$)/;

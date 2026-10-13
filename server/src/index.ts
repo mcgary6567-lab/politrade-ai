@@ -26,6 +26,7 @@ app.use(express.json({ limit: "5mb" }));
 migrate();
 seedAdmin();
 seedPlans();
+rebrandOnce();
 
 app.get("/api/photo/:bioguide", photo);
 app.get("/api/health", (_req, res) => res.json({ ok: true, version: APP_VERSION, ai: aiOn(), ...stats() }));
@@ -95,6 +96,17 @@ if (fs.existsSync(webDist)) {
   // hashed assets are immutable; index.html must always be fresh so new deploys show up
   app.use(express.static(webDist, { maxAge: "365d", immutable: true, index: false, setHeaders: (res, p) => { if (p.endsWith(".html") || p.endsWith(".webmanifest") || p.endsWith("sw.js")) res.setHeader("cache-control", "no-cache"); } }));
   app.get(/^\/(?!api).*/, (_req, res) => res.sendFile(path.join(webDist, "index.html"), { headers: { "cache-control": "no-cache" } }));
+}
+
+/** One-time: installs that still carry the old default brand strings move to Hillradar. Custom values are left alone. */
+function rebrandOnce() {
+  if (getSetting("brand.v2")) return;
+  const swap: Record<string, [string, string]> = {
+    "brand.name": ["PoliTrade AI", config.brandName], "brand.company": ["PoliTrade AI", config.brandName],
+    "brand.contact": ["hello@politrade.ai", config.contactEmail], "email.from": ["alerts@politrade.ai", config.email.from],
+  };
+  for (const [k, [oldV, newV]] of Object.entries(swap)) { const cur = getSetting(k); if (cur === oldV) setSetting(k, newV); }
+  setSetting("brand.v2", "1");
 }
 
 /** Default subscription plans: Free and Pro ($300 / year). Existing installs seeded with the old trio are migrated once. */

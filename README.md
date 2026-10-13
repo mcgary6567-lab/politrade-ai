@@ -1,4 +1,4 @@
-# PoliTrade AI
+# Hillradar
 
 Track **publicly disclosed US congressional stock trades** (STOCK Act disclosures) with **AI-powered alerts** to WhatsApp, Telegram and email the moment a lawmaker files a trade.
 

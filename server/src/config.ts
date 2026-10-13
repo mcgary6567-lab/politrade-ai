@@ -50,12 +50,12 @@ export const config = {
   email: {
     webhookUrl: process.env.EMAIL_WEBHOOK_URL ?? "",     // generic HTTP email provider (e.g. Resend/Mailgun REST)
     apiKey: process.env.EMAIL_API_KEY ?? "",
-    from: process.env.EMAIL_FROM ?? "alerts@politrade.ai",
+    from: process.env.EMAIL_FROM ?? "alerts@hillradar.com",
     to: process.env.EMAIL_TO ?? "",
   },
   scheduler: process.env.SCHEDULER !== "off",
-  brandName: process.env.BRAND_NAME ?? "PoliTrade AI",
-  contactEmail: process.env.CONTACT_EMAIL ?? "hello@politrade.ai",
+  brandName: process.env.BRAND_NAME ?? "Hillradar",
+  contactEmail: process.env.CONTACT_EMAIL ?? "hello@hillradar.com",
   social: {
     x: process.env.SOCIAL_X ?? "",
     telegram: process.env.SOCIAL_TELEGRAM ?? "",

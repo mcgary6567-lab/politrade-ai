@@ -149,7 +149,7 @@ export async function ingestFromFeed(opts: { alerts?: boolean } = {}): Promise<{
   return { fetched, added, source: `${urls.length} source${urls.length > 1 ? "s" : ""}`, errors };
 }
 
-const UA = { accept: "application/json, */*", "user-agent": "PoliTradeAI/1.0 (+public STOCK Act data)" };
+const UA = { accept: "application/json, */*", "user-agent": "Hillradar/1.0 (+public STOCK Act data)" };
 
 async function fetchJson(url: string): Promise<any> {
   const res = await fetch(url, { headers: UA });

@@ -32,7 +32,7 @@ export default function Layout() {
       <OfflineBar />
       <header className="sticky top-0 z-30 border-b border-line bg-ink-900/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-          <Link to="/" className="flex items-center gap-2.5"><Logo className="h-8 w-8" /><span className="whitespace-nowrap font-display text-lg font-700 tracking-tight">Poli<span className="text-gold">Trade</span> <span className="text-slate-400">AI</span></span></Link>
+          <Link to="/" className="flex items-center gap-2.5"><Logo className="h-8 w-8" /><span className="whitespace-nowrap font-display text-lg font-700 tracking-tight">Hill<span className="text-gold">radar</span></span></Link>
           <nav className="ml-1 hidden items-center gap-0 md:flex xl:ml-3 xl:gap-0.5">
             {BASE_NAV.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.end} title={n.label} onMouseEnter={() => PREFETCH[n.to]?.forEach(prefetch)} className={({ isActive }) =>

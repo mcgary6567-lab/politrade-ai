@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "PoliTrade AI — Congressional trade tracker",
-  "short_name": "PoliTrade AI",
+  "name": "Hillradar — Congressional trade tracker",
+  "short_name": "Hillradar",
   "description": "Every disclosed US congressional stock trade, with instant alerts. Works offline with your last-loaded data.",
   "start_url": "/",
   "scope": "/",
@@ -9,7 +9,7 @@
   "orientation": "any",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["finance", "news", "productivity"],
+  "categories": ["news", "government", "productivity"],
   "background_color": "#0a0f1c",
   "theme_color": "#0a0f1c",
   "prefer_related_applications": false,

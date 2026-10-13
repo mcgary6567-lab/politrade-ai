@@ -33,7 +33,9 @@ const I: Record<string, string> = {
 };
 const ic = (k: string, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k] ?? I.info}</svg>`;
 
-const UPDATED = "October 12, 2026";
+const UPDATED = "October 13, 2026";
+/** "Hillradar" -> Hill<b>radar</b>, "PoliTrade AI" -> PoliTrade <b>AI</b>, anything else as-is. */
+export const brandHtml = (n: string) => `<span>${/\sAI$/.test(n) ? `${n.replace(/ AI$/, "")} <b>AI</b>` : n.length > 6 ? `${n.slice(0, 4)}<b>${n.slice(4)}</b>` : n}</span>`;
 
 type Section = { id: string; icon: string; title: string; html: string };
 
@@ -71,7 +73,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--mute);font-si
 @media(max-width:860px){.grid{grid-template-columns:1fr;gap:18px}aside{position:static}aside ol{display:flex;flex-wrap:wrap;gap:6px;border-left:0}aside li a{border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:.82rem;gap:6px}aside li a small{display:none}.nav a{padding:6px 8px;font-size:.82rem}.hero h1{font-size:1.5rem}}
 @media(max-width:600px){.bar{flex-wrap:wrap;height:auto;min-height:56px;padding:8px 0}.nav{margin-left:0;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.nav a{white-space:nowrap}.hero{padding:28px 0 20px}section{padding:16px 14px}table{display:block;overflow-x:auto}}
 ${opts.css ?? ""}</style>${opts.headExtra ?? ""}</head><body>
-<header><div class="wrap bar"><a class="brand" href="/"><img src="/icon-192.png" width="30" height="30" alt="" style="border-radius:8px">${name.replace(/ AI$/, "")} <b>AI</b></a><nav class="nav">${nav}</nav></div></header>
+<header><div class="wrap bar"><a class="brand" href="/"><img src="/icon-192.png" width="30" height="30" alt="" style="border-radius:8px">${brandHtml(name)}</a><nav class="nav">${nav}</nav></div></header>
 <div class="wrap"><div class="hero"><h1>${title}</h1><p>${lead}</p><div class="meta"><span class="chip">${ic("clock", 14)} Last updated ${UPDATED}</span><span class="chip">${ic("file", 14)} ${sections.length} ${opts.sectionsLabel ?? "sections"}</span><span class="chip">${ic("globe", 14)} Applies worldwide</span></div>${opts.heroExtra ?? ""}</div>
 <div class="grid"><aside><h3>On this page</h3><ol>${toc}</ol></aside><main>${body}</main></div></div>
 <footer><div class="wrap"><span>© ${new Date().getFullYear()} ${integ.companyName()} · ${name}. Data from public US congressional disclosures (STOCK Act).</span><span><a href="/">← Back to the app</a></span></div></footer>

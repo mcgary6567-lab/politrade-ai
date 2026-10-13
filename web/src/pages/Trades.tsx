@@ -59,7 +59,7 @@ export default function Trades() {
       {!user?.pro && (
         <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 p-4 text-sm">
           <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> <span className="text-slate-300">you are seeing the last 30 days of filings. <b>Pro ($300 / year)</b> unlocks the full history since 2014, instant Telegram / WhatsApp / Email alerts, unlimited watchlist and CSV export.</span></div>
-          <a href={`mailto:${branding?.contact ?? "hello@politrade.ai"}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Upgrade to Pro</a>
+          <a href={`mailto:${branding?.contact ?? "hello@hillradar.com"}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Upgrade to Pro</a>
         </div>
       )}
       <div className="card space-y-2 p-3">
