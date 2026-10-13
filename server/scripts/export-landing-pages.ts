@@ -27,34 +27,37 @@ for (const kind of pages) {
   let html = legalPage(kind);
   html = html
     // sibling public pages live next to this file
-    .replace(/href="\/(faq|terms|privacy|disclaimer|contact)(#[^"]*)?"/g, (_m, p, h = "") => (local.has(p) ? `href="${p}.html${h}"` : _m))
-    .replace(/href="\/help"/g, 'href="faq.html"')
+    .replace(/href="\/(faq|terms|privacy|disclaimer|contact)(#[^"]*)?"/g, (_m, p, h = "") => (local.has(p) ? `href="/${p}/${h}"` : _m))
+    .replace(/href="\/help"/g, 'href="/faq/"')
     // brand / home links go to the landing root
-    .replace(/href="\/"/g, 'href="./"')
+    .replace(/href="\/"/g, 'href="/"')
     .replace(/← Back to the app/g, "← Back to home")
     // icons from the landing assets
-    .replace(/src="\/icon\.svg"/g, 'src="assets/logo.svg"')
-    .replace(/src="\/icon-192\.png"/g, 'src="assets/icon-192.png"')
-    .replace(/href="\/favicon\.png"/g, 'href="assets/favicon.png"')
+    .replace(/src="\/icon\.svg"/g, 'src="/assets/logo.svg"')
+    .replace(/src="\/icon-192\.png"/g, 'src="/assets/icon-192.png"')
+    .replace(/href="\/favicon\.png"/g, 'href="/assets/favicon.png"')
     // app links (/settings, /signup, /login, /invest …) are rewritten at runtime by app.js using config.js
-    .replace("</body>", '<script src="config.js"></script>\n<script src="app.js" defer></script>\n</body>');
+    .replace("</body>", '<script src="/config.js"></script>\n<script src="/app.js" defer></script>\n</body>');
   // SEO head: canonical, strong description, robots, social cards, breadcrumb + WebPage schema
-  const m = META[kind]; const url = `${SITE}/${kind}.html`;
+  const m = META[kind]; const url = `${SITE}/${kind}/`;
   html = html
     .replace(/<title>[^<]*<\/title>/, `<title>${m.title}</title>`)
     .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${m.desc}">`)
-    .replace('<link rel="icon" href="assets/favicon.png">', `<link rel="canonical" href="${url}">
+    .replace('<link rel="icon" href="/assets/favicon.png">', `<link rel="canonical" href="${url}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta name="theme-color" content="#0a0f1c">
-<link rel="icon" href="assets/favicon.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <meta property="og:site_name" content="Hillradar AI"><meta property="og:type" content="article"><meta property="og:url" content="${url}"><meta property="og:title" content="${m.title}"><meta property="og:description" content="${m.desc}"><meta property="og:image" content="${SITE}/assets/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${m.title}"><meta name="twitter:description" content="${m.desc}"><meta name="twitter:image" content="${SITE}/assets/og-image.png">
 <script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@graph": [
   { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` }, { "@type": "ListItem", position: 2, name: m.crumb, item: url }] },
   { "@type": "WebPage", "@id": `${url}#webpage`, url, name: m.title, description: m.desc, isPartOf: { "@id": `${SITE}/#website` }, publisher: { "@id": `${SITE}/#org` }, inLanguage: "en-US", dateModified: new Date().toISOString().slice(0, 10) },
 ] }).replace(/</g, "\\u003c")}</script>`)
-    .replace('<img src="assets/logo.svg" width="42" height="42" alt="">', '<img src="assets/logo.svg" width="42" height="42" alt="Hillradar AI logo">');
-  fs.writeFileSync(path.join(out, `${kind}.html`), html);
-  console.log(`wrote ${kind}.html (${(html.length / 1024).toFixed(1)} KB)`);
+    .replace('<img src="/assets/logo.svg" width="42" height="42" alt="">', '<img src="/assets/logo.svg" width="42" height="42" alt="Hillradar AI logo">')
+    // legal nav gets a Blog link and the back link goes to the site root
+    .replace('<nav class="nav">', '<nav class="nav"><a href="/blog/">Blog</a>');
+  fs.mkdirSync(path.join(out, kind), { recursive: true });
+  fs.writeFileSync(path.join(out, kind, "index.html"), html);
+  console.log(`wrote ${kind}/index.html (${(html.length / 1024).toFixed(1)} KB)`);
 }
 try { fs.unlinkSync(process.env.DB_PATH!); fs.unlinkSync(process.env.DB_PATH! + "-wal"); fs.unlinkSync(process.env.DB_PATH! + "-shm"); } catch {}
