@@ -44,15 +44,15 @@ Sign in with `admin@politrade.ai` / `politrade123` (override via `ADMIN_EMAIL` /
 
 ## Deploy (Fly.io)
 ```bash
-fly apps create politrade-ai
-fly volumes create politrade_data --size 1 --region iad -a politrade-ai
-fly secrets set -a politrade-ai \
+fly apps create hillradar-ai
+fly volumes create hillradar_data --size 1 --region iad -a hillradar-ai
+fly secrets set -a hillradar-ai \
   JWT_SECRET="$(openssl rand -hex 32)" \
   ADMIN_EMAIL="you@mail.com" ADMIN_PASSWORD="strong-pass" \
-  PUBLIC_URL="https://politrade-ai.fly.dev" \
+  PUBLIC_URL="https://hillradar-ai.fly.dev" \
   DATA_FEED_URL="<public disclosure JSON url>" \
   TELEGRAM_BOT_TOKEN="..." TELEGRAM_CHAT_ID="..."     # + WhatsApp / email as needed
-fly deploy -a politrade-ai
+fly deploy -a hillradar-ai
 ```
 Auto-deploy on push to `main` via `.github/workflows/fly-deploy.yml` (set repo secret `FLY_API_TOKEN` + variable `FLY_APP`). Any always-on host with a persistent disk works (VPS + Docker, Railway, Render); shared/serverless hosting will not keep the SQLite file.
 

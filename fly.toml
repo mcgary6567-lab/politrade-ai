@@ -1,5 +1,5 @@
-# PoliTrade AI on Fly.io — one always-on machine, SQLite on a persistent volume.
-app = "politrade-ai"
+# Hillradar on Fly.io — one always-on machine, SQLite on a persistent volume.
+app = "hillradar-ai"
 primary_region = "iad"   # US East — close to the data sources
 
 [build]
@@ -8,12 +8,12 @@ primary_region = "iad"   # US East — close to the data sources
 [env]
   NODE_ENV = "production"
   PORT = "4000"
-  DB_PATH = "/data/politrade.db"
+  DB_PATH = "/data/hillradar.db"
   WEB_DIST = "/app/web/dist"
   # DATA_FEED_URL, ADMIN_EMAIL/PASSWORD, JWT_SECRET, PUBLIC_URL, alert channels -> set via `fly secrets set`
 
 [mounts]
-  source = "politrade_data"
+  source = "hillradar_data"
   destination = "/data"
 
 [http_service]

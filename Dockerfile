@@ -24,6 +24,6 @@ COPY --from=server /srv/dist ./dist
 COPY --from=web /web/dist ./web/dist
 RUN mkdir -p /data && chown -R node:node /data
 USER node
-ENV DB_PATH=/data/politrade.db WEB_DIST=/app/web/dist PORT=4000
+ENV DB_PATH=/data/hillradar.db WEB_DIST=/app/web/dist PORT=4000
 EXPOSE 4000
 CMD ["node","--disable-warning=ExperimentalWarning","dist/index.js"]
