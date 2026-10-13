@@ -9,6 +9,10 @@ Hillradar marketing / Google Ads landing page. Plain HTML, CSS and JS. No build 
 - `config.js` – **edit this**: `APP_URL` (where the app runs) and `API_URL` (same server)
 - `assets/` – icons
 
+## Public pages
+`faq.html`, `terms.html`, `privacy.html`, `disclaimer.html`, `contact.html` are exported from the app
+(`cd server && npm run export:landing`) so the marketing site serves them itself. Only sign-in / sign-up links go to the app.
+
 ## Deploy
 Upload the folder to any static host (cPanel/Hostinger `public_html`, Netlify, Vercel, Cloudflare Pages, GitHub Pages, S3).
 Point your domain at it. Done.
