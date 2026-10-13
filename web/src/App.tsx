@@ -67,10 +67,6 @@ const Fallback = () => <div className="space-y-3">{Array.from({ length: 4 }, (_,
 function Protected() {
   const { user, ready } = useAuth();
   if (!ready) return <div className="grid min-h-screen place-items-center text-slate-500">Loading…</div>;
-  if (!user) {
-    // first-time visitors on the root get the public landing page (served by the API from /landing)
-    if (window.location.pathname === "/" && !getToken()) { window.location.replace("/welcome/"); return null; }
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
   return <Outlet />;
 }

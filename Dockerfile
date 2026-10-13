@@ -22,9 +22,8 @@ COPY server/package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=server /srv/dist ./dist
 COPY --from=web /web/dist ./web/dist
-COPY landing ./landing
 RUN mkdir -p /data && chown -R node:node /data
 USER node
-ENV DB_PATH=/data/hillradar.db WEB_DIST=/app/web/dist LANDING_DIR=/app/landing PORT=4000
+ENV DB_PATH=/data/hillradar.db WEB_DIST=/app/web/dist PORT=4000
 EXPOSE 4000
 CMD ["node","--disable-warning=ExperimentalWarning","dist/index.js"]

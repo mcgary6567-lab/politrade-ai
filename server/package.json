@@ -10,7 +10,7 @@
     "start": "node --disable-warning=ExperimentalWarning dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --disable-warning=ExperimentalWarning --import tsx --test test/*.test.ts",
-    "export:landing": "tsx --disable-warning=ExperimentalWarning scripts/export-landing-pages.ts ../landing"
+    "export:landing": "tsx --disable-warning=ExperimentalWarning scripts/export-landing-pages.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

@@ -59,7 +59,7 @@ app.post("/api/auth/signup", (req, res) => {
   return "error" in r ? res.status(409).json(r) : res.json(r);
 });
 
-// public, read-only numbers for the external marketing site (no auth, CORS open, 10-minute cache)
+// public, read-only numbers for the marketing site on hillradar.com (no auth, CORS open, 10-minute cache)
 let landingCache: { at: number; body: any } | null = null;
 app.get("/api/public/landing", (_req, res) => {
   if (!landingCache || Date.now() - landingCache.at > 600_000) {
@@ -73,14 +73,6 @@ app.get("/api/public/landing", (_req, res) => {
   res.setHeader("cache-control", "public, max-age=300"); res.setHeader("access-control-allow-origin", "*");
   res.json(landingCache.body);
 });
-
-// marketing landing page (static files in /landing; the same folder is what gets hosted on the public domain later)
-const landingDir = path.resolve(process.env.LANDING_DIR ?? "../landing");
-if (fs.existsSync(landingDir)) {
-  // relative asset paths in index.html need the trailing slash, so /welcome itself redirects
-  app.get(["/welcome", "/start", "/congress-trades"], (req, res, next) => (req.path === "/welcome/" ? next() : res.redirect(302, "/welcome/")));
-  app.use("/welcome", express.static(landingDir, { maxAge: "1h", setHeaders: (res, p) => { if (p.endsWith(".html") || p.endsWith("config.js")) res.setHeader("cache-control", "no-cache"); } }));
-}
 
 // public legal pages
 app.get("/privacy", (_req, res) => res.type("html").send(legalPage("privacy")));

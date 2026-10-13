@@ -1,7 +1,7 @@
 /**
  * Export the public pages (FAQ, Terms, Privacy, Disclaimer, Contact) as static HTML into the landing folder,
  * so the marketing site on hillradar.com serves them itself. Only sign-in / sign-up / in-app links point at the app.
- *   usage: npx tsx scripts/export-landing-pages.ts [outDir]   (default ../landing)
+ *   usage: npx tsx scripts/export-landing-pages.ts <path-to-hillradar-landing-checkout>
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -10,7 +10,8 @@ const { migrate } = await import("../src/db.js");
 migrate();
 const { legalPage } = await import("../src/legal.js");
 
-const out = path.resolve(process.argv[2] ?? "../landing");
+const out = path.resolve(process.argv[2] ?? "");
+if (!process.argv[2] || !fs.existsSync(path.join(out, "index.html"))) { console.error("usage: export-landing-pages.ts <path to the hillradar-landing checkout>"); process.exit(1); }
 const pages = ["faq", "terms", "privacy", "disclaimer", "contact"] as const;
 const local = new Set(pages);
 
