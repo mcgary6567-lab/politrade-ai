@@ -55,7 +55,7 @@ for (const kind of pages) {
 ] }).replace(/</g, "\\u003c")}</script>`)
     .replace('<img src="/assets/logo.svg" width="42" height="42" alt="">', '<img src="/assets/logo.svg" width="42" height="42" alt="Hillradar AI logo">')
     // legal nav gets a Blog link and the back link goes to the site root
-    .replace('<nav class="nav">', '<nav class="nav"><a href="/blog/">Blog</a>');
+    .replace('<nav class="nav">', '<nav class="nav">');
   fs.mkdirSync(path.join(out, kind), { recursive: true });
   fs.writeFileSync(path.join(out, kind, "index.html"), html);
   console.log(`wrote ${kind}/index.html (${(html.length / 1024).toFixed(1)} KB)`);
