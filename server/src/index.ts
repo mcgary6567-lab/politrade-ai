@@ -108,14 +108,14 @@ if (fs.existsSync(webDist)) {
 
 /** One-time: installs that still carry the old default brand strings move to Hillradar. Custom values are left alone. */
 function rebrandOnce() {
-  if (getSetting("brand.v3")) return;
+  if (getSetting("brand.v4")) return;
   const swap: Record<string, [string[], string]> = {
-    "brand.name": [["PoliTrade AI"], config.brandName], "brand.company": [["PoliTrade AI"], config.brandName],
+    "brand.name": [["PoliTrade AI", "Hillradar"], config.brandName], "brand.company": [["PoliTrade AI", "Hillradar"], config.brandName],
     "brand.contact": [["hello@politrade.ai", "hello@hillradar.com"], config.contactEmail],
     "email.from": [["alerts@politrade.ai"], config.email.from],
   };
   for (const [k, [olds, newV]] of Object.entries(swap)) { const cur = getSetting(k); if (cur != null && olds.includes(cur)) setSetting(k, newV); }
-  setSetting("brand.v3", "1");
+  setSetting("brand.v4", "1");
 }
 
 /** Default subscription plans: Free and Pro ($300 / year). Existing installs seeded with the old trio are migrated once. */

@@ -54,7 +54,7 @@ export const config = {
     to: process.env.EMAIL_TO ?? "",
   },
   scheduler: process.env.SCHEDULER !== "off",
-  brandName: process.env.BRAND_NAME ?? "Hillradar",
+  brandName: process.env.BRAND_NAME ?? "Hillradar AI",
   contactEmail: process.env.CONTACT_EMAIL ?? "info@hillradar.com",
   social: {
     x: process.env.SOCIAL_X ?? "",

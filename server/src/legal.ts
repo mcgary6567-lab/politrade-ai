@@ -54,7 +54,7 @@ function layout(title: string, lead: string, sections: Section[], kind: string, 
 a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
 header{position:sticky;top:0;z-index:5;background:rgba(10,15,28,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
-.bar{display:flex;align-items:center;gap:14px;height:60px}.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.1rem;color:var(--ink)}
+.bar{display:flex;align-items:center;gap:14px;height:60px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;color:var(--ink)}
 .brand b{color:var(--gold)}.nav{margin-left:auto;display:flex;gap:4px}.nav a{padding:7px 11px;border-radius:9px;font-size:.9rem;font-weight:600;color:#cdd6e6}.nav a.on,.nav a:hover{background:rgba(231,178,60,.14);color:var(--gold);text-decoration:none}
 .hero{padding:44px 0 26px;border-bottom:1px solid var(--line)}.hero h1{margin:0 0 8px;font-size:2rem;line-height:1.2}.hero p{margin:0;color:var(--mute);max-width:720px}
 .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:.78rem;color:#cdd6e6}
@@ -73,7 +73,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--mute);font-si
 @media(max-width:860px){.grid{grid-template-columns:1fr;gap:18px}aside{position:static}aside ol{display:flex;flex-wrap:wrap;gap:6px;border-left:0}aside li a{border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:.82rem;gap:6px}aside li a small{display:none}.nav a{padding:6px 8px;font-size:.82rem}.hero h1{font-size:1.5rem}}
 @media(max-width:600px){.bar{flex-wrap:wrap;height:auto;min-height:56px;padding:8px 0}.nav{margin-left:0;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.nav a{white-space:nowrap}.hero{padding:28px 0 20px}section{padding:16px 14px}table{display:block;overflow-x:auto}}
 ${opts.css ?? ""}</style>${opts.headExtra ?? ""}</head><body>
-<header><div class="wrap bar"><a class="brand" href="/"><img src="/icon-192.png" width="30" height="30" alt="" style="border-radius:8px">${brandHtml(name)}</a><nav class="nav">${nav}</nav></div></header>
+<header><div class="wrap bar"><a class="brand" href="/"><img src="/icon.svg" width="36" height="36" alt="">${brandHtml(name)}</a><nav class="nav">${nav}</nav></div></header>
 <div class="wrap"><div class="hero"><h1>${title}</h1><p>${lead}</p><div class="meta"><span class="chip">${ic("clock", 14)} Last updated ${UPDATED}</span><span class="chip">${ic("file", 14)} ${sections.length} ${opts.sectionsLabel ?? "sections"}</span><span class="chip">${ic("globe", 14)} Applies worldwide</span></div>${opts.heroExtra ?? ""}</div>
 <div class="grid"><aside><h3>On this page</h3><ol>${toc}</ol></aside><main>${body}</main></div></div>
 <footer><div class="wrap"><span>© ${new Date().getFullYear()} ${integ.companyName()} · ${name}. Data from public US congressional disclosures (STOCK Act).</span><span><a href="/">← Back to the app</a></span></div></footer>

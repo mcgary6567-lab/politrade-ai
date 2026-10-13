@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Hillradar — Congressional trade tracker",
-  "short_name": "Hillradar",
+  "name": "Hillradar AI — Congressional trade tracker",
+  "short_name": "Hillradar AI",
   "description": "Every disclosed US congressional stock trade, with instant alerts. Works offline with your last-loaded data.",
   "start_url": "/",
   "scope": "/",

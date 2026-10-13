@@ -66,8 +66,8 @@ export function Shell({ children, title }: { children: React.ReactNode; title?: 
       style={{ backgroundImage: "radial-gradient(1000px 500px at 80% -10%, rgba(231,178,60,.10), transparent 60%)" }}>
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <Logo className="mx-auto h-14 w-14" />
-          <h1 className="mt-3 font-display text-2xl font-700">Hill<span className="text-gold">radar</span></h1>
+          <Logo className="mx-auto h-20 w-20" />
+          <h1 className="mt-3 font-display text-2xl font-700">Hill<span className="text-gold">radar</span> <span className="text-lg font-600 text-slate-400">AI</span></h1>
           <p className="mt-1 text-sm text-slate-400">{title ?? "Congressional stock trades, with AI signals & alerts."}</p>
         </div>
         {children}
