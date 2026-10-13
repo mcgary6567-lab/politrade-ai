@@ -271,6 +271,6 @@ data.get("/invest", cached(600_000, () => "/invest"), async (req, res) => {
   res.json({
     strategy, locked,
     portfolio: locked ? portfolio.map((p, i) => (i === 0 ? p : { ...p, ticker: "•••", issuer: "Locked — Pro", issuer_id: 0, topBuyer: null, locked: true })) : portfolio,
-    proPriceCents: 30000,
+    proPriceCents: 49700,
   });
 });

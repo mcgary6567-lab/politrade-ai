@@ -21,7 +21,9 @@ img { max-width: 100%; }
 .bar { display: flex; align-items: center; gap: 14px; height: 62px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.25rem; color: var(--ink); letter-spacing: -.01em; }
 .brand img { display: block; }
+.brand .bw { display: flex; flex-direction: column; line-height: 1.05; }
 .brand .bt { white-space: nowrap; }
+.brand .tag { font-size: .68rem; font-weight: 500; color: var(--mute); letter-spacing: .01em; white-space: nowrap; margin-top: 3px; }
 .brand b { color: var(--gold); }
 .brand .ai { font-style: normal; font-weight: 600; font-size: .8em; color: var(--mute); }
 .brand.fb { font-size: 1.05rem; }
@@ -117,8 +119,8 @@ h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); letter-spacing: -.01em; margin: 0 0 
 .plan .pp { font-size: 2.2rem; font-weight: 800; margin: 6px 0 2px; }
 .plan .pp small { font-size: .95rem; color: var(--mute); font-weight: 500; }
 .plan ul { margin: 16px 0 20px; padding: 0; list-style: none; }
-.plan li { display: flex; gap: 10px; padding: 6px 0; font-size: .93rem; color: #d5dced; align-items: flex-start; }
-.plan li .i { color: var(--buy); margin-top: 4px; }
+.plan li { position: relative; padding: 6px 0 6px 26px; font-size: .93rem; color: #d5dced; }
+.plan li .i { position: absolute; left: 0; top: 9px; color: var(--buy); }
 .plan li.no { color: var(--mute); }
 .plan li.no .i { color: var(--mute); }
 
@@ -152,7 +154,7 @@ h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); letter-spacing: -.01em; margin: 0 0 
 @media (max-width: 600px) {
   .nav .l { display: none; } .nav .s { display: inline; }
   .nav { gap: 6px; } .nav a { padding: 8px 8px; }
-  .bar { gap: 6px; } .brand { font-size: 1.05rem; gap: 7px; } .brand img { width: 32px; height: 32px; }
+  .bar { gap: 6px; } .brand { font-size: 1.05rem; gap: 7px; } .brand img { width: 36px; height: 36px; } .site-header .brand .tag { display: none; }
   .grid3 { grid-template-columns: 1fr; }
   section { padding: 44px 0; }
   .ctas .btn { width: 100%; }

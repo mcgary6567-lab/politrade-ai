@@ -38,7 +38,7 @@ test("overview + default plans seeded", async () => {
   assert.ok(o.data.trades >= 400 && o.data.users >= 1 && o.data.plans === 2);
   const plans = await call(admin, "GET", "/api/admin/plans");
   const pro = plans.data.rows.find((p: any) => p.name === "Pro");
-  assert.equal(pro.price_cents, 30000); assert.equal(pro.interval, "year");
+  assert.equal(pro.price_cents, 49700); assert.equal(pro.interval, "year");
   assert.ok(plans.data.rows.some((p: any) => p.name === "Free" && p.price_cents === 0));
 });
 

@@ -22,7 +22,7 @@ export default function Home() {
     <div className="space-y-5">
       {d.window && (
         <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 px-4 py-3 text-sm">
-          <span className="flex-1 basis-[260px]"><b className="text-gold">Free plan</b> — showing the last {d.window} days. <b>Pro ($300 / year)</b>: full history since 2014, instant Telegram / WhatsApp / Email alerts, CSV.</span>
+          <span className="flex-1 basis-[260px]"><b className="text-gold">Free plan</b> — showing the last {d.window} days. <b>Pro ($497 / year)</b>: full history since 2014, AI Scanning, Investment Plan, instant alerts, CSV.</span>
           <Link to="/settings" className="btn-gold px-3 py-1.5 text-xs">Upgrade</Link>
         </div>
       )}

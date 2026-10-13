@@ -30,7 +30,7 @@ export default function Settings() {
             <ul className="mt-3 space-y-1 text-sm text-slate-300">{String(u.planInfo?.features ?? "Browse every disclosed trade\nLast 30 days of filings\n1 watchlist item").split("\n").filter(Boolean).map((f: string, i: number) => <li key={i} className="flex gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-buy" />{f}</li>)}</ul>
             {!u.pro && (
               <div className="mt-4 rounded-xl border border-gold/40 bg-gold/5 p-3 text-sm">
-                <b className="text-gold">Pro — $300 / year</b><p className="mt-1 text-slate-300">Full history since 2014, instant Telegram / WhatsApp / Email alerts, unlimited watchlist, AI insight, CSV.</p>
+                <b className="text-gold">Pro — $497 / year</b><p className="mt-1 text-slate-300">Full history since 2014, AI Scanning, Investment Plan, instant Telegram / WhatsApp / Email alerts, unlimited watchlist, CSV.</p>
                 <a href={`mailto:${branding?.contact ?? ""}?subject=Upgrade to Pro&body=Please upgrade my account (${u.email}) to Pro.`} className="btn-gold mt-3 w-full text-sm">Upgrade to Pro</a>
               </div>
             )}

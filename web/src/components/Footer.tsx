@@ -15,7 +15,7 @@ export default function Footer() {
     <footer className="mt-10 border-t border-line bg-ink-800">
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-9 sm:grid-cols-2 md:grid-cols-5">
         <div className="sm:col-span-2 md:col-span-1">
-          <div className="flex items-center gap-2.5"><Logo className="h-10 w-10 shrink-0" /><span className="font-display text-lg font-700">Hill<span className="text-gold">radar</span> <span className="text-sm font-600 text-slate-400">AI</span></span></div>
+          <div className="flex items-center gap-2.5"><Logo className="h-11 w-11 shrink-0" /><span className="flex flex-col leading-none"><span className="font-display text-lg font-700">Hill<span className="text-gold">radar</span> <span className="text-sm font-600 text-slate-400">AI</span></span><span className="mt-1 text-[11px] text-slate-500">Congress trades, on your radar.</span></span></div>
           <p className="mt-3 max-w-xs text-sm text-slate-400">AI-powered tracker for publicly disclosed US congressional stock trades. For research only — not financial advice.</p>
         </div>
         <div>

@@ -118,21 +118,27 @@ function rebrandOnce() {
   setSetting("brand.v4", "1");
 }
 
-/** Default subscription plans: Free and Pro ($300 / year). Existing installs seeded with the old trio are migrated once. */
+/** Default subscription plans: Free and Pro ($497 / year). Older installs are migrated once. */
 function seedPlans() {
   const now = new Date().toISOString();
   const FREE = "Browse every disclosed trade, politician and issuer\nLast 30 days of filings\n1 watchlist item";
-  const PRO = "Full history since 2014 + every new filing\nInstant Telegram / WhatsApp / Email alerts\nUnlimited watchlist\nAI insight on every trade\nCSV export\nPriority support";
+  const PRO = "Full history since 2014 + every new filing\nAI Scanning: every buy & sell signal with reasons and thesis\nInvestment Plan: back-test, calculator and full model portfolio\nInstant Telegram / WhatsApp / Email alerts\nUnlimited watchlist\nCSV export\nTrack-record leaderboard\nPriority support";
   if (!get("SELECT 1 FROM plans LIMIT 1")) {
     run("INSERT INTO plans(name,price_cents,interval,features,active,created_at) VALUES(?,?,?,?,1,?)", "Free", 0, "year", FREE, now);
-    run("INSERT INTO plans(name,price_cents,interval,features,active,created_at) VALUES(?,?,?,?,1,?)", "Pro", 30000, "year", PRO, now);
-    setSetting("plans.v2", "1");
+    run("INSERT INTO plans(name,price_cents,interval,features,active,created_at) VALUES(?,?,?,?,1,?)", "Pro", 49700, "year", PRO, now);
+    setSetting("plans.v2", "1"); setSetting("plans.v3", "1");
     return;
+  }
+  if (!getSetting("plans.v3")) {
+    // one-time: Pro $300/yr → $497/yr with AI Scanning + Investment Plan in the feature list
+    const p3 = get("SELECT id FROM plans WHERE name='Pro' AND price_cents=30000");
+    if (p3) run("UPDATE plans SET price_cents=49700, features=? WHERE id=?", PRO, p3.id);
+    setSetting("plans.v3", "1");
   }
   if (getSetting("plans.v2")) return;
   // one-time: old defaults (Free $0/mo, Pro $19/mo, Team $49/mo) → Free + Pro $300/yr
   const pro = get("SELECT id FROM plans WHERE name='Pro' AND price_cents=1900 AND interval='month'");
-  if (pro) run("UPDATE plans SET price_cents=30000, interval='year', features=? WHERE id=?", PRO, pro.id);
+  if (pro) run("UPDATE plans SET price_cents=49700, interval='year', features=? WHERE id=?", PRO, pro.id);
   const free = get("SELECT id FROM plans WHERE name='Free' AND price_cents=0");
   if (free) run("UPDATE plans SET interval='year', features=? WHERE id=?", FREE, free.id);
   const team = get("SELECT id FROM plans WHERE name='Team' AND price_cents=4900");

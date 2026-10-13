@@ -30,7 +30,7 @@ export default function Signals() {
           {d.locked && (
             <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 p-4 text-sm">
               <Lock size={18} className="shrink-0 text-gold" />
-              <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> you can see the #1 signal. <b>Pro ($300 / year)</b> unlocks every buy and sell signal, the full track-record leaderboard, instant alerts the moment a new cluster forms, and the AI thesis on each.</div>
+              <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> you can see the #1 signal. <b>Pro ($497 / year)</b> unlocks every buy and sell signal, the full track-record leaderboard, instant alerts the moment a new cluster forms, and the AI thesis on each.</div>
               <a href={`mailto:${branding?.contact ?? ""}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Upgrade to Pro</a>
             </div>
           )}

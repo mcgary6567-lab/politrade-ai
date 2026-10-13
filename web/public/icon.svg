@@ -4,17 +4,18 @@
     <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6cf6b"/><stop offset="1" stop-color="#d79a1e"/></linearGradient>
   </defs>
   <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)" stroke="#2b3a66" stroke-width="1.5"/>
-  <!-- radar sweeps from the dome's top -->
-  <path d="M32 29a17 17 0 0 1 17-17" fill="none" stroke="#e7b23c" stroke-width="3" stroke-linecap="round" opacity=".95"/>
-  <path d="M32 29a25 25 0 0 1 25-25" fill="none" stroke="#e7b23c" stroke-width="3" stroke-linecap="round" opacity=".45"/>
-  <path d="M32 29a9 9 0 0 1 9-9" fill="none" stroke="#e7b23c" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="49" cy="14" r="3.2" fill="#22c58b"/>
-  <circle cx="49" cy="14" r="6" fill="none" stroke="#22c58b" stroke-width="1.2" opacity=".5"/>
-  <!-- capitol dome, solid -->
-  <path d="M32 24.5a1.6 1.6 0 0 0 0 0M32 25.5v3.5" stroke="url(#gold)" stroke-width="3" stroke-linecap="round"/>
-  <path d="M18 43a14 14 0 0 1 28 0z" fill="url(#gold)"/>
-  <rect x="14" y="43" width="36" height="4" rx="1.5" fill="url(#gold)"/>
-  <rect x="16" y="47" width="32" height="8" fill="#0b1020"/>
-  <g fill="url(#gold)"><rect x="18" y="47" width="3.4" height="8"/><rect x="24.3" y="47" width="3.4" height="8"/><rect x="30.6" y="47" width="3.4" height="8"/><rect x="36.9" y="47" width="3.4" height="8"/><rect x="43.2" y="47" width="3.4" height="8"/></g>
-  <rect x="12" y="55" width="40" height="3.5" rx="1.5" fill="url(#gold)"/>
+  <!-- radar sweeps -->
+  <path d="M32 24a10 10 0 0 1 10-10" fill="none" stroke="#e7b23c" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M32 24a17 17 0 0 1 17-17" fill="none" stroke="#e7b23c" stroke-width="2.6" stroke-linecap="round" opacity=".55"/>
+  <circle cx="50" cy="12" r="3" fill="#22c58b"/>
+  <circle cx="50" cy="12" r="5.6" fill="none" stroke="#22c58b" stroke-width="1.2" opacity=".5"/>
+  <!-- capitol: solid gold with a white outline -->
+  <g stroke="#f4f6fb" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M32 21v4" fill="none"/>
+    <path d="M14 44a18 18 0 0 1 36 0z" fill="url(#gold)"/>
+    <rect x="9" y="44" width="46" height="4.5" rx="1.5" fill="url(#gold)"/>
+    <rect x="11" y="48.5" width="42" height="7.5" fill="#0b1020"/>
+    <rect x="6" y="56" width="52" height="4" rx="1.5" fill="url(#gold)"/>
+  </g>
+  <g fill="url(#gold)"><rect x="13.5" y="48.5" width="4" height="7.5"/><rect x="20.5" y="48.5" width="4" height="7.5"/><rect x="27.5" y="48.5" width="4" height="7.5"/><rect x="34.5" y="48.5" width="4" height="7.5"/><rect x="41.5" y="48.5" width="4" height="7.5"/><rect x="48.5" y="48.5" width="2.5" height="7.5"/></g>
 </svg>
