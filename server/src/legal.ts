@@ -40,7 +40,7 @@ type Section = { id: string; icon: string; title: string; html: string };
 type LayoutOpts = { css?: string; script?: string; heroExtra?: string; headExtra?: string; sectionsLabel?: string };
 function layout(title: string, lead: string, sections: Section[], kind: string, opts: LayoutOpts = {}): string {
   const name = integ.brandName();
-  const nav = [["faq", "Briefing Room"], ["terms", "Terms"], ["privacy", "Privacy"], ["disclaimer", "Disclaimer"], ["contact", "Contact"]]
+  const nav = [["faq", "FAQ"], ["terms", "Terms"], ["privacy", "Privacy"], ["disclaimer", "Disclaimer"], ["contact", "Contact"]]
     .map(([k, l]) => `<a href="/${k}" class="${k === kind ? "on" : ""}">${l}</a>`).join("");
   const toc = sections.map((s, i) => `<li><a href="#${s.id}"><span>${i + 1}</span>${s.title}</a></li>`).join("");
   const body = sections.map((s, i) => `<section id="${s.id}"><h2><span class="ico">${ic(s.icon)}</span><span class="num">${i + 1}.</span> ${s.title}</h2>${s.html}</section>`).join("");
@@ -247,7 +247,7 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact" |
       ${integ.companyAddress() ? `<p><b>${co}</b> · ${integ.companyAddress()}</p>` : ""}` },
     { id: "social", icon: "globe", title: "Follow us", html: soc.length ? `<p style="display:flex;flex-wrap:wrap;gap:10px">${soc.map(([k, l, u]) => `<a class="btn" href="${u}" target="_blank" rel="noreferrer">${ic(k, 18)} ${l}</a>`).join("")}</p>` : `<p>Social links will appear here once they are set by the administrator.</p>` },
     { id: "faq", icon: "help", title: "Quick answers", html: `
-      <p>The <a href="/faq"><b>Briefing Room</b></a> (our Help Center &amp; FAQ) answers 30+ questions about data, AI signals, plans, alerts and the app. The most common ones:</p>
+      <p>The full <a href="/faq"><b>Help Center &amp; FAQ</b></a> answers 30+ questions about data, AI signals, plans, alerts and the app. The most common ones:</p>
       <ul><li><b>How fresh is the data?</b> New filings are imported several times a day; most appear within hours of publication by Congress.</li>
       <li><b>Why can't I see trades older than 30 days?</b> That is the Free plan window. Pro unlocks the full history since 2014.</li>
       <li><b>How do alerts work?</b> Connect Telegram, add a WhatsApp number or email in <a href="/settings">Settings</a>; Pro members receive new filings that match their watchlist and new AI signals.</li>
@@ -353,7 +353,7 @@ q.addEventListener('input',filter);exp.addEventListener('click',function(e){e.pr
 if(location.hash){var el=document.querySelector(location.hash);if(el&&el.classList.contains('qa')){el.open=true;el.scrollIntoView();}}
 var p=new URLSearchParams(location.search).get('q');if(p){q.value=p;filter();}})();
 </script>`;
-  const html = layout("The Briefing Room", `<b style="color:var(--gold)">Help Center &amp; FAQ.</b> Straight answers about the data, the AI signals, plans, alerts and the app. Can't find it? Email <a href="mailto:${mail}">${mail}</a> — we reply within one business day.`, sections, "faq", {
+  const html = layout("Help Center & FAQ", `Straight answers about the data, the AI signals, plans, alerts and the app. Can't find it? Email <a href="mailto:${mail}">${mail}</a> — we reply within one business day.`, sections, "faq", {
     css, heroExtra, script, sectionsLabel: "topics", headExtra: `<script type="application/ld+json">${ld}</script>`,
   });
   // per-topic counts in the sidebar + a closing CTA + empty state
