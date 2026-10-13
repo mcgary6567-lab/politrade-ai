@@ -74,6 +74,14 @@ app.get("/api/public/landing", (_req, res) => {
   res.json(landingCache.body);
 });
 
+// marketing landing page (static files in /landing; the same folder is what gets hosted on the public domain later)
+const landingDir = path.resolve(process.env.LANDING_DIR ?? "../landing");
+if (fs.existsSync(landingDir)) {
+  // relative asset paths in index.html need the trailing slash, so /welcome itself redirects
+  app.get(["/welcome", "/start", "/congress-trades"], (req, res, next) => (req.path === "/welcome/" ? next() : res.redirect(302, "/welcome/")));
+  app.use("/welcome", express.static(landingDir, { maxAge: "1h", setHeaders: (res, p) => { if (p.endsWith(".html") || p.endsWith("config.js")) res.setHeader("cache-control", "no-cache"); } }));
+}
+
 // public legal pages
 app.get("/privacy", (_req, res) => res.type("html").send(legalPage("privacy")));
 app.get("/terms", (_req, res) => res.type("html").send(legalPage("terms")));
