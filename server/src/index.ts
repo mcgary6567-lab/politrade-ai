@@ -5,7 +5,7 @@ import fs from "node:fs";
 import cron from "node-cron";
 import { z } from "zod";
 import { config, APP_VERSION } from "./config.js";
-import { migrate, get, run, getSetting, setSetting } from "./db.js";
+import { migrate, get, all, run, getSetting, setSetting } from "./db.js";
 import { seedAdmin, login, loginWithPin, signup, requireAuth } from "./auth.js";
 import { data } from "./routes/data.js";
 import { alerts } from "./routes/alerts.js";
@@ -56,6 +56,21 @@ app.post("/api/auth/signup", (req, res) => {
   if (!b.success) return res.status(400).json({ error: b.error.issues[0]?.message ?? "Invalid input" });
   const r = signup(b.data);
   return "error" in r ? res.status(409).json(r) : res.json(r);
+});
+
+// public, read-only numbers for the external marketing site (no auth, CORS open, 10-minute cache)
+let landingCache: { at: number; body: any } | null = null;
+app.get("/api/public/landing", (_req, res) => {
+  if (!landingCache || Date.now() - landingCache.at > 600_000) {
+    const stats = get(`SELECT COUNT(*) trades, COUNT(DISTINCT politician_id) politicians, COUNT(DISTINCT issuer_id) issuers, MIN(tx_date) first_date, MAX(published_date) last_pub FROM trades`) ?? {};
+    const latest = all(`SELECT tr.tx_type, tr.tx_date, tr.published_date, tr.amount_min, tr.amount_max, p.name politician, p.party, p.chamber, p.state, i.ticker, i.name issuer
+      FROM trades tr JOIN politicians p ON p.id=tr.politician_id JOIN issuers i ON i.id=tr.issuer_id WHERE i.ticker IS NOT NULL ORDER BY tr.published_date DESC, tr.id DESC LIMIT 6`);
+    const active = all(`SELECT p.name, p.party, p.chamber, p.state, COUNT(*) n FROM trades tr JOIN politicians p ON p.id=tr.politician_id WHERE tr.published_date >= date('now','-90 days') GROUP BY p.id ORDER BY n DESC LIMIT 6`);
+    const popular = all(`SELECT i.ticker, i.name, COUNT(DISTINCT tr.politician_id) pols, COUNT(*) n FROM trades tr JOIN issuers i ON i.id=tr.issuer_id WHERE tr.published_date >= date('now','-90 days') AND i.ticker IS NOT NULL GROUP BY i.id ORDER BY pols DESC, n DESC LIMIT 6`);
+    landingCache = { at: Date.now(), body: { brand: integ.brandName(), company: integ.companyName(), contact: integ.contactEmail(), stats, latest, active, popular } };
+  }
+  res.setHeader("cache-control", "public, max-age=300"); res.setHeader("access-control-allow-origin", "*");
+  res.json(landingCache.body);
 });
 
 // public legal pages
