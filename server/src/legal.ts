@@ -31,7 +31,7 @@ const I: Record<string, string> = {
   rocket: '<path d="M5 15l-2 6 6-2M14 4c3 0 6 3 6 6l-8 8-4-4z"/><circle cx="15" cy="9" r="1.5"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7M12 17v.5"/>',
 };
-export const ic = (k: string, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k] ?? I.info}</svg>`;
+const ic = (k: string, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k] ?? I.info}</svg>`;
 
 const UPDATED = "October 12, 2026";
 

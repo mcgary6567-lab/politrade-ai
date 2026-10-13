@@ -16,7 +16,6 @@ import { pollTelegramLinks } from "./notify.js";
 import { compress, photo, bumpCache } from "./perf.js";
 import { seedDemo } from "./seed.js";
 import { legalPage } from "./legal.js";
-import { landingPage } from "./landing.js";
 import { integ, aiOn } from "./settings.js";
 
 export const app = express();
@@ -59,8 +58,7 @@ app.post("/api/auth/signup", (req, res) => {
   return "error" in r ? res.status(409).json(r) : res.json(r);
 });
 
-// public marketing page (ads landing) + legal pages
-app.get(["/welcome", "/start", "/congress-trades"], (_req, res) => res.type("html").send(landingPage()));
+// public legal pages
 app.get("/privacy", (_req, res) => res.type("html").send(legalPage("privacy")));
 app.get("/terms", (_req, res) => res.type("html").send(legalPage("terms")));
 app.get("/disclaimer", (_req, res) => res.type("html").send(legalPage("disclaimer")));
