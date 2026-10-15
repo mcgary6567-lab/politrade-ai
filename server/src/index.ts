@@ -13,7 +13,7 @@ import { me } from "./routes/me.js";
 import { admin } from "./routes/admin.js";
 import { ingestFromFeed, stats, syncPoliticians } from "./ingest.js";
 import { pollTelegramLinks } from "./notify.js";
-import { compress, photo, bumpCache } from "./perf.js";
+import { compress, photo, logo, bumpCache } from "./perf.js";
 import { seedDemo } from "./seed.js";
 import { legalPage } from "./legal.js";
 import { integ, aiOn } from "./settings.js";
@@ -29,6 +29,7 @@ seedPlans();
 rebrandOnce();
 
 app.get("/api/photo/:bioguide", photo);
+app.get("/api/logo/:ticker", logo);
 app.get("/api/health", (_req, res) => res.json({ ok: true, version: APP_VERSION, ai: aiOn(), ...stats() }));
 app.get("/api/branding", (_req, res) => res.json({
   name: integ.brandName(), version: APP_VERSION, contact: integ.contactEmail(),

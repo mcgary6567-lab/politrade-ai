@@ -10,6 +10,15 @@ export default function Issuers() {
   return id ? <Detail id={id} /> : <List />;
 }
 
+/** Company logo by ticker (proxied + disk-cached on our origin); falls back to a letter avatar. */
+export function IssuerLogo({ ticker, name, size = 28, className = "" }: { ticker?: string | null; name?: string; size?: number; className?: string }) {
+  const [err, setErr] = useState(false);
+  const letter = String(ticker || name || "?").trim().charAt(0).toUpperCase();
+  const style = { width: size, height: size, fontSize: Math.round(size * 0.42) };
+  if (!ticker || err) return <span style={style} className={`grid shrink-0 place-items-center rounded-lg bg-ink-600 font-mono font-700 text-gold ${className}`}>{letter}</span>;
+  return <img src={`/api/logo/${encodeURIComponent(ticker)}`} alt="" loading="lazy" onError={() => setErr(true)} style={style} className={`shrink-0 rounded-lg bg-white object-contain p-0.5 ${className}`} />;
+}
+
 function List() {
   const [sp, setSp] = useSearchParams();
   const [rows, setRows] = useState<any[]>([]);
@@ -47,6 +56,7 @@ function List() {
           {rows.map((i) => (
             <li key={i.id}>
               <Link to={`/issuers/${i.id}`} className="flex items-center gap-3 p-3.5 active:bg-ink-700/40">
+                <IssuerLogo ticker={i.ticker} name={i.name} size={40} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2"><span className="font-mono font-700 text-gold-300">{i.ticker ?? "—"}</span>{i.sector && <span className="chip py-0 text-[10px]">{i.sector}</span>}</div>
                   <div className="truncate text-sm font-semibold">{i.name}</div>
@@ -72,7 +82,7 @@ function List() {
             <tbody className="divide-y divide-line">
               {rows.map((i) => (
                 <tr key={i.id} className="hover:bg-ink-700/40">
-                  <td className="td font-mono font-semibold text-gold-300"><Link to={`/issuers/${i.id}`} className="hover:underline">{i.ticker ?? "—"}</Link></td>
+                  <td className="td"><Link to={`/issuers/${i.id}`} className="flex items-center gap-2 font-mono font-semibold text-gold-300 hover:underline"><IssuerLogo ticker={i.ticker} name={i.name} size={24} />{i.ticker ?? "—"}</Link></td>
                   <td className="td font-semibold"><Link to={`/issuers/${i.id}`} className="hover:text-gold">{i.name}</Link></td>
                   <td className="td">{i.sector ? <button className="chip hover:border-gold/50" onClick={() => set("sector", i.sector)}>{i.sector}</button> : <span className="text-xs text-slate-500">—</span>}</td>
                   <td className="td text-right font-mono">{i.trades}</td>
@@ -104,7 +114,7 @@ function Detail({ id }: { id: string }) {
     <div className="space-y-5">
       <Link to="/issuers" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-gold"><ArrowLeft size={15} /> All issuers</Link>
       <div className="card flex flex-wrap items-center gap-4 p-5">
-        <span className="grid h-16 w-16 place-items-center rounded-2xl bg-ink-600 font-mono text-lg font-700 text-gold">{i.ticker ?? "?"}</span>
+        <IssuerLogo ticker={i.ticker} name={i.name} size={64} className="!rounded-2xl" />
         <div className="flex-1"><h1 className="font-display text-2xl font-700">{i.name}</h1><p className="mt-1 text-slate-400">{i.sector ?? `${i.ticker ? "Ticker " + i.ticker : "Issuer"} · traded by ${s.politicians ?? 0} lawmakers`}</p></div>
         <Link to={`/trades?issuer=${i.id}`} className="btn-ghost text-sm"><ExternalLink size={14} /> Open in Trades</Link>
       </div>

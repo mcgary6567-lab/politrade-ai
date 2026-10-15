@@ -55,3 +55,41 @@ export async function photo(req: Request, res: Response) {
   fs.writeFile(file, buf, () => {});
   res.type("jpeg").send(buf);
 }
+
+/** Company logos by ticker, proxied through our own origin and cached on disk (keyless source, PNG). */
+const logoDir = path.join(path.dirname(config.dbPath), "logos");
+fs.mkdirSync(logoDir, { recursive: true });
+const logoInflight = new Map<string, Promise<Buffer | null>>();
+// keyless ticker-logo CDNs, tried in order; whichever first returns a real image wins
+const LOGO_SOURCES = [
+  (t: string) => `https://assets.parqet.com/logos/symbol/${t}?format=png`,
+  (t: string) => `https://financialmodelingprep.com/image-stock/${t}.png`,
+];
+async function fetchLogo(ticker: string): Promise<Buffer | null> {
+  for (const src of LOGO_SOURCES) {
+    try {
+      const r = await fetch(src(ticker));
+      if (!r.ok) continue;
+      const buf = Buffer.from(await r.arrayBuffer());
+      if (buf.length >= 100) return buf; // a real image, not an empty/placeholder body
+    } catch { /* try the next source */ }
+  }
+  return null;
+}
+export async function logo(req: Request, res: Response) {
+  const t = String(req.params.ticker).toUpperCase().replace(/[^A-Z0-9.-]/g, "");
+  if (!t) return res.status(404).end();
+  const file = path.join(logoDir, `${t}.png`);
+  res.setHeader("cache-control", "public, max-age=2592000, immutable");
+  if (fs.existsSync(file)) {
+    const buf = fs.readFileSync(file);
+    if (!buf.length) { res.setHeader("cache-control", "public, max-age=86400"); return res.status(404).end(); } // cached miss
+    return res.type("png").send(buf);
+  }
+  let p = logoInflight.get(t);
+  if (!p) { p = fetchLogo(t); logoInflight.set(t, p); p.finally(() => logoInflight.delete(t)); }
+  const buf = await p;
+  if (!buf) { fs.writeFile(file, Buffer.alloc(0), () => {}); res.setHeader("cache-control", "public, max-age=86400"); return res.status(404).end(); } // remember the miss for a day
+  fs.writeFile(file, buf, () => {});
+  res.type("png").send(buf);
+}
