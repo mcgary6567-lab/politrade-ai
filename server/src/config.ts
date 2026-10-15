@@ -60,7 +60,6 @@ export const config = {
     x: process.env.SOCIAL_X ?? "",
     telegram: process.env.SOCIAL_TELEGRAM ?? "",
     github: process.env.SOCIAL_GITHUB ?? "",
-    linkedin: process.env.SOCIAL_LINKEDIN ?? "",
   },
 };
 

@@ -23,7 +23,6 @@ const I: Record<string, string> = {
   spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
   x: '<path d="M4 4l16 16M20 4L4 20"/>',
   send: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
-  linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.5M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>',
   github: '<path d="M9 19c-4 1.5-4-2-6-2m12 4v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.7 11.7 0 0 0-6 0C6.8 2.8 5.8 3.1 5.8 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
   phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
   key: '<circle cx="8" cy="14" r="4"/><path d="M11 11l9-9M16 6l2 2M19 3l2 2"/>',
@@ -237,7 +236,7 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact" |
 
   // contact
   const soc = [
-    ["x", "X / Twitter", integ.socialX()], ["linkedin", "LinkedIn", integ.socialLinkedin()], ["send", "Telegram", integ.socialTelegram()], ["github", "GitHub", integ.socialGithub()],
+    ["x", "X / Twitter", integ.socialX()], ["send", "Telegram", integ.socialTelegram()], ["github", "GitHub", integ.socialGithub()],
   ].filter(([, , u]) => u);
   return layout("Contact Us", `We're happy to help with your account, Pro membership, data corrections, partnerships or press. Most messages get a reply within one business day.`, [
     { id: "reach", icon: "mail", title: "Ways to reach us", html: `
