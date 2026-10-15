@@ -44,25 +44,22 @@ const TRADE_SELECT = `SELECT tr.id, tr.tx_type, tr.tx_date, tr.published_date, t
             i.id issuer_id, i.ticker, i.name issuer, i.sector
      FROM trades tr JOIN politicians p ON p.id=tr.politician_id JOIN issuers i ON i.id=tr.issuer_id`;
 
-/** GET /api/trades — filterable, sortable, paginated feed. */
-const FREE_DAYS = 30;
-/** Free plan sees only the most recent filings; Pro (or admin) sees everything. */
-function planWindow(req: { user?: { pro?: boolean } }, qs: Record<string, string>): Record<string, string> {
-  if (req.user?.pro) return qs;
-  const capped: Record<string, string> = { ...qs, days: String(Math.min(Number(qs.days) || FREE_DAYS, FREE_DAYS)) };
-  delete capped.pub_from; delete capped.pub_to; delete capped.from; delete capped.to;
-  return capped;
-}
+/** GET /api/trades — filterable, sortable, paginated feed.
+ *  Free plan: only the first FREE_VISIBLE trades are returned (the rest are locked); Pro (or admin) gets everything. */
+const FREE_VISIBLE = 3;
 
 data.get("/trades", (req, res) => {
-  const qs = planWindow(req, req.query as Record<string, string>);
-  const limit = Math.min(Number(qs.limit ?? 50), 200);
-  const offset = Math.max(Number(qs.offset ?? 0), 0);
+  const qs = req.query as Record<string, string>;
+  const pro = Boolean(req.user?.pro);
   const order = SORTS[qs.sort ?? "published"] ?? SORTS.published;
   const { w, p } = tradeFilters(qs);
-  const rows = all(`${TRADE_SELECT} ${w} ORDER BY ${order} LIMIT ? OFFSET ?`, ...p, limit, offset);
   const total = get(`SELECT COUNT(*) c FROM trades tr JOIN politicians p ON p.id=tr.politician_id JOIN issuers i ON i.id=tr.issuer_id ${w}`, ...p).c;
-  res.json({ rows, total, limit, offset, plan: req.user?.pro ? "pro" : "free", window_days: req.user?.pro ? null : FREE_DAYS });
+  // Pro paginates normally; Free sees only the first FREE_VISIBLE rows (offset ignored), the rest are locked.
+  const limit = pro ? Math.min(Number(qs.limit ?? 50), 200) : FREE_VISIBLE;
+  const offset = pro ? Math.max(Number(qs.offset ?? 0), 0) : 0;
+  const rows = all(`${TRADE_SELECT} ${w} ORDER BY ${order} LIMIT ? OFFSET ?`, ...p, limit, offset);
+  const locked = pro ? 0 : Math.max(0, total - rows.length);
+  res.json({ rows, total, limit, offset, plan: pro ? "pro" : "free", free_visible: pro ? null : FREE_VISIBLE, locked });
 });
 
 /** GET /api/trades.csv — same filters, CSV download (Pro). */
@@ -90,6 +87,11 @@ data.get("/filters", cached(300_000), (_req, res) => {
 data.get("/trades/:id", (req, res) => {
   const row = get(`${TRADE_SELECT} WHERE tr.id=?`, req.params.id);
   if (!row) return res.status(404).json({ error: "Not found" });
+  // Free plan can only open the same FREE_VISIBLE most-recent trades it can see in the feed; the rest are Pro-locked.
+  if (!req.user?.pro) {
+    const open = get(`SELECT 1 FROM (SELECT id FROM trades ORDER BY published_date DESC, id DESC LIMIT ${FREE_VISIBLE}) WHERE id=?`, row.id);
+    if (!open) return res.status(402).json({ error: "This trade is locked — upgrade to Pro to see the full feed", locked: true });
+  }
   res.json({ trade: row });
 });
 

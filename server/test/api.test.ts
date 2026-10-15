@@ -75,3 +75,40 @@ test("watchlist add/list/delete", async () => {
   assert.equal((await call(tok, "DELETE", `/api/watchlist/${list.data.rows[0].id}`)).status, 200);
   assert.equal((await call(tok, "GET", "/api/watchlist")).data.rows.length, 0);
 });
+
+test("free plan sees only 3 trades; the rest are Pro-locked (feed + detail)", async () => {
+  // admin is Pro: full feed
+  const admin = (await call("", "POST", "/api/auth/login", { email: "admin@politrade.ai", password: "politrade123" })).data.token;
+  const full = await call(admin, "GET", "/api/trades?limit=200");
+  assert.equal(full.data.plan, "pro");
+  assert.ok(full.data.rows.length > 3, "admin gets the full feed");
+  assert.equal(full.data.locked, 0, "nothing locked for Pro");
+
+  // a brand-new signup is Free
+  const su = await call("", "POST", "/api/auth/signup", { first_name: "Free", last_name: "User", email: "free@test.pk", password: "test1234", accept: true });
+  assert.equal(su.status, 200, JSON.stringify(su.data));
+  const free = su.data.token;
+  assert.equal(su.data.user.pro, false, "new user is not Pro");
+
+  const feed = await call(free, "GET", "/api/trades?limit=50");
+  assert.equal(feed.data.plan, "free");
+  assert.equal(feed.data.rows.length, 3, "free sees exactly 3 trades");
+  assert.equal(feed.data.free_visible, 3);
+  assert.equal(feed.data.locked, feed.data.total - 3, "the rest are locked");
+  assert.ok(feed.data.total > 3, "there are more trades than shown");
+
+  // the 3 visible trades (top of the feed) open; a locked one does not
+  const visibleId = feed.data.rows[0].id;
+  assert.equal((await call(free, "GET", `/api/trades/${visibleId}`)).status, 200, "a visible trade opens");
+  const lockedId = full.data.rows.map((t: any) => t.id).find((id: number) => !feed.data.rows.some((r: any) => r.id === id));
+  assert.ok(lockedId, "found a trade outside the free 3");
+  const det = await call(free, "GET", `/api/trades/${lockedId}`);
+  assert.equal(det.status, 402, "a locked trade is refused for Free");
+  assert.equal(det.data.locked, true);
+
+  // Pro can open that same trade
+  assert.equal((await call(admin, "GET", `/api/trades/${lockedId}`)).status, 200, "Pro opens any trade");
+
+  // CSV stays Pro-only
+  assert.equal((await call(free, "GET", "/api/trades.csv")).status, 402, "CSV is Pro-only");
+});

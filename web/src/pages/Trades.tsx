@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../App";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, Sparkles, Download, SlidersHorizontal, X, ArrowLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Sparkles, Download, SlidersHorizontal, X, ArrowLeftRight, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { api, money, ago, getToken } from "../lib/api";
 import { pill } from "./Home";
 import { Select, AMOUNT_BANDS } from "../components/ui";
@@ -14,6 +14,7 @@ export default function Trades() {
   const [branding, setBranding] = useState<any>(null);
   const [rows, setRows] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
+  const [locked, setLocked] = useState(0); // Free plan: how many trades are hidden behind Pro
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<any>(null);
   const [more, setMore] = useState(false);
@@ -34,7 +35,7 @@ export default function Trades() {
   useEffect(() => {
     setLoading(true);
     const p = query(); p.set("limit", "50"); p.set("offset", String(offset));
-    api<any>(`/trades?${p}`).then((r) => { setRows(r.rows); setTotal(r.total); }).finally(() => setLoading(false));
+    api<any>(`/trades?${p}`).then((r) => { setRows(r.rows); setTotal(r.total); setLocked(r.locked ?? 0); }).finally(() => setLoading(false));
   }, [deps, offset]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (!user?.pro) fetch("/api/branding").then((r) => r.json()).then(setBranding).catch(() => {}); }, [user?.pro]);
@@ -58,7 +59,7 @@ export default function Trades() {
 
       {!user?.pro && (
         <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 p-4 text-sm">
-          <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> <span className="text-slate-300">you are seeing the last 30 days of filings. <b>Pro ($497 / year)</b> unlocks the full history since 2014, AI Scanning, the Investment Plan, instant Telegram / WhatsApp / Email alerts, unlimited watchlist and CSV export.</span></div>
+          <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> <span className="text-slate-300">you are seeing a preview of {rows.length} trade{rows.length === 1 ? "" : "s"}{total > rows.length ? ` out of ${total.toLocaleString()}` : ""}. <b>Pro ($497 / year)</b> unlocks every trade, the full history since 2014, AI Scanning, the Investment Plan, instant Telegram / WhatsApp / Email alerts, unlimited watchlist and CSV export.</span></div>
           <a href={`mailto:${branding?.contact ?? "info@hillradar.com"}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Upgrade to Pro</a>
         </div>
       )}
@@ -123,6 +124,19 @@ export default function Trades() {
               {r.ai_note && <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-ink-800/70 px-2.5 py-1.5 text-xs text-slate-400"><Sparkles size={11} className="mt-0.5 shrink-0 text-gold" />{r.ai_note}</div>}
             </li>
           ))}
+          {!user?.pro && locked > 0 && rows.length > 0 && (
+            <li className="relative">
+              <div aria-hidden className="pointer-events-none select-none space-y-px opacity-60 blur-[5px]">
+                {Array.from({ length: Math.min(locked, 5) }, (_, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 p-3.5">
+                    <div className="min-w-0 flex-1 space-y-1.5"><div className="h-4 w-24 rounded bg-ink-500/70" /><div className="h-3 w-40 rounded bg-ink-600/60" /></div>
+                    <div className="h-4 w-16 rounded bg-ink-500/70" />
+                  </div>
+                ))}
+              </div>
+              <LockCTA locked={locked} contact={branding?.contact} overlay />
+            </li>
+          )}
           {loading && !rows.length && Array.from({ length: 6 }, (_, i) => <li key={i} className="p-3.5"><div className="h-12 animate-pulse rounded bg-ink-600/60" /></li>)}
           {!loading && !rows.length && <li className="p-8 text-center text-sm text-slate-500">No trades match these filters.</li>}
         </ul>
@@ -148,6 +162,21 @@ export default function Trades() {
                   <td className={`td text-right font-mono text-sm ${r.filed_after_days > 45 ? "text-sell" : "text-slate-400"}`}>{r.filed_after_days != null ? `${r.filed_after_days}d` : "—"}</td>
                 </tr>
               ))}
+              {!user?.pro && locked > 0 && rows.length > 0 && (<>
+                {Array.from({ length: Math.min(locked, 5) }, (_, i) => (
+                  <tr key={`lk${i}`} aria-hidden className="pointer-events-none select-none opacity-60 blur-[5px]">
+                    <td className="td"><div className="h-4 w-32 rounded bg-ink-500/70" /><div className="mt-1 h-3 w-24 rounded bg-ink-600/60" /></td>
+                    <td className="td"><div className="h-4 w-16 rounded bg-ink-500/70" /></td>
+                    <td className="td"><div className="h-5 w-12 rounded bg-ink-600/60" /></td>
+                    <td className="td text-right"><div className="ml-auto h-4 w-20 rounded bg-ink-500/70" /></td>
+                    <td className="td"><div className="h-3 w-12 rounded bg-ink-600/60" /></td>
+                    <td className="td"><div className="h-3 w-16 rounded bg-ink-600/60" /></td>
+                    <td className="td"><div className="h-3 w-16 rounded bg-ink-600/60" /></td>
+                    <td className="td text-right"><div className="ml-auto h-3 w-8 rounded bg-ink-600/60" /></td>
+                  </tr>
+                ))}
+                <tr><td colSpan={8} className="p-0"><LockCTA locked={locked} contact={branding?.contact} /></td></tr>
+              </>)}
               {loading && !rows.length && Array.from({ length: 8 }, (_, i) => <tr key={i}><td className="td" colSpan={8}><div className="h-8 animate-pulse rounded bg-ink-600/60" /></td></tr>)}
               {!loading && !rows.length && <tr><td className="td py-8 text-center text-slate-500" colSpan={8}>No trades match these filters.</td></tr>}
             </tbody>
@@ -155,12 +184,26 @@ export default function Trades() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <button className="btn-ghost text-sm disabled:opacity-40" disabled={offset <= 0} onClick={() => set("offset", String(Math.max(0, offset - 50)))}><ChevronLeft size={15} /> Previous</button>
-        <span className="text-sm text-slate-500">{total ? offset + 1 : 0}–{Math.min(offset + 50, total)} of {total.toLocaleString()}</span>
-        <button className="btn-ghost text-sm disabled:opacity-40" disabled={offset + 50 >= total} onClick={() => set("offset", String(offset + 50))}>Next <ChevronRight size={15} /></button>
-      </div>
+      {user?.pro && (
+        <div className="flex items-center justify-between">
+          <button className="btn-ghost text-sm disabled:opacity-40" disabled={offset <= 0} onClick={() => set("offset", String(Math.max(0, offset - 50)))}><ChevronLeft size={15} /> Previous</button>
+          <span className="text-sm text-slate-500">{total ? offset + 1 : 0}–{Math.min(offset + 50, total)} of {total.toLocaleString()}</span>
+          <button className="btn-ghost text-sm disabled:opacity-40" disabled={offset + 50 >= total} onClick={() => set("offset", String(offset + 50))}>Next <ChevronRight size={15} /></button>
+        </div>
+      )}
       <p className="text-xs text-slate-500">Delay = days between the trade and its public filing (STOCK Act requires ≤45 days). Red marks late filings.</p>
+    </div>
+  );
+}
+
+/** Pro upsell shown over (overlay) or under the blurred, locked trades on the Free plan. */
+function LockCTA({ locked, contact, overlay }: { locked: number; contact?: string; overlay?: boolean }) {
+  return (
+    <div className={`flex flex-col items-center justify-center gap-2 px-4 py-6 text-center ${overlay ? "absolute inset-0 z-10 bg-gradient-to-t from-ink-900 via-ink-900/90 to-transparent" : "border-t border-line"}`}>
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15 text-gold"><Lock size={18} /></div>
+      <div className="text-sm font-700">{locked.toLocaleString()} more trade{locked === 1 ? "" : "s"} locked</div>
+      <div className="max-w-sm text-xs text-slate-400">Upgrade to <b className="text-gold">Pro ($497 / year)</b> to unlock every trade, the full history since 2014, AI Scanning, alerts and CSV export.</div>
+      <a href={`mailto:${contact ?? "info@hillradar.com"}?subject=Upgrade to Pro`} className="btn-gold mt-1 px-4 py-2 text-xs">Unlock all trades with Pro</a>
     </div>
   );
 }

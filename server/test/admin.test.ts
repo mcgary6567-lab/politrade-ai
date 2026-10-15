@@ -139,14 +139,17 @@ test("test-alert endpoint reports simulated when unconfigured", async () => {
   assert.equal((await call(admin, "POST", "/api/admin/test/ai")).status, 400);
 });
 
-test("plan gating: free member sees 30-day window, no CSV, 1 watchlist item; Pro unlocks", async () => {
+test("plan gating: free member sees only 3 trades (rest locked), no CSV, 1 watchlist item; Pro unlocks", async () => {
   const c = await call(admin, "POST", "/api/admin/users", { email: "free@example.com", password: "secret12", name: "Free" });
   const tok = (await call("", "POST", "/api/auth/login", { email: "free@example.com", password: "secret12" })).data.token;
   const me = (await call(tok, "GET", "/api/me")).data.user;
   assert.equal(me.plan, "Free"); assert.equal(me.pro, false);
   const all = (await call(admin, "GET", "/api/trades?limit=1")).data.total;
-  const free = await call(tok, "GET", "/api/trades?limit=1");
-  assert.equal(free.data.window_days, 30); assert.ok(free.data.total < all);
+  const free = await call(tok, "GET", "/api/trades?limit=50");
+  assert.equal(free.data.free_visible, 3);
+  assert.equal(free.data.rows.length, 3, "free sees exactly 3 trades");
+  assert.equal(free.data.total, all, "total is the full count, only the rows are capped");
+  assert.equal(free.data.locked, all - 3, "the rest are locked");
   assert.equal((await call(tok, "GET", "/api/trades.csv")).status, 402);
   assert.equal((await call(tok, "POST", "/api/watchlist", { kind: "ticker", value: "AAPL" })).status, 200);
   assert.equal((await call(tok, "POST", "/api/watchlist", { kind: "ticker", value: "MSFT" })).status, 402);
