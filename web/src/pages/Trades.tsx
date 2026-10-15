@@ -8,6 +8,18 @@ import { Select, AMOUNT_BANDS } from "../components/ui";
 
 const KEYS = ["q", "type", "party", "chamber", "state", "sector", "owner", "ticker", "politician", "issuer", "from", "to", "pub_from", "pub_to", "days", "amount_min", "amount_max", "sort"] as const;
 
+/** Realistic-looking filler rows shown blurred behind the Pro lock — fake data, so nothing real is exposed, but it
+ *  reads like a populated feed so visitors can see there is more to unlock. */
+const LOCK_SAMPLES = [
+  { politician: "Sen. Patricia Coleman", party: "Democrat", chamber: "Senate", state: "NY", ticker: "GOOGL", issuer: "Alphabet Inc.", tx_type: "buy", amount_min: 15001, amount_max: 50000, tx_date: "2026-09-12", published_date: "2026-09-24", filed_after_days: 12, owner: "Spouse" },
+  { politician: "Rep. Michael Hayes", party: "Republican", chamber: "House", state: "TX", ticker: "META", issuer: "Meta Platforms Inc.", tx_type: "sell", amount_min: 50001, amount_max: 100000, tx_date: "2026-09-05", published_date: "2026-09-19", filed_after_days: 14, owner: "Self" },
+  { politician: "Sen. Robert Jennings", party: "Republican", chamber: "Senate", state: "FL", ticker: "AVGO", issuer: "Broadcom Inc.", tx_type: "buy", amount_min: 100001, amount_max: 250000, tx_date: "2026-08-29", published_date: "2026-09-16", filed_after_days: 18, owner: "Joint" },
+  { politician: "Rep. Angela Brooks", party: "Democrat", chamber: "House", state: "CA", ticker: "XOM", issuer: "Exxon Mobil Corp.", tx_type: "sell", amount_min: 1001, amount_max: 15000, tx_date: "2026-09-01", published_date: "2026-09-21", filed_after_days: 20, owner: "Self" },
+  { politician: "Sen. David Whitmore", party: "Republican", chamber: "Senate", state: "OH", ticker: "LLY", issuer: "Eli Lilly and Company", tx_type: "buy", amount_min: 250001, amount_max: 500000, tx_date: "2026-08-22", published_date: "2026-09-10", filed_after_days: 19, owner: "Self" },
+  { politician: "Rep. Karen Mitchell", party: "Democrat", chamber: "House", state: "WA", ticker: "JPM", issuer: "JPMorgan Chase & Co.", tx_type: "buy", amount_min: 15001, amount_max: 50000, tx_date: "2026-09-03", published_date: "2026-09-18", filed_after_days: 15, owner: "Spouse" },
+] as const;
+const lockSample = (i: number) => LOCK_SAMPLES[i % LOCK_SAMPLES.length];
+
 export default function Trades() {
   const { user } = useAuth();
   const [sp, setSp] = useSearchParams();
@@ -126,14 +138,24 @@ export default function Trades() {
           ))}
           {!user?.pro && locked > 0 && rows.length > 0 && (
             <li className="relative">
-              <div aria-hidden className="pointer-events-none select-none space-y-px opacity-60 blur-[5px]">
-                {Array.from({ length: Math.min(locked, 5) }, (_, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 p-3.5">
-                    <div className="min-w-0 flex-1 space-y-1.5"><div className="h-4 w-24 rounded bg-ink-500/70" /><div className="h-3 w-40 rounded bg-ink-600/60" /></div>
-                    <div className="h-4 w-16 rounded bg-ink-500/70" />
-                  </div>
+              <ul aria-hidden className="divide-y divide-line pointer-events-none select-none blur-[6px]">
+                {Array.from({ length: Math.min(locked, 5) }, (_, i) => lockSample(i)).map((s, i) => (
+                  <li key={i} className="p-3.5">
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className={pill(s.tx_type)}>{s.tx_type.toUpperCase()}</span><span className="font-mono text-base font-700 text-gold-300">{s.ticker}</span><span className="truncate text-xs text-slate-400">{s.issuer}</span></div>
+                        <span className="mt-1.5 block truncate text-sm font-semibold">{s.politician}</span>
+                        <div className="text-xs text-slate-500">{[s.party, s.chamber, s.state].join(" · ")} · {s.owner}</div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="font-mono text-sm text-slate-100">{money(s.amount_min, s.amount_max)}</div>
+                        <div className="mt-1 text-xs text-slate-400">{s.tx_date}</div>
+                        <div className="text-[11px] text-slate-500">filed · {s.filed_after_days}d</div>
+                      </div>
+                    </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
               <LockCTA locked={locked} contact={branding?.contact} overlay />
             </li>
           )}
@@ -163,16 +185,16 @@ export default function Trades() {
                 </tr>
               ))}
               {!user?.pro && locked > 0 && rows.length > 0 && (<>
-                {Array.from({ length: Math.min(locked, 5) }, (_, i) => (
-                  <tr key={`lk${i}`} aria-hidden className="pointer-events-none select-none opacity-60 blur-[5px]">
-                    <td className="td"><div className="h-4 w-32 rounded bg-ink-500/70" /><div className="mt-1 h-3 w-24 rounded bg-ink-600/60" /></td>
-                    <td className="td"><div className="h-4 w-16 rounded bg-ink-500/70" /></td>
-                    <td className="td"><div className="h-5 w-12 rounded bg-ink-600/60" /></td>
-                    <td className="td text-right"><div className="ml-auto h-4 w-20 rounded bg-ink-500/70" /></td>
-                    <td className="td"><div className="h-3 w-12 rounded bg-ink-600/60" /></td>
-                    <td className="td"><div className="h-3 w-16 rounded bg-ink-600/60" /></td>
-                    <td className="td"><div className="h-3 w-16 rounded bg-ink-600/60" /></td>
-                    <td className="td text-right"><div className="ml-auto h-3 w-8 rounded bg-ink-600/60" /></td>
+                {Array.from({ length: Math.min(locked, 5) }, (_, i) => lockSample(i)).map((s, i) => (
+                  <tr key={`lk${i}`} aria-hidden className="pointer-events-none select-none blur-[6px]">
+                    <td className="td"><span className="font-semibold">{s.politician}</span><div className="text-xs text-slate-500">{[s.party, s.chamber, s.state].join(" · ")}</div></td>
+                    <td className="td"><div className="font-semibold"><span className="font-mono text-gold-300">{s.ticker}</span></div><div className="max-w-[220px] truncate text-xs text-slate-400">{s.issuer}</div></td>
+                    <td className="td"><span className={pill(s.tx_type)}>{s.tx_type.toUpperCase()}</span></td>
+                    <td className="td text-right font-mono">{money(s.amount_min, s.amount_max)}</td>
+                    <td className="td text-sm capitalize text-slate-400">{s.owner}</td>
+                    <td className="td text-sm text-slate-300">{s.tx_date}</td>
+                    <td className="td text-sm text-slate-400">filed · {s.filed_after_days}d</td>
+                    <td className="td text-right font-mono text-sm text-slate-400">{s.filed_after_days}d</td>
                   </tr>
                 ))}
                 <tr><td colSpan={8} className="p-0"><LockCTA locked={locked} contact={branding?.contact} /></td></tr>

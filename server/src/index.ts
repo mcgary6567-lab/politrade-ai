@@ -15,6 +15,7 @@ import { ingestFromFeed, stats, syncPoliticians } from "./ingest.js";
 import { pollTelegramLinks } from "./notify.js";
 import { compress, photo, logo, bumpCache } from "./perf.js";
 import { seedDemo } from "./seed.js";
+import { backfillSectors } from "./sectors.js";
 import { legalPage } from "./legal.js";
 import { integ, aiOn } from "./settings.js";
 
@@ -27,6 +28,7 @@ migrate();
 seedAdmin();
 seedPlans();
 rebrandOnce();
+backfillSectors(); // fill in company sectors from the curated ticker map (feed rarely carries them)
 
 app.get("/api/photo/:bioguide", photo);
 app.get("/api/logo/:ticker", logo);

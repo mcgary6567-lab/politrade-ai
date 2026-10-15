@@ -6,6 +6,7 @@ import { get, run, all } from "./db.js";
 import { tradeInsight } from "./ai.js";
 import { sendAlert, recordAlert, sendToUser } from "./notify.js";
 import { integ } from "./settings.js";
+import { sectorFor } from "./sectors.js";
 
 const now = () => new Date().toISOString();
 
@@ -32,8 +33,9 @@ function upsertPolitician(p: { ext_id?: string; name: string; party?: string; ch
 function upsertIssuer(i: { ticker?: string; name: string; sector?: string }): number {
   const row = i.ticker ? get("SELECT id FROM issuers WHERE ticker=?", i.ticker) : get("SELECT id FROM issuers WHERE name=?", i.name);
   if (row) return row.id;
+  const sector = i.sector || sectorFor(i.ticker, i.name) || null; // feed's own sector wins, else our curated ticker map
   return Number(run("INSERT INTO issuers(ticker,name,sector,created_at) VALUES(?,?,?,?)",
-    i.ticker ?? null, i.name, i.sector ?? null, now()).lastInsertRowid);
+    i.ticker ?? null, i.name, sector, now()).lastInsertRowid);
 }
 
 /** Insert a trade if new; returns the trade id when it was freshly created (so the caller can alert), else null. */
