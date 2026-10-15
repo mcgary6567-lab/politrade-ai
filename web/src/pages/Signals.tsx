@@ -5,6 +5,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../App";
 import { Select, compact, partyTone } from "../components/ui";
 import { Avatar } from "./Politicians";
+import IssuerLogo from "../components/IssuerLogo";
 
 /** Smart-money signals page: which tickers Congress is clustering into, weighted by each lawmaker's track record. */
 export default function Signals() {
@@ -55,7 +56,8 @@ export default function Signals() {
               <div className="card divide-y divide-line">
                 {d.sell.map((s: any, i: number) => (
                   <div key={i} className="flex items-center gap-3 p-3 text-sm">
-                    {s.locked ? <Lock size={14} className="text-gold" /> : <span className="font-mono font-700 text-sell">{s.ticker}</span>}
+                    {s.locked ? <Lock size={14} className="text-gold" /> : <IssuerLogo ticker={s.ticker} name={s.issuer} size={24} />}
+                    {!s.locked && <span className="font-mono font-700 text-sell">{s.ticker}</span>}
                     <span className="min-w-0 flex-1 truncate text-slate-300">{s.locked ? "Locked — Pro" : s.issuer}</span>
                     <span className="text-xs text-slate-500">{s.sellers} sellers{s.buyers ? ` · ${s.buyers} buyers` : ""}</span>
                     <Score v={s.score} small />
@@ -105,6 +107,7 @@ function SignalCard({ s, rank }: { s: any; rank: number }) {
     <div className="card p-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="font-mono text-slate-500">#{rank}</span>
+        <IssuerLogo ticker={s.ticker} name={s.issuer} size={28} />
         <Link to={`/issuers/${s.issuer_id}`} className="font-mono text-lg font-700 text-gold hover:underline">{s.ticker}</Link>
         <span className="order-last min-w-0 basis-full truncate text-sm text-slate-300 sm:order-none sm:basis-auto sm:flex-1">{s.issuer}</span>
         <span className={`ml-auto chip py-0 text-[10px] sm:ml-0 ${s.confidence === "high" ? "border-buy/50 text-buy" : s.confidence === "medium" ? "border-gold/50 text-gold" : ""}`}>{s.confidence}</span>

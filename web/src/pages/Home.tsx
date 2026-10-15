@@ -6,6 +6,7 @@ import { api, money, ago } from "../lib/api";
 import { useAuth } from "../App";
 import { compact, partyTone } from "../components/ui";
 import { Avatar } from "./Politicians";
+import IssuerLogo from "../components/IssuerLogo";
 
 export const pill = (t: string) => (t === "buy" ? "pill-buy" : t === "sell" ? "pill-sell" : "pill-ex");
 
@@ -40,6 +41,7 @@ export default function Home() {
             {sig.buy.slice(0, 3).map((x: any, i: number) => (
               <Link key={i} to="/signals" className="rounded-xl border border-line bg-ink-800/60 p-3 transition hover:border-gold/50">
                 <div className="flex items-center gap-2">
+                  {!x.locked && <IssuerLogo ticker={x.ticker} name={x.issuer} size={24} />}
                   <span className={`font-mono text-lg font-700 ${x.locked ? "text-slate-600" : "text-gold"}`}>{x.locked ? "•••" : x.ticker}</span>
                   <span className={`chip py-0 text-[10px] ${x.confidence === "high" ? "border-buy/50 text-buy" : x.confidence === "medium" ? "border-gold/50 text-gold" : ""}`}>{x.score}/100</span>
                   {x.locked && <Lock size={12} className="ml-auto text-gold" />}
@@ -63,7 +65,7 @@ export default function Home() {
             {d.latest.map((r: any) => (
               <div key={r.id} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-3 py-2.5 text-sm sm:grid-cols-[64px_1fr_1fr_auto]">
                 <div><span className={pill(r.tx_type)}>{r.tx_type.toUpperCase()}</span><div className="mt-1 text-[11px] text-slate-500">{ago(r.published_date)}</div></div>
-                <div className="min-w-0"><Link to={`/issuers/${r.issuer_id}`} className="block truncate font-semibold hover:text-gold">{r.issuer}</Link><div className="truncate font-mono text-xs text-gold-300">{r.ticker ?? "—"}<span className="font-sans text-slate-500 sm:hidden"> · {r.politician}</span></div></div>
+                <div className="flex min-w-0 items-center gap-2"><IssuerLogo ticker={r.ticker} name={r.issuer} size={26} /><div className="min-w-0"><Link to={`/issuers/${r.issuer_id}`} className="block truncate font-semibold hover:text-gold">{r.issuer}</Link><div className="truncate font-mono text-xs text-gold-300">{r.ticker ?? "—"}<span className="font-sans text-slate-500 sm:hidden"> · {r.politician}</span></div></div></div>
                 <div className="hidden min-w-0 sm:block"><Link to={`/politicians/${r.politician_id}`} className="block truncate font-semibold hover:text-gold">{r.politician}</Link><div className="truncate text-xs text-slate-500">{[r.party, r.chamber, r.state].filter(Boolean).join(" | ")}</div></div>
                 <div className="text-right font-mono text-xs text-slate-300">{band(r.amount_min, r.amount_max)}</div>
               </div>
@@ -119,7 +121,7 @@ export default function Home() {
             <div className="divide-y divide-line">
               {d.featuredIssuers.map((i: any) => (
                 <Link key={i.id} to={`/issuers/${i.id}`} className="grid grid-cols-[40px_minmax(0,1fr)_auto_auto] items-center gap-3 py-2.5 hover:bg-ink-700/40 sm:grid-cols-[40px_1fr_auto_auto_110px]">
-                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-600 font-mono text-[11px] font-700 text-gold">{i.ticker.slice(0, 4)}</span>
+                  <IssuerLogo ticker={i.ticker} name={i.name} size={36} />
                   <div className="min-w-0"><div className="truncate text-sm font-semibold">{i.name}</div><div className="font-mono text-xs text-slate-500">{i.ticker}:US</div></div>
                   <Stat n={i.trades} l="Trades" />
                   <div className="text-right text-xs"><div className="font-mono text-buy">{i.buys}</div><div className="font-mono text-sell">{i.sells}</div></div>

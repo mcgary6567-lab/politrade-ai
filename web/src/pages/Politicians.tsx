@@ -4,6 +4,7 @@ import { Search, ArrowLeft, Landmark, Star, PieChart, History, ExternalLink } fr
 import { api, money, ago } from "../lib/api";
 import { pill } from "./Home";
 import { Select, KPI, partyTone, compact } from "../components/ui";
+import IssuerLogo from "../components/IssuerLogo";
 
 export default function Politicians() {
   const { id } = useParams();
@@ -122,7 +123,7 @@ function Detail({ id }: { id: string }) {
         <div className="card p-4">
           <h2 className="mb-3 flex items-center gap-2 font-display font-600"><Star size={15} className="text-gold" /> Favourite issuers</h2>
           <ul className="space-y-2 text-sm">
-            {data.topIssuers?.map((i: any) => <li key={i.ticker + i.name} className="flex items-center justify-between"><span><span className="font-mono text-gold-300">{i.ticker}</span> <span className="text-slate-400">{i.name}</span></span><span className="font-mono">{i.trades}</span></li>)}
+            {data.topIssuers?.map((i: any) => <li key={i.ticker + i.name} className="flex items-center justify-between gap-2"><span className="flex min-w-0 items-center gap-2"><IssuerLogo ticker={i.ticker} name={i.name} size={22} /><span className="min-w-0"><span className="font-mono text-gold-300">{i.ticker}</span> <span className="text-slate-400">{i.name}</span></span></span><span className="font-mono">{i.trades}</span></li>)}
           </ul>
           <h2 className="mb-2 mt-5 flex items-center gap-2 font-display font-600"><PieChart size={15} className="text-gold" /> Sectors</h2>
           <div className="flex flex-wrap gap-1.5">{data.bySector?.map((x: any) => <span key={x.sector} className="chip">{x.sector} <span className="text-gold">{x.trades}</span></span>)}</div>
@@ -136,7 +137,7 @@ function Detail({ id }: { id: string }) {
               <tbody className="divide-y divide-line">
                 {trades.map((t: any) => (
                   <tr key={t.id} className="hover:bg-ink-700/40">
-                    <td className="td"><span className="font-mono text-gold-300">{t.ticker ?? ""}</span> <span className="text-sm text-slate-300">{t.issuer}</span><div className="text-xs text-slate-500">{t.sector}</div></td>
+                    <td className="td"><div className="flex items-center gap-2"><IssuerLogo ticker={t.ticker} name={t.issuer} size={26} /><div className="min-w-0"><span className="font-mono text-gold-300">{t.ticker ?? ""}</span> <span className="text-sm text-slate-300">{t.issuer}</span><div className="text-xs text-slate-500">{t.sector}</div></div></div></td>
                     <td className="td"><span className={pill(t.tx_type)}>{t.tx_type.toUpperCase()}</span></td>
                     <td className="td text-right font-mono">{money(t.amount_min, t.amount_max)}</td>
                     <td className="td text-sm capitalize text-slate-400">{t.owner ?? "—"}</td>

@@ -5,6 +5,7 @@ import { Search, Sparkles, Download, SlidersHorizontal, X, ArrowLeftRight, Chevr
 import { api, money, ago, getToken } from "../lib/api";
 import { pill } from "./Home";
 import { Select, AMOUNT_BANDS } from "../components/ui";
+import IssuerLogo from "../components/IssuerLogo";
 
 const KEYS = ["q", "type", "party", "chamber", "state", "sector", "owner", "ticker", "politician", "issuer", "from", "to", "pub_from", "pub_to", "days", "amount_min", "amount_max", "sort"] as const;
 
@@ -121,6 +122,7 @@ export default function Trades() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className={pill(r.tx_type)}>{r.tx_type.toUpperCase()}</span>
+                    <IssuerLogo ticker={r.ticker} name={r.issuer} size={20} />
                     {r.ticker ? <Link to={`/issuers/${r.issuer_id}`} className="font-mono text-base font-700 text-gold-300">{r.ticker}</Link> : <span className="text-slate-500">—</span>}
                     <span className="truncate text-xs text-slate-400">{r.issuer}</span>
                   </div>
@@ -143,7 +145,7 @@ export default function Trades() {
                   <li key={i} className="p-3.5">
                     <div className="flex items-start gap-3">
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className={pill(s.tx_type)}>{s.tx_type.toUpperCase()}</span><span className="font-mono text-base font-700 text-gold-300">{s.ticker}</span><span className="truncate text-xs text-slate-400">{s.issuer}</span></div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className={pill(s.tx_type)}>{s.tx_type.toUpperCase()}</span><IssuerLogo ticker={s.ticker} name={s.issuer} size={20} /><span className="font-mono text-base font-700 text-gold-300">{s.ticker}</span><span className="truncate text-xs text-slate-400">{s.issuer}</span></div>
                         <span className="mt-1.5 block truncate text-sm font-semibold">{s.politician}</span>
                         <div className="text-xs text-slate-500">{[s.party, s.chamber, s.state].join(" · ")} · {s.owner}</div>
                       </div>
@@ -173,8 +175,8 @@ export default function Trades() {
                 <tr key={r.id} className="hover:bg-ink-700/40">
                   <td className="td"><Link to={`/politicians/${r.politician_id}`} className="font-semibold hover:text-gold">{r.politician}</Link>
                     <div className="text-xs text-slate-500">{[r.party, r.chamber, r.state].filter(Boolean).join(" · ")}</div></td>
-                  <td className="td"><div className="font-semibold">{r.ticker ? <Link to={`/issuers/${r.issuer_id}`} className="font-mono text-gold-300 hover:underline">{r.ticker}</Link> : "—"} {r.sector && <span className="chip ml-1 py-0 text-[10px]">{r.sector}</span>}</div>
-                    <div className="max-w-[220px] truncate text-xs text-slate-400">{r.issuer}</div></td>
+                  <td className="td"><div className="flex items-center gap-2"><IssuerLogo ticker={r.ticker} name={r.issuer} size={26} /><div className="min-w-0"><div className="font-semibold">{r.ticker ? <Link to={`/issuers/${r.issuer_id}`} className="font-mono text-gold-300 hover:underline">{r.ticker}</Link> : "—"} {r.sector && <span className="chip ml-1 py-0 text-[10px]">{r.sector}</span>}</div>
+                    <div className="max-w-[220px] truncate text-xs text-slate-400">{r.issuer}</div></div></div></td>
                   <td className="td"><span className={pill(r.tx_type)}>{r.tx_type.toUpperCase()}</span></td>
                   <td className="td text-right font-mono">{money(r.amount_min, r.amount_max)}</td>
                   <td className="td text-sm capitalize text-slate-400">{r.owner ?? "—"}</td>
@@ -188,7 +190,7 @@ export default function Trades() {
                 {Array.from({ length: Math.min(locked, 5) }, (_, i) => lockSample(i)).map((s, i) => (
                   <tr key={`lk${i}`} aria-hidden className="pointer-events-none select-none blur-[6px]">
                     <td className="td"><span className="font-semibold">{s.politician}</span><div className="text-xs text-slate-500">{[s.party, s.chamber, s.state].join(" · ")}</div></td>
-                    <td className="td"><div className="font-semibold"><span className="font-mono text-gold-300">{s.ticker}</span></div><div className="max-w-[220px] truncate text-xs text-slate-400">{s.issuer}</div></td>
+                    <td className="td"><div className="flex items-center gap-2"><IssuerLogo ticker={s.ticker} name={s.issuer} size={26} /><div className="min-w-0"><div className="font-semibold"><span className="font-mono text-gold-300">{s.ticker}</span></div><div className="max-w-[220px] truncate text-xs text-slate-400">{s.issuer}</div></div></div></td>
                     <td className="td"><span className={pill(s.tx_type)}>{s.tx_type.toUpperCase()}</span></td>
                     <td className="td text-right font-mono">{money(s.amount_min, s.amount_max)}</td>
                     <td className="td text-sm capitalize text-slate-400">{s.owner}</td>

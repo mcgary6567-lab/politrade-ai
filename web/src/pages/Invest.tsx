@@ -5,6 +5,7 @@ import { Wallet, Lock, Sparkles, ShieldAlert, Calculator, PiggyBank, BadgeDollar
 import { api } from "../lib/api";
 import { useAuth } from "../App";
 import { compact, partyTone } from "../components/ui";
+import IssuerLogo from "../components/IssuerLogo";
 
 /**
  * Invest Plan: what the back-test says about following congressional "smart clusters", a calculator that projects a
@@ -120,7 +121,7 @@ export default function Invest() {
               <span className="w-5 shrink-0 font-mono text-sm text-slate-500">{p.rank}</span>
               <div className="min-w-0 flex-1">
                 {p.locked ? <span className="flex items-center gap-2 text-sm text-slate-500"><Lock size={13} className="text-gold" /> Pro members only</span>
-                  : <><Link to={`/issuers/${p.issuer_id}`} className="font-mono font-700 text-gold hover:underline">{p.ticker}</Link><div className="truncate text-xs text-slate-400">{p.issuer}</div></>}
+                  : <div className="flex items-center gap-2"><IssuerLogo ticker={p.ticker} name={p.issuer} size={24} /><div className="min-w-0"><Link to={`/issuers/${p.issuer_id}`} className="font-mono font-700 text-gold hover:underline">{p.ticker}</Link><div className="truncate text-xs text-slate-400">{p.issuer}</div></div></div>}
                 <div className="mt-1 flex flex-wrap gap-x-2 text-[11px] text-slate-400">
                   <span className={`chip py-0 text-[10px] ${p.confidence === "high" ? "border-buy/50 text-buy" : p.confidence === "medium" ? "border-gold/50 text-gold" : ""}`}>{p.score}/100</span>
                   <span>{p.buyers} buying{p.bipartisan ? " · bipartisan" : ""}</span>
@@ -139,7 +140,7 @@ export default function Invest() {
               {d.portfolio.map((p: any) => (
                 <tr key={p.rank} className={p.locked ? "opacity-70" : "hover:bg-ink-700/40"}>
                   <td className="td font-mono text-slate-500">{p.rank}</td>
-                  <td className="td">{p.locked ? <span className="flex items-center gap-2 text-slate-500"><Lock size={13} className="text-gold" /> Pro members only</span> : <><Link to={`/issuers/${p.issuer_id}`} className="font-mono font-700 text-gold hover:underline">{p.ticker}</Link><div className="text-xs text-slate-400">{p.issuer}</div></>}</td>
+                  <td className="td">{p.locked ? <span className="flex items-center gap-2 text-slate-500"><Lock size={13} className="text-gold" /> Pro members only</span> : <div className="flex items-center gap-2"><IssuerLogo ticker={p.ticker} name={p.issuer} size={24} /><div className="min-w-0"><Link to={`/issuers/${p.issuer_id}`} className="font-mono font-700 text-gold hover:underline">{p.ticker}</Link><div className="text-xs text-slate-400">{p.issuer}</div></div></div>}</td>
                   <td className="td"><span className={`chip py-0 text-[10px] ${p.confidence === "high" ? "border-buy/50 text-buy" : p.confidence === "medium" ? "border-gold/50 text-gold" : ""}`}>{p.score}/100</span></td>
                   <td className="td text-right font-mono">{p.weight}%</td>
                   <td className="td text-right font-mono text-slate-100">{usd(amount * p.weight / 100)}</td>

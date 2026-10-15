@@ -4,6 +4,7 @@ import { LayoutDashboard, Users, CreditCard, Plug, Database, Bell, Plus, Pencil,
 import { api, ago } from "../lib/api";
 import { useAuth } from "../App";
 import { Modal, Field, Select, KPI, toast, Empty } from "../components/ui";
+import IssuerLogo from "../components/IssuerLogo";
 
 const TABS = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
@@ -446,7 +447,7 @@ function AlertsTab() {
         </div>
         {sig.length > 0 && (
           <table className="mt-3 w-full text-sm"><thead className="border-b border-line"><tr><th className="th">When</th><th className="th">Ticker</th><th className="th">Confidence</th><th className="th text-right">Score</th><th className="th text-right">Buyers</th><th className="th text-right">Delivered</th></tr></thead>
-            <tbody className="divide-y divide-line">{sig.slice(0, 12).map((r) => <tr key={r.id}><td className="td whitespace-nowrap text-slate-400">{r.created_at?.replace("T", " ").slice(5, 16)}</td><td className="td font-mono font-700 text-gold">{r.ticker}</td><td className="td capitalize">{r.confidence}</td><td className="td text-right font-mono">{r.score}</td><td className="td text-right font-mono">{r.buyers}</td><td className="td text-right font-mono">{r.sent ?? 0}/{r.attempts}</td></tr>)}</tbody></table>
+            <tbody className="divide-y divide-line">{sig.slice(0, 12).map((r) => <tr key={r.id}><td className="td whitespace-nowrap text-slate-400">{r.created_at?.replace("T", " ").slice(5, 16)}</td><td className="td"><span className="flex items-center gap-1.5 font-mono font-700 text-gold"><IssuerLogo ticker={r.ticker} size={18} />{r.ticker}</span></td><td className="td capitalize">{r.confidence}</td><td className="td text-right font-mono">{r.score}</td><td className="td text-right font-mono">{r.buyers}</td><td className="td text-right font-mono">{r.sent ?? 0}/{r.attempts}</td></tr>)}</tbody></table>
         )}
       </div>
       <div className="flex items-center justify-between"><p className="text-sm text-slate-400">Trade alerts — every delivery attempt per channel. Failed rows show the provider's error so you can fix the key and re-send.</p><button className="btn-ghost text-sm" onClick={testAll}><Send size={14} /> Send test to all channels</button></div>
@@ -457,7 +458,7 @@ function AlertsTab() {
             {rows.map((a) => (
               <tr key={a.id} className="hover:bg-ink-700/40">
                 <td className="td whitespace-nowrap text-slate-400">{a.created_at?.replace("T", " ").slice(0, 16)}</td>
-                <td className="td"><span className={a.tx_type === "buy" ? "pill-buy" : a.tx_type === "sell" ? "pill-sell" : "pill-ex"}>{a.tx_type.toUpperCase()}</span> <span className="font-semibold">{a.politician}</span> <span className="font-mono text-gold-300">{a.ticker}</span></td>
+                <td className="td"><span className={a.tx_type === "buy" ? "pill-buy" : a.tx_type === "sell" ? "pill-sell" : "pill-ex"}>{a.tx_type.toUpperCase()}</span> <span className="font-semibold">{a.politician}</span> <span className="inline-flex items-center gap-1.5 align-middle font-mono text-gold-300"><IssuerLogo ticker={a.ticker} size={18} />{a.ticker}</span></td>
                 <td className="td capitalize">{a.channel}</td>
                 <td className="td">{a.ok ? <span className="flex items-center gap-1 text-buy"><CheckCircle2 size={14} /> sent</span> : <span className="flex items-center gap-1 text-xs text-sell"><XCircle size={14} /> {a.info}</span>}</td>
                 <td className="td text-right"><button className="btn-ghost px-2 py-1 text-xs" disabled={busy === a.trade_id} onClick={() => resend(a.trade_id)}><RefreshCw size={12} className={busy === a.trade_id ? "animate-spin" : ""} /> Re-send</button></td>
