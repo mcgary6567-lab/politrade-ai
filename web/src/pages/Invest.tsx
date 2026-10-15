@@ -157,7 +157,7 @@ export default function Invest() {
           <div className="flex flex-wrap items-center gap-3 border-t border-line bg-gold/5 p-4 text-sm">
             <Sparkles size={18} className="shrink-0 text-gold" />
             <div className="flex-1 basis-[260px]">You are seeing 1 of {d.portfolio.length} positions. <b>Pro</b> shows every stock in the plan, the AI thesis behind each, and sends you an alert the moment a new cluster forms — so you act on the same day, not weeks later.</div>
-            <a href={`mailto:${branding?.contact ?? ""}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Unlock the full plan — $300 / year</a>
+            <a href={`mailto:${branding?.contact ?? ""}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Unlock the full plan — ${(d.proPriceCents / 100).toFixed(0)} / year</a>
           </div>
         )}
       </section>
