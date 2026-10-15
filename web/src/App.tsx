@@ -4,10 +4,10 @@ import { api, getToken, setToken, prefetch } from "./lib/api";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Home from "./pages/Home";
 import Trades from "./pages/Trades";
 import Politicians from "./pages/Politicians";
 import Issuers from "./pages/Issuers";
+const Home = lazy(() => import("./pages/Home"));
 const Insights = lazy(() => import("./pages/Insights"));
 const Signals = lazy(() => import("./pages/Signals"));
 const Invest = lazy(() => import("./pages/Invest"));
@@ -42,7 +42,7 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route element={<Protected />}>
           <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Suspense fallback={<Fallback />}><Home /></Suspense>} />
             <Route path="/trades" element={<Trades />} />
             <Route path="/politicians" element={<Politicians />} />
             <Route path="/politicians/:id" element={<Politicians />} />

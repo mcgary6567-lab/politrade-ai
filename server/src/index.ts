@@ -17,7 +17,7 @@ import { compress, photo, logo, bumpCache } from "./perf.js";
 import { seedDemo } from "./seed.js";
 import { backfillSectors } from "./sectors.js";
 import { legalPage } from "./legal.js";
-import { integ, aiOn } from "./settings.js";
+import { integ, aiOn, proPriceCents } from "./settings.js";
 
 export const app = express();
 app.use(cors());
@@ -36,6 +36,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true, version: APP_VERSION,
 app.get("/api/branding", (_req, res) => res.json({
   name: integ.brandName(), version: APP_VERSION, contact: integ.contactEmail(),
   social: { x: integ.socialX(), telegram: integ.socialTelegram(), github: integ.socialGithub() },
+  proPriceCents: proPriceCents(),
 }));
 
 app.post("/api/auth/login", (req, res) => {

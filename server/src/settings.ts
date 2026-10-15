@@ -1,5 +1,16 @@
-import { getSetting, setSetting, all } from "./db.js";
+import { getSetting, setSetting, all, get } from "./db.js";
 import { config } from "./config.js";
+
+/** The current Pro price in cents, read from the active paid plan (single source of truth for all "$X / year" copy). */
+export function proPriceCents(): number {
+  const r = (get("SELECT price_cents FROM plans WHERE active=1 AND price_cents>0 AND lower(name)='pro' ORDER BY price_cents ASC LIMIT 1")
+    ?? get("SELECT price_cents FROM plans WHERE active=1 AND price_cents>0 ORDER BY price_cents ASC LIMIT 1")) as { price_cents: number } | undefined;
+  return r?.price_cents ?? 49700;
+}
+/** Pro price formatted for display, e.g. "$497". */
+export function proPriceLabel(): string {
+  return `$${Math.round(proPriceCents() / 100)}`;
+}
 
 /** A setting saved from the admin panel wins; otherwise fall back to the environment. */
 export function s(key: string, fallback = ""): string {

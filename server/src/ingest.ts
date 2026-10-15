@@ -370,6 +370,7 @@ export function stats() {
     politicians: get("SELECT COUNT(*) c FROM politicians").c,
     issuers: get("SELECT COUNT(*) c FROM issuers").c,
     last: get("SELECT MAX(published_date) d FROM trades")?.d,
+    updated: get("SELECT finished_at FROM ingest_log WHERE finished_at IS NOT NULL ORDER BY id DESC LIMIT 1")?.finished_at ?? null,
   };
 }
 export { all };

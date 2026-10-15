@@ -5,11 +5,24 @@ import { HelpCircle, FileText, ShieldCheck, AlertTriangle, Mail, ArrowLeftRight,
 import InstallApp from "./InstallApp";
 
 type Brand = { name: string; version: string; contact: string; social: { x?: string; telegram?: string; github?: string } };
-const XIcon = ({ size = 15 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2H22l-7.4 8.5L23 22h-6.8l-5.3-6.9L4.8 22H1.7l7.9-9L0 2h7l4.8 6.3L18.9 2zm-1.2 18h1.9L6.4 3.9H4.4L17.7 20z" /></svg>;
+/** Short relative time for the data-freshness badge (minutes / hours / days). */
+function fresh(iso: string): string {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  return days === 1 ? "1d ago" : `${days}d ago`;
+}
+
+const XIcon = ({ size = 15 }: { size?: number }) =><svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2H22l-7.4 8.5L23 22h-6.8l-5.3-6.9L4.8 22H1.7l7.9-9L0 2h7l4.8 6.3L18.9 2zm-1.2 18h1.9L6.4 3.9H4.4L17.7 20z" /></svg>;
 
 export default function Footer() {
   const [b, setB] = useState<Brand | null>(null);
+  const [updated, setUpdated] = useState<string | null>(null);
   useEffect(() => { fetch("/api/branding").then((r) => r.json()).then(setB).catch(() => {}); }, []);
+  useEffect(() => { fetch("/api/health").then((r) => r.json()).then((h) => setUpdated(h?.updated ?? null)).catch(() => {}); }, []);
   const year = new Date().getFullYear();
   return (
     <footer className="mt-10 border-t border-line bg-ink-800">
@@ -54,6 +67,7 @@ export default function Footer() {
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <span>© {year} Hillradar AI. Data from public US congressional disclosures (STOCK Act).</span>
+          {updated && <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-buy" /> Data updated {fresh(updated)}</span>}
           <span>Not affiliated with any government body or lawmaker. v{b?.version ?? "1.0.0"}</span>
         </div>
       </div>

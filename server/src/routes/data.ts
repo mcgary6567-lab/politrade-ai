@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { all, get } from "../db.js";
 import { cached } from "../perf.js";
+import { proPriceCents } from "../settings.js";
 
 /** Serve politician photos from our own origin (disk-cached proxy) instead of 350 cross-origin GitHub requests. */
 export const photoUrl = (p: any) => p?.ext_id ? `/api/photo/${p.ext_id}` : p?.photo_url ?? null;
@@ -280,6 +281,6 @@ data.get("/invest", cached(600_000, () => "/invest"), async (req, res) => {
   res.json({
     strategy, locked,
     portfolio: locked ? portfolio.map((p, i) => (i === 0 ? p : { ...p, ticker: "•••", issuer: "Locked — Pro", issuer_id: 0, topBuyer: null, locked: true })) : portfolio,
-    proPriceCents: 49700,
+    proPriceCents: proPriceCents(),
   });
 });

@@ -3,9 +3,9 @@ import { useAuth } from "../App";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Sparkles, Download, SlidersHorizontal, X, ArrowLeftRight, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { api, money, ago, getToken } from "../lib/api";
-import { pill } from "./Home";
-import { Select, AMOUNT_BANDS } from "../components/ui";
+import { Select, AMOUNT_BANDS, pill } from "../components/ui";
 import IssuerLogo from "../components/IssuerLogo";
+import { useProPrice } from "../lib/plan";
 
 const KEYS = ["q", "type", "party", "chamber", "state", "sector", "owner", "ticker", "politician", "issuer", "from", "to", "pub_from", "pub_to", "days", "amount_min", "amount_max", "sort"] as const;
 
@@ -23,6 +23,7 @@ const lockSample = (i: number) => LOCK_SAMPLES[i % LOCK_SAMPLES.length];
 
 export default function Trades() {
   const { user } = useAuth();
+  const price = useProPrice();
   const [sp, setSp] = useSearchParams();
   const [branding, setBranding] = useState<any>(null);
   const [rows, setRows] = useState<any[]>([]);
@@ -72,7 +73,7 @@ export default function Trades() {
 
       {!user?.pro && (
         <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 p-4 text-sm">
-          <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> <span className="text-slate-300">you are seeing a preview of {rows.length} trade{rows.length === 1 ? "" : "s"}{total > rows.length ? ` out of ${total.toLocaleString()}` : ""}. <b>Pro ($497 / year)</b> unlocks every trade, the full history since 2014, AI Scanning, the Investment Plan, instant Telegram / WhatsApp / Email alerts, unlimited watchlist and CSV export.</span></div>
+          <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> <span className="text-slate-300">you are seeing a preview of {rows.length} trade{rows.length === 1 ? "" : "s"}{total > rows.length ? ` out of ${total.toLocaleString()}` : ""}. <b>Pro ({price} / year)</b> unlocks every trade, the full history since 2014, AI Scanning, the Investment Plan, instant Telegram / WhatsApp / Email alerts, unlimited watchlist and CSV export.</span></div>
           <a href={`mailto:${branding?.contact ?? "info@hillradar.com"}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Upgrade to Pro</a>
         </div>
       )}
@@ -222,11 +223,12 @@ export default function Trades() {
 
 /** Pro upsell shown over (overlay) or under the blurred, locked trades on the Free plan. */
 function LockCTA({ locked, contact, overlay }: { locked: number; contact?: string; overlay?: boolean }) {
+  const price = useProPrice();
   return (
     <div className={`flex flex-col items-center justify-center gap-2 px-4 py-6 text-center ${overlay ? "absolute inset-0 z-10 bg-gradient-to-t from-ink-900 via-ink-900/90 to-transparent" : "border-t border-line"}`}>
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15 text-gold"><Lock size={18} /></div>
       <div className="text-sm font-700">{locked.toLocaleString()} more trade{locked === 1 ? "" : "s"} locked</div>
-      <div className="max-w-sm text-xs text-slate-400">Upgrade to <b className="text-gold">Pro ($497 / year)</b> to unlock every trade, the full history since 2014, AI Scanning, alerts and CSV export.</div>
+      <div className="max-w-sm text-xs text-slate-400">Upgrade to <b className="text-gold">Pro ({price} / year)</b> to unlock every trade, the full history since 2014, AI Scanning, alerts and CSV export.</div>
       <a href={`mailto:${contact ?? "info@hillradar.com"}?subject=Upgrade to Pro`} className="btn-gold mt-1 px-4 py-2 text-xs">Unlock all trades with Pro</a>
     </div>
   );

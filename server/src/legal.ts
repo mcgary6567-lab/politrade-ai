@@ -1,5 +1,5 @@
 import { config } from "./config.js";
-import { integ } from "./settings.js";
+import { integ, proPriceLabel } from "./settings.js";
 
 /** Inline icons (no external requests): keys used by the section headers below. */
 const I: Record<string, string> = {
@@ -84,8 +84,9 @@ const note = (html: string, warn = false) => `<div class="note${warn ? " warn" :
 export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact" | "faq"): string {
   const name = integ.brandName(), co = integ.companyName(), mail = integ.contactEmail(), law = integ.jurisdiction();
   const url = config.publicUrl.replace(/^https?:\/\//, "");
+  const price = proPriceLabel();
 
-  if (kind === "faq") return faqPage(name, co, mail, law);
+  if (kind === "faq") return faqPage(name, co, mail, law, price);
 
   if (kind === "terms") return layout("Terms & Conditions", `The agreement between you and ${co} for using ${name} — the website, the installable app, alerts and the API. Please read it; by creating an account you accept it.`, [
     { id: "acceptance", icon: "file", title: "Acceptance of these terms", html: `
@@ -101,7 +102,7 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact" |
     { id: "plans", icon: "card", title: "Plans, payment & renewal", html: `
       <table><tr><th>Plan</th><th>Price</th><th>Includes</th></tr>
       <tr><td><b>Free</b></td><td>$0</td><td>Browse trades, politicians and issuers for the most recent 30 days; 1 watchlist item; the #1 AI signal.</td></tr>
-      <tr><td><b>Pro</b></td><td>$497 per year</td><td>Full history since 2014, AI Scanning (every signal with reasons and thesis), the Investment Plan (back-test, calculator, full model portfolio), instant Telegram / WhatsApp / email alerts, unlimited watchlist, CSV export, track-record leaderboard, priority support.</td></tr></table>
+      <tr><td><b>Pro</b></td><td>${price} per year</td><td>Full history since 2014, AI Scanning (every signal with reasons and thesis), the Investment Plan (back-test, calculator, full model portfolio), instant Telegram / WhatsApp / email alerts, unlimited watchlist, CSV export, track-record leaderboard, priority support.</td></tr></table>
       <ul><li>Prices are in US dollars and exclude any taxes you may owe. Current prices are always shown in the app; we may change prices for future periods with notice.</li>
       <li>Pro is billed <b>annually in advance</b>. Access starts when payment is confirmed and lasts 12 months. Unless you cancel before the renewal date, your plan renews for another year at the then-current price (where automatic billing is in place).</li>
       <li><b>Refunds:</b> you may request a full refund within <b>14 days</b> of your first Pro payment if you have not exported data or received more than 10 alerts. After that, payments are non-refundable except where the law requires otherwise.</li>
@@ -242,7 +243,7 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact" |
     { id: "reach", icon: "mail", title: "Ways to reach us", html: `
       <div class="cards">
         <div class="card"><h4>${ic("mail", 18)} Email</h4><p><a href="mailto:${mail}">${mail}</a><br>Account, billing, corrections, anything.</p></div>
-        <div class="card"><h4>${ic("spark", 18)} Pro membership</h4><p>Want Pro ($497 / year)? <a href="mailto:${mail}?subject=Upgrade%20to%20Pro">Email us</a> with your account email and we will activate it the same day.</p></div>
+        <div class="card"><h4>${ic("spark", 18)} Pro membership</h4><p>Want Pro (${price} / year)? <a href="mailto:${mail}?subject=Upgrade%20to%20Pro">Email us</a> with your account email and we will activate it the same day.</p></div>
         <div class="card"><h4>${ic("alert", 18)} Data correction</h4><p>Spotted a wrong trade? <a href="mailto:${mail}?subject=Data%20correction">Send the filing link</a> and we will fix it.</p></div>
         <div class="card"><h4>${ic("help", 18)} Press & partnerships</h4><p><a href="mailto:${mail}?subject=Partnership">${mail}</a></p></div>
       </div>
@@ -262,7 +263,7 @@ export function legalPage(kind: "privacy" | "terms" | "disclaimer" | "contact" |
 type QA = { q: string; a: string; tags?: string };
 type Group = { id: string; icon: string; title: string; blurb: string; items: QA[] };
 
-function faqPage(name: string, co: string, mail: string, law: string): string {
+function faqPage(name: string, co: string, mail: string, law: string, price: string): string {
   const groups: Group[] = [
     { id: "start", icon: "rocket", title: "Getting started", blurb: "What the service is and how to begin in two minutes.", items: [
       { q: `What is ${name}?`, a: `<p>${name} is a research tool that tracks the stock trades US senators and representatives are legally required to disclose under the <b>STOCK Act</b>. It turns tens of thousands of filings into a searchable database, politician and company profiles, performance track records, and <b>AI Signals</b> that highlight where several lawmakers are buying at the same time.</p><p>It is built for investors, journalists and researchers who want to follow "political smart money" without reading PDF filings by hand.</p>` },
@@ -284,13 +285,13 @@ function faqPage(name: string, co: string, mail: string, law: string): string {
       { q: "What is an AI Signal?", a: `<p>A signal is a stock where the <b>pattern of congressional buying</b> looks unusually strong right now. For each ticker in the window (default 90 days) we score:</p><ul><li>how many different lawmakers bought it, and how recently;</li><li>whether buyers come from <b>both parties</b> (bipartisan clusters have historically been more reliable);</li><li>the <b>track record</b> of the people buying — a buy by someone with a 65% hit rate counts more than one by someone with 40%;</li><li>how past congressional buys of that same stock have performed;</li><li>sell-side pressure, which lowers the score.</li></ul><p>The result is a score out of 100 with a confidence tier (high / medium / watch), the reasons in plain English and, when AI insight is enabled, a short thesis.</p>` },
       { q: "What does the back-test on the Invest Plan page actually measure?", a: `<p>We take every disclosed stock buy since 2014 with a known 6-month outcome (about 21,500 trades) and compare four rules, equal-weighted and before costs:</p><table><tr><th>Rule</th><th>Avg 6-month return</th><th>Beat market</th></tr><tr><td>Market (S&amp;P 500)</td><td>+9.3%</td><td>—</td></tr><tr><td>Any congressional buy</td><td>+9.3%</td><td>46%</td></tr><tr><td>Cluster buys (2+ lawmakers within 45 days)</td><td>+10.9%</td><td>47%</td></tr><tr><td><b>Smart clusters</b> (cluster + a buyer with ≥55% track record) — the rule our signals use</td><td><b>+17.1%</b></td><td><b>60%</b></td></tr></table><p>The exact figures are recomputed from the live database and shown on the page itself.</p>` },
       { q: "Is the +17% figure guaranteed or a prediction?", a: `<p><b>No.</b> It is a historical average with real caveats, which we print on the page: it applies today's track records to past trades (which flatters results), it ignores fees, taxes and the filing delay, and averages hide big winners and losers. Past performance never guarantees future results. Treat it as evidence that the approach has been worth studying, not as a promise.</p>`, tags: "guarantee risk" },
-      { q: "How does the profit calculator work?", a: `<p>You set a starting amount, a monthly contribution and a time horizon. The calculator compounds your money monthly at two historical rates — the market's and the smart-cluster rule's — and shows both paths side by side, plus the difference. It also shows how many months of that historical edge would cover the <b>$497 / year</b> Pro price at your numbers. It is a what-if tool, not a forecast.</p>` },
+      { q: "How does the profit calculator work?", a: `<p>You set a starting amount, a monthly contribution and a time horizon. The calculator compounds your money monthly at two historical rates — the market's and the smart-cluster rule's — and shows both paths side by side, plus the difference. It also shows how many months of that historical edge would cover the <b>${price} / year</b> Pro price at your numbers. It is a what-if tool, not a forecast.</p>` },
       { q: "What is the model portfolio on Invest Plan?", a: `<p>It splits a chosen amount across the current <b>buy signals</b>, weighted by signal score, so you can see what a signal-following allocation would look like today. Free members see the #1 position; Pro members see all of them with the reasons and top buyers behind each.</p>` },
       { q: "Is any of this financial advice?", a: `<p>No. ${name} provides research and education about public records. We are not a broker or investment adviser, we do not know your situation, and nothing here is a recommendation to buy or sell anything. Please read the <a href="/disclaimer">Disclaimer</a> and decide for yourself or with a licensed adviser.</p>`, tags: "advice legal" },
     ]},
     { id: "plans", icon: "card", title: "Plans & billing", blurb: "Free vs Pro, pricing, refunds and cancellation.", items: [
-      { q: "What is the difference between Free and Pro?", a: `<table><tr><th></th><th>Free</th><th>Pro — $497 / year</th></tr><tr><td>Trades, politicians, issuers</td><td>Last 30 days</td><td>Full history since 2014</td></tr><tr><td>AI Scanning (signals)</td><td>#1 signal only</td><td>Every signal + reasons + AI thesis</td></tr><tr><td>Investment Plan</td><td>Back-test, calculator, #1 position</td><td>Full model portfolio</td></tr><tr><td>Alerts (Telegram / WhatsApp / Email)</td><td>—</td><td>Instant, on watchlist filings and new signals</td></tr><tr><td>Watchlist</td><td>1 item</td><td>Unlimited</td></tr><tr><td>CSV export</td><td>—</td><td>Yes</td></tr><tr><td>Track-record leaderboard</td><td>—</td><td>Yes</td></tr><tr><td>Support</td><td>Email</td><td>Priority</td></tr></table>` },
-      { q: "How much does Pro cost and how is it billed?", a: `<p><b>$497 per year</b>, billed annually in advance in US dollars. There is no monthly plan; one yearly price keeps the service independent of ads and data resale.</p>` },
+      { q: "What is the difference between Free and Pro?", a: `<table><tr><th></th><th>Free</th><th>Pro — ${price} / year</th></tr><tr><td>Trades, politicians, issuers</td><td>Last 30 days</td><td>Full history since 2014</td></tr><tr><td>AI Scanning (signals)</td><td>#1 signal only</td><td>Every signal + reasons + AI thesis</td></tr><tr><td>Investment Plan</td><td>Back-test, calculator, #1 position</td><td>Full model portfolio</td></tr><tr><td>Alerts (Telegram / WhatsApp / Email)</td><td>—</td><td>Instant, on watchlist filings and new signals</td></tr><tr><td>Watchlist</td><td>1 item</td><td>Unlimited</td></tr><tr><td>CSV export</td><td>—</td><td>Yes</td></tr><tr><td>Track-record leaderboard</td><td>—</td><td>Yes</td></tr><tr><td>Support</td><td>Email</td><td>Priority</td></tr></table>` },
+      { q: "How much does Pro cost and how is it billed?", a: `<p><b>${price} per year</b>, billed annually in advance in US dollars. There is no monthly plan; one yearly price keeps the service independent of ads and data resale.</p>` },
       { q: "How do I upgrade?", a: `<p>Click <b>Upgrade to Pro</b> anywhere in the app or email <a href="mailto:${mail}?subject=Upgrade%20to%20Pro">${mail}</a> with your account email. We activate Pro on your account as soon as payment is confirmed; your plan badge in the header changes to <b>PRO</b>.</p>` },
       { q: "Can I get a refund?", a: `<p>Yes — a <b>full refund within 14 days</b> of your first Pro payment, provided you have not exported data or received more than 10 alerts. After that, payments are non-refundable except where the law requires otherwise. Details are in the <a href="/terms#plans">Terms</a>.</p>` },
       { q: "How do I cancel?", a: `<p>Email us before your renewal date. Cancelling stops the next renewal; you keep every Pro feature until the end of the year you paid for, then the account moves to Free — nothing is deleted.</p>` },

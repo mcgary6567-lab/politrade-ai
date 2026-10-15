@@ -68,6 +68,7 @@ export function Empty({ text }: { text: string }) {
 
 export const partyTone = (p?: string) => p === "Democrat" ? "text-sky-400" : p === "Republican" ? "text-rose-400" : "text-violet-300";
 export const compact = (n?: number | null) => n == null ? "—" : n >= 1e9 ? `$${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${n}`;
+export const pill = (t: string) => (t === "buy" ? "pill-buy" : t === "sell" ? "pill-sell" : "pill-ex");
 export const AMOUNT_BANDS: [string, string, string][] = [
   ["", "", "Any amount"], ["1001", "15000", "$1K – $15K"], ["15001", "50000", "$15K – $50K"], ["50001", "100000", "$50K – $100K"],
   ["100001", "250000", "$100K – $250K"], ["250001", "1000000", "$250K – $1M"], ["1000001", "", "$1M+"],

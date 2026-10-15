@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Search, ArrowLeft, Landmark, Star, PieChart, History, ExternalLink, Lock } from "lucide-react";
 import { api, money, ago } from "../lib/api";
-import { pill } from "./Home";
+import { pill } from "../components/ui";
 import { Select, KPI, partyTone, compact } from "../components/ui";
 import IssuerLogo from "../components/IssuerLogo";
 import { useAuth } from "../App";
+import { useProPrice } from "../lib/plan";
 
 /** Realistic-looking sample rows blurred behind the Pro lock on a politician's trade history. */
 const POL_LOCK_SAMPLES = [
@@ -97,6 +98,7 @@ export function Avatar({ p, size }: { p: any; size: string }) {
 
 function Detail({ id }: { id: string }) {
   const { user } = useAuth();
+  const price = useProPrice();
   const [data, setData] = useState<any>(null);
   const [type, setType] = useState("");
   const [branding, setBranding] = useState<any>(null);
@@ -180,7 +182,7 @@ function Detail({ id }: { id: string }) {
             <div className="flex flex-col items-center justify-center gap-2 border-t border-line bg-gold/5 px-4 py-6 text-center">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15 text-gold"><Lock size={18} /></div>
               <div className="text-sm font-700">{locked.toLocaleString()} more trade{locked === 1 ? "" : "s"} locked</div>
-              <div className="max-w-sm text-xs text-slate-400">Free shows only the latest trade. Upgrade to <b className="text-gold">Pro ($497 / year)</b> to see this lawmaker's full trade history, AI Scanning, alerts and CSV export.</div>
+              <div className="max-w-sm text-xs text-slate-400">Free shows only the latest trade. Upgrade to <b className="text-gold">Pro ({price} / year)</b> to see this lawmaker's full trade history, AI Scanning, alerts and CSV export.</div>
               <a href={`mailto:${branding?.contact ?? "info@hillradar.com"}?subject=Upgrade to Pro`} className="btn-gold mt-1 px-4 py-2 text-xs">Unlock all trades with Pro</a>
             </div>
           )}

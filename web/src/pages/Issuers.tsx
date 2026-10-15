@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Search, ArrowLeft, Building2, Users, History, ExternalLink } from "lucide-react";
 import { api, ago, money } from "../lib/api";
-import { pill } from "./Home";
+import { pill } from "../components/ui";
 import { Select, KPI, partyTone, compact } from "../components/ui";
 import IssuerLogo from "../components/IssuerLogo";
 

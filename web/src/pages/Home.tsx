@@ -4,14 +4,14 @@ import { BarChart, Bar, LineChart, Line, ResponsiveContainer, XAxis, Tooltip } f
 import { Sparkles, TrendingUp, Lock, ArrowLeftRight, Lightbulb, Landmark, Building2, Map as MapIcon, Wallet } from "lucide-react";
 import { api, money, ago } from "../lib/api";
 import { useAuth } from "../App";
-import { compact, partyTone } from "../components/ui";
+import { compact, partyTone, pill } from "../components/ui";
+import { useProPrice } from "../lib/plan";
 import { Avatar } from "./Politicians";
 import IssuerLogo from "../components/IssuerLogo";
 
-export const pill = (t: string) => (t === "buy" ? "pill-buy" : t === "sell" ? "pill-sell" : "pill-ex");
-
 export default function Home() {
   const { user } = useAuth();
+  const price = useProPrice();
   const [d, setD] = useState<any>(null);
   const [assets, setAssets] = useState<"stocks" | "all">("stocks");
   const [sig, setSig] = useState<any>(null);
@@ -23,7 +23,7 @@ export default function Home() {
     <div className="space-y-5">
       {d.window && (
         <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 px-4 py-3 text-sm">
-          <span className="flex-1 basis-[260px]"><b className="text-gold">Free plan</b> — showing the last {d.window} days. <b>Pro ($497 / year)</b>: full history since 2014, AI Scanning, Investment Plan, instant alerts, CSV.</span>
+          <span className="flex-1 basis-[260px]"><b className="text-gold">Free plan</b> — showing the last {d.window} days. <b>Pro ({price} / year)</b>: full history since 2014, AI Scanning, Investment Plan, instant alerts, CSV.</span>
           <Link to="/settings" className="btn-gold px-3 py-1.5 text-xs">Upgrade</Link>
         </div>
       )}

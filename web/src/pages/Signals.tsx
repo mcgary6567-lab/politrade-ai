@@ -6,10 +6,12 @@ import { useAuth } from "../App";
 import { Select, compact, partyTone } from "../components/ui";
 import { Avatar } from "./Politicians";
 import IssuerLogo from "../components/IssuerLogo";
+import { useProPrice } from "../lib/plan";
 
 /** Smart-money signals page: which tickers Congress is clustering into, weighted by each lawmaker's track record. */
 export default function Signals() {
   const { user } = useAuth();
+  const price = useProPrice();
   const [d, setD] = useState<any>(null);
   const [days, setDays] = useState("90");
   useEffect(() => { setD(null); api(`/signals?days=${days}`).then(setD).catch(() => setD({ buy: [], sell: [], leaderboard: [] })); }, [days]);
@@ -31,7 +33,7 @@ export default function Signals() {
           {d.locked && (
             <div className="card flex flex-wrap items-center gap-3 border-gold/40 bg-gold/5 p-4 text-sm">
               <Lock size={18} className="shrink-0 text-gold" />
-              <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> you can see the #1 signal. <b>Pro ($497 / year)</b> unlocks every buy and sell signal, the full track-record leaderboard, instant alerts the moment a new cluster forms, and the AI thesis on each.</div>
+              <div className="flex-1 basis-[260px]"><b className="text-gold">Free plan:</b> you can see the #1 signal. <b>Pro ({price} / year)</b> unlocks every buy and sell signal, the full track-record leaderboard, instant alerts the moment a new cluster forms, and the AI thesis on each.</div>
               <a href={`mailto:${branding?.contact ?? ""}?subject=Upgrade to Pro`} className="btn-gold px-3 py-2 text-xs">Upgrade to Pro</a>
             </div>
           )}
