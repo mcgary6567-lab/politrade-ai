@@ -112,3 +112,23 @@ test("free plan sees only 3 trades; the rest are Pro-locked (feed + detail)", as
   // CSV stays Pro-only
   assert.equal((await call(free, "GET", "/api/trades.csv")).status, 402, "CSV is Pro-only");
 });
+
+test("a politician's trade history: Free sees only the latest trade, Pro sees all", async () => {
+  const admin = (await call("", "POST", "/api/auth/login", { email: "admin@politrade.ai", password: "politrade123" })).data.token;
+  const free = (await call("", "POST", "/api/auth/signup", { first_name: "Free", last_name: "Two", email: "free2@test.pk", password: "test1234", accept: true })).data.token;
+
+  // pick a politician that has several trades
+  const pols = await call(admin, "GET", "/api/politicians");
+  const polId = pols.data.rows.find((p: any) => p.trades > 1)?.id ?? pols.data.rows[0].id;
+
+  const pro = await call(admin, "GET", `/api/politicians/${polId}`);
+  assert.equal(pro.data.plan, "pro");
+  assert.equal(pro.data.tradesLocked, 0, "nothing locked for Pro");
+  assert.ok(pro.data.trades.length > 1, "Pro gets the full history");
+
+  const f = await call(free, "GET", `/api/politicians/${polId}`);
+  assert.equal(f.data.plan, "free");
+  assert.equal(f.data.trades.length, 1, "Free sees exactly one trade");
+  assert.equal(f.data.tradesTotal, pro.data.trades.length, "total reflects the real history");
+  assert.equal(f.data.tradesLocked, pro.data.trades.length - 1, "the rest are locked");
+});

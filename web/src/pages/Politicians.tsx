@@ -1,10 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Search, ArrowLeft, Landmark, Star, PieChart, History, ExternalLink } from "lucide-react";
+import { Search, ArrowLeft, Landmark, Star, PieChart, History, ExternalLink, Lock } from "lucide-react";
 import { api, money, ago } from "../lib/api";
 import { pill } from "./Home";
 import { Select, KPI, partyTone, compact } from "../components/ui";
 import IssuerLogo from "../components/IssuerLogo";
+import { useAuth } from "../App";
+
+/** Realistic-looking sample rows blurred behind the Pro lock on a politician's trade history. */
+const POL_LOCK_SAMPLES = [
+  { ticker: "AAPL", issuer: "Apple Inc.", sector: "Technology", tx_type: "buy", amount_min: 15001, amount_max: 50000, owner: "Joint", tx_date: "2026-08-06", published_date: "2026-09-14", filed_after_days: 12 },
+  { ticker: "NVDA", issuer: "NVIDIA Corporation", sector: "Semiconductors", tx_type: "buy", amount_min: 50001, amount_max: 100000, owner: "Self", tx_date: "2026-08-04", published_date: "2026-09-12", filed_after_days: 14 },
+  { ticker: "JPM", issuer: "JPMorgan Chase & Co.", sector: "Financials", tx_type: "sell", amount_min: 1001, amount_max: 15000, owner: "Spouse", tx_date: "2026-07-29", published_date: "2026-09-09", filed_after_days: 18 },
+  { ticker: "XOM", issuer: "Exxon Mobil Corp.", sector: "Energy", tx_type: "buy", amount_min: 100001, amount_max: 250000, owner: "Joint", tx_date: "2026-07-22", published_date: "2026-09-02", filed_after_days: 20 },
+  { ticker: "LLY", issuer: "Eli Lilly and Company", sector: "Health Care", tx_type: "buy", amount_min: 250001, amount_max: 500000, owner: "Self", tx_date: "2026-07-15", published_date: "2026-08-28", filed_after_days: 16 },
+  { ticker: "GOOGL", issuer: "Alphabet Inc.", sector: "Communication Services", tx_type: "sell", amount_min: 15001, amount_max: 50000, owner: "Joint", tx_date: "2026-07-08", published_date: "2026-08-20", filed_after_days: 13 },
+] as const;
+const polLockSample = (i: number) => POL_LOCK_SAMPLES[i % POL_LOCK_SAMPLES.length];
 
 export default function Politicians() {
   const { id } = useParams();
@@ -84,13 +96,18 @@ export function Avatar({ p, size }: { p: any; size: string }) {
 }
 
 function Detail({ id }: { id: string }) {
+  const { user } = useAuth();
   const [data, setData] = useState<any>(null);
   const [type, setType] = useState("");
+  const [branding, setBranding] = useState<any>(null);
   useEffect(() => { setData(null); api(`/politicians/${id}`).then(setData).catch(() => setData({ error: true })); }, [id]);
+  useEffect(() => { if (!user?.pro) fetch("/api/branding").then((r) => r.json()).then(setBranding).catch(() => {}); }, [user?.pro]);
   if (!data) return <p className="text-slate-500">Loading…</p>;
   if (data.error) return <p className="text-slate-500">Not found. <Link to="/politicians" className="text-gold">Back</Link></p>;
   const p = data.politician, s = data.summary ?? {};
   const trades = data.trades.filter((t: any) => !type || t.tx_type === type);
+  const locked = user?.pro ? 0 : (data.tradesLocked ?? 0);
+  const histCount = user?.pro ? trades.length : (data.tradesTotal ?? trades.length);
   return (
     <div className="space-y-5">
       <Link to="/politicians" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-gold"><ArrowLeft size={15} /> All politicians</Link>
@@ -129,7 +146,7 @@ function Detail({ id }: { id: string }) {
           <div className="flex flex-wrap gap-1.5">{data.bySector?.map((x: any) => <span key={x.sector} className="chip">{x.sector} <span className="text-gold">{x.trades}</span></span>)}</div>
         </div>
         <div className="card overflow-hidden lg:col-span-2">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3"><span className="flex items-center gap-2 font-display font-600"><History size={15} className="text-gold" /> Trade history ({trades.length})</span>
+          <div className="flex items-center justify-between border-b border-line px-4 py-3"><span className="flex items-center gap-2 font-display font-600"><History size={15} className="text-gold" /> Trade history ({histCount})</span>
             <Select value={type} onChange={setType} opts={[["", "All types"], ["buy", "Buys"], ["sell", "Sells"], ["exchange", "Exchanges"]]} className="py-1.5" /></div>
           <div className="max-h-[560px] overflow-auto">
             <table className="w-full min-w-[560px]">
@@ -145,10 +162,28 @@ function Detail({ id }: { id: string }) {
                     <td className="td text-sm text-slate-400">{ago(t.published_date)}{t.filed_after_days > 45 && <span className="ml-1 text-xs text-sell">late</span>}</td>
                   </tr>
                 ))}
-                {!trades.length && <tr><td className="td py-8 text-center text-slate-500" colSpan={6}>No trades on record.</td></tr>}
+                {!trades.length && !locked && <tr><td className="td py-8 text-center text-slate-500" colSpan={6}>No trades on record.</td></tr>}
+                {locked > 0 && Array.from({ length: Math.min(locked, 6) }, (_, i) => polLockSample(i)).map((t, i) => (
+                  <tr key={`lk${i}`} aria-hidden className="pointer-events-none select-none blur-[6px]">
+                    <td className="td"><div className="flex items-center gap-2"><IssuerLogo ticker={t.ticker} name={t.issuer} size={26} /><div className="min-w-0"><span className="font-mono text-gold-300">{t.ticker}</span> <span className="text-sm text-slate-300">{t.issuer}</span><div className="text-xs text-slate-500">{t.sector}</div></div></div></td>
+                    <td className="td"><span className={pill(t.tx_type)}>{t.tx_type.toUpperCase()}</span></td>
+                    <td className="td text-right font-mono">{money(t.amount_min, t.amount_max)}</td>
+                    <td className="td text-sm capitalize text-slate-400">{t.owner}</td>
+                    <td className="td text-sm text-slate-300">{t.tx_date}</td>
+                    <td className="td text-sm text-slate-400">{ago(t.published_date)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
+          {locked > 0 && (
+            <div className="flex flex-col items-center justify-center gap-2 border-t border-line bg-gold/5 px-4 py-6 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15 text-gold"><Lock size={18} /></div>
+              <div className="text-sm font-700">{locked.toLocaleString()} more trade{locked === 1 ? "" : "s"} locked</div>
+              <div className="max-w-sm text-xs text-slate-400">Free shows only the latest trade. Upgrade to <b className="text-gold">Pro ($497 / year)</b> to see this lawmaker's full trade history, AI Scanning, alerts and CSV export.</div>
+              <a href={`mailto:${branding?.contact ?? "info@hillradar.com"}?subject=Upgrade to Pro`} className="btn-gold mt-1 px-4 py-2 text-xs">Unlock all trades with Pro</a>
+            </div>
+          )}
         </div>
       </div>
     </div>

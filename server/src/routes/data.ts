@@ -47,6 +47,8 @@ const TRADE_SELECT = `SELECT tr.id, tr.tx_type, tr.tx_date, tr.published_date, t
 /** GET /api/trades — filterable, sortable, paginated feed.
  *  Free plan: only the first FREE_VISIBLE trades are returned (the rest are locked); Pro (or admin) gets everything. */
 const FREE_VISIBLE = 3;
+/** Free plan: a politician's trade history shows only the first (most recent) trade; the rest are Pro-locked. */
+const FREE_POL_TRADES = 1;
 
 data.get("/trades", (req, res) => {
   const qs = req.query as Record<string, string>;
@@ -121,9 +123,14 @@ data.get("/politicians/:id", (req, res) => {
   const p0 = get("SELECT * FROM politicians WHERE id=?", req.params.id);
   const p = p0 ? { ...p0, photo_url: photoUrl(p0) } : null;
   if (!p) return res.status(404).json({ error: "Not found" });
-  const trades = all(
+  const pro = Boolean(req.user?.pro);
+  // Free plan sees only the first (most recent) trade in this politician's history; the rest are Pro-locked.
+  const allTrades = all(
     `SELECT tr.*, i.ticker, i.name issuer, i.sector FROM trades tr JOIN issuers i ON i.id=tr.issuer_id
      WHERE tr.politician_id=? ORDER BY tr.published_date DESC LIMIT 200`, req.params.id);
+  const trades = pro ? allTrades : allTrades.slice(0, FREE_POL_TRADES);
+  const tradesTotal = allTrades.length;
+  const tradesLocked = pro ? 0 : Math.max(0, tradesTotal - trades.length);
   const summary = get(`SELECT COUNT(*) trades, SUM(CASE WHEN tx_type='buy' THEN 1 ELSE 0 END) buys,
       SUM(CASE WHEN tx_type='sell' THEN 1 ELSE 0 END) sells, SUM(COALESCE(amount_max,amount_min,0)) volume,
       AVG(filed_after_days) avg_delay, COUNT(DISTINCT issuer_id) issuers FROM trades WHERE politician_id=?`, req.params.id);
@@ -131,7 +138,7 @@ data.get("/politicians/:id", (req, res) => {
       WHERE tr.politician_id=? GROUP BY i.id ORDER BY trades DESC LIMIT 6`, req.params.id);
   const bySector = all(`SELECT COALESCE(i.sector,'Other') sector, COUNT(*) trades FROM trades tr JOIN issuers i ON i.id=tr.issuer_id
       WHERE tr.politician_id=? GROUP BY sector ORDER BY trades DESC`, req.params.id);
-  res.json({ politician: p, trades, summary, topIssuers, bySector });
+  res.json({ politician: p, trades, summary, topIssuers, bySector, tradesTotal, tradesLocked, plan: pro ? "pro" : "free" });
 });
 
 /** GET /api/issuers — companies with trade counts + filters. */
