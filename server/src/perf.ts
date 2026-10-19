@@ -20,6 +20,47 @@ export function compress(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+/**
+ * Serve the Brotli / gzip copy that `npm run build` pre-generated (file.js.br / file.js.gz) when the
+ * browser accepts it, so the big hashed JS/CSS chunks transfer 4-5x smaller with no per-request CPU.
+ * Falls through to express.static for anything without a pre-compressed twin. Mount it BEFORE static.
+ */
+const STATIC_TYPES: Record<string, string> = {
+  ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml",
+  ".json": "application/json; charset=utf-8", ".webmanifest": "application/manifest+json; charset=utf-8",
+  ".html": "text/html; charset=utf-8", ".map": "application/json; charset=utf-8",
+  ".woff2": "font/woff2", ".woff": "font/woff", ".txt": "text/plain; charset=utf-8",
+};
+const ENCODINGS = [
+  { suffix: ".br", enc: "br", re: /\bbr\b/ },
+  { suffix: ".gz", enc: "gzip", re: /\bgzip\b/ },
+];
+export function staticPrecompressed(dir: string) {
+  const root = path.resolve(dir);
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+    let rel: string;
+    try { rel = decodeURIComponent(req.path); } catch { return next(); }
+    if (rel.includes("\0")) return next();
+    const abs = path.resolve(root, "." + rel);
+    if (abs !== root && !abs.startsWith(root + path.sep)) return next(); // never escape the web root
+    const type = STATIC_TYPES[path.extname(abs).toLowerCase()];
+    if (!type) return next();
+    const accept = String(req.headers["accept-encoding"] ?? "");
+    for (const { suffix, enc, re } of ENCODINGS) {
+      if (!re.test(accept) || !fs.existsSync(abs + suffix)) continue;
+      const fresh = /\.(html|webmanifest)$/.test(abs) || abs.endsWith("sw.js");
+      res.setHeader("content-type", type);
+      res.setHeader("content-encoding", enc);
+      res.setHeader("vary", "accept-encoding");
+      res.setHeader("cache-control", fresh ? "no-cache" : "public, max-age=31536000, immutable");
+      return res.sendFile(abs + suffix);
+    }
+    next();
+  };
+}
+
 /** Small in-memory TTL cache for expensive read-only aggregates; cleared whenever new trades arrive. */
 const store = new Map<string, { at: number; body: any }>();
 let generation = 0;

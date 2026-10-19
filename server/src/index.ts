@@ -13,7 +13,7 @@ import { me } from "./routes/me.js";
 import { admin } from "./routes/admin.js";
 import { ingestFromFeed, stats, syncPoliticians } from "./ingest.js";
 import { pollTelegramLinks } from "./notify.js";
-import { compress, photo, logo, bumpCache } from "./perf.js";
+import { compress, staticPrecompressed, photo, logo, bumpCache } from "./perf.js";
 import { seedDemo } from "./seed.js";
 import { backfillSectors } from "./sectors.js";
 import { legalPage } from "./legal.js";
@@ -97,6 +97,8 @@ app.use("/api", api);
 // serve the built web app in production
 const webDist = path.resolve(config.webDist);
 if (fs.existsSync(webDist)) {
+  // serve the Brotli/gzip build output first (big JS/CSS go over the wire 4-5x smaller), then fall back to the raw file
+  app.use(staticPrecompressed(webDist));
   // hashed assets are immutable; index.html must always be fresh so new deploys show up
   app.use(express.static(webDist, { maxAge: "365d", immutable: true, index: false, setHeaders: (res, p) => { if (p.endsWith(".html") || p.endsWith(".webmanifest") || p.endsWith("sw.js")) res.setHeader("cache-control", "no-cache"); } }));
   app.get(/^\/(?!api).*/, (_req, res) => res.sendFile(path.join(webDist, "index.html"), { headers: { "cache-control": "no-cache" } }));
