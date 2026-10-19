@@ -28,9 +28,11 @@ export const config = {
   jwtSecret: jwtSecret(),
   publicUrl: process.env.PUBLIC_URL ?? "http://localhost:4000",
   webDist: process.env.WEB_DIST ?? "../web/dist",
-  // who can sign in (the first admin is seeded from these on boot)
+  // first admin, seeded from these on first boot only (later changes are made in Admin → Users)
   adminEmail: (process.env.ADMIN_EMAIL ?? "admin@politrade.ai").toLowerCase(),
   adminPassword: process.env.ADMIN_PASSWORD ?? "politrade123",
+  // set to 1 for one boot to force-reset the env admin (lost password recovery)
+  adminForceReset: process.env.ADMIN_FORCE_RESET === "1",
   // data ingest
   // public STOCK Act disclosure JSON feed(s); defaults to the open House + Senate datasets so a fresh install has real data
   dataFeedUrl: process.env.DATA_FEED_URL ?? [
@@ -57,7 +59,7 @@ export const config = {
   brandName: process.env.BRAND_NAME ?? "Hillradar AI",
   contactEmail: process.env.CONTACT_EMAIL ?? "info@hillradar.com",
   social: {
-    x: process.env.SOCIAL_X ?? "",
+    x: process.env.SOCIAL_X ?? "https://x.com/hillradarai",
     telegram: process.env.SOCIAL_TELEGRAM ?? "",
     github: process.env.SOCIAL_GITHUB ?? "",
   },

@@ -14,13 +14,22 @@ export function planOf(row: { id: number; role: string; plan_id?: number | null 
 }
 declare global { namespace Express { interface Request { user?: AuthUser } } }
 
+/**
+ * First-boot admin from ADMIN_EMAIL / ADMIN_PASSWORD.
+ * Only runs when the database has no active admin yet, so an email or password changed from the
+ * admin panel (Users tab or Settings) survives restarts and redeploys.
+ * Recovery: set ADMIN_FORCE_RESET=1 (one boot) to re-create / reset the env admin and get back in.
+ */
 export function seedAdmin() {
   const email = config.adminEmail;
+  const hasAdmin = get("SELECT COUNT(*) c FROM users WHERE role='admin' AND status='active'").c > 0;
+  if (hasAdmin && !config.adminForceReset) return;
   const existing = get("SELECT id FROM users WHERE email=?", email);
   const hash = bcrypt.hashSync(config.adminPassword, 10);
-  if (existing) run("UPDATE users SET password_hash=? WHERE id=?", hash, existing.id);
+  if (existing) run("UPDATE users SET password_hash=?, role='admin', status='active' WHERE id=?", hash, existing.id);
   else run("INSERT INTO users(email,password_hash,name,role,created_at) VALUES(?,?,?,?,?)",
     email, hash, "Admin", "admin", new Date().toISOString());
+  if (config.adminForceReset) console.log(`[auth] ADMIN_FORCE_RESET: admin ${email} reset from environment — unset the variable now`);
 }
 
 export function signToken(u: AuthUser): string {

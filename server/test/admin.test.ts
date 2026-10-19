@@ -68,6 +68,27 @@ test("users: create member, member cannot access admin, suspend blocks login, pl
   assert.equal((await call(admin, "DELETE", `/api/admin/users/${c.data.id}`)).status, 200);
 });
 
+test("users: filters + stats; admin password changed in the panel survives a re-seed (restart)", async () => {
+  const { seedAdmin } = await import("../src/auth.js");
+  const me = (await call(admin, "GET", "/api/me")).data.user;
+  const list = await call(admin, "GET", "/api/admin/users?role=admin&status=active");
+  assert.equal(list.status, 200);
+  assert.ok(list.data.rows.length >= 1 && list.data.rows.every((u: any) => u.role === "admin" && u.status === "active"));
+  assert.ok(list.data.stats.total >= 1 && list.data.stats.admins >= 1);
+  assert.equal((await call(admin, "GET", "/api/admin/users?plan=paid")).data.rows.every((u: any) => u.paid === 1), true);
+
+  // change the admin password from the panel, then simulate a server restart
+  assert.equal((await call(admin, "PUT", `/api/admin/users/${me.id}`, { password: "changed-99" })).status, 200);
+  seedAdmin();
+  assert.equal((await call("", "POST", "/api/auth/login", { email: "admin@politrade.ai", password: "politrade123" })).status, 401, "env password no longer works");
+  assert.equal((await call("", "POST", "/api/auth/login", { email: "admin@politrade.ai", password: "changed-99" })).status, 200, "panel password sticks across restarts");
+  // email change must stay unique
+  await call(admin, "POST", "/api/admin/users", { email: "taken@example.com", password: "secret12" });
+  assert.equal((await call(admin, "PUT", `/api/admin/users/${me.id}`, { email: "taken@example.com" })).status, 400);
+  // restore for the remaining tests
+  assert.equal((await call(admin, "PUT", `/api/admin/users/${me.id}`, { password: "politrade123" })).status, 200);
+});
+
 test("plans CRUD", async () => {
   const c = await call(admin, "POST", "/api/admin/plans", { name: "VIP", price_cents: 9900, interval: "month", features: "All" });
   assert.equal(c.status, 200);

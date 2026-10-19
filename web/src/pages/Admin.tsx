@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
-import { LayoutDashboard, Users, CreditCard, Plug, Database, Bell, Plus, Pencil, Trash2, Send, RefreshCw, Eye, EyeOff, CheckCircle2, XCircle, Bot, MessageCircle, Mail, Rss, Palette, Upload, Trash } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Plug, Database, Bell, Plus, Pencil, Trash2, KeyRound, Send, RefreshCw, Eye, EyeOff, CheckCircle2, XCircle, Bot, MessageCircle, Mail, Rss, Palette, Upload, Trash } from "lucide-react";
 import { api, ago } from "../lib/api";
 import { useAuth } from "../App";
 import { Modal, Field, Select, KPI, toast, Empty } from "../components/ui";
@@ -103,11 +103,15 @@ const Row = ({ k, v }: { k: string; v: ReactNode }) => <div className="flex item
 function UsersTab() {
   const { user: me } = useAuth();
   const [rows, setRows] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const [plans, setPlans] = useState<any[]>([]);
   const [q, setQ] = useState("");
+  const [role, setRole] = useState(""); const [status, setStatus] = useState(""); const [plan, setPlan] = useState("");
   const [edit, setEdit] = useState<any>(null); // null | {} (new) | row
-  const load = () => Promise.all([api<any>(`/admin/users?q=${encodeURIComponent(q)}`), api<any>("/admin/plans")]).then(([u, p]) => { setRows(u.rows); setPlans(p.rows); }).catch((e) => toast.err(e.message));
-  useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [q]); // eslint-disable-line react-hooks/exhaustive-deps
+  const qs = new URLSearchParams({ q, role, status, plan }).toString();
+  const load = () => Promise.all([api<any>(`/admin/users?${qs}`), api<any>("/admin/plans")]).then(([u, p]) => { setRows(u.rows); setStats(u.stats); setPlans(p.rows); }).catch((e) => toast.err(e.message));
+  useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [qs]); // eslint-disable-line react-hooks/exhaustive-deps
+  const filtered = Boolean(q || role || status || plan);
 
   const save = async (f: any) => {
     const body: any = { email: f.email, name: f.name, role: f.role, status: f.status, plan_id: f.plan_id ? Number(f.plan_id) : null };
@@ -127,47 +131,66 @@ function UsersTab() {
 
   return (
     <div className="space-y-4">
+      {stats && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          <KPI label="Users" value={stats.total} sub={`${stats.active7d ?? 0} active this week`} />
+          <KPI label="Admins" value={stats.admins ?? 0} tone="text-gold" />
+          <KPI label="Paid plan" value={stats.paid ?? 0} tone="text-buy" sub="Pro members" />
+          <KPI label="Free" value={Math.max(0, (stats.total ?? 0) - (stats.paid ?? 0))} />
+          <KPI label="Suspended" value={stats.suspended ?? 0} tone={stats.suspended ? "text-sell" : "text-slate-500"} />
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <input className="input max-w-xs" placeholder="Search email or name…" value={q} onChange={(e) => setQ(e.target.value)} />
-        <span className="text-sm text-slate-500">{rows.length} users</span>
+        <Select value={role} onChange={setRole} opts={[["", "All roles"], ["admin", "Admins"], ["member", "Members"]]} />
+        <Select value={status} onChange={setStatus} opts={[["", "Any status"], ["active", "Active"], ["suspended", "Suspended"]]} />
+        <Select value={plan} onChange={setPlan} opts={[["", "All plans"], ["paid", "Paid (Pro)"], ["none", "No plan"], ...plans.map((p) => [String(p.id), p.name] as [string, string])]} />
+        {filtered && <button className="btn-ghost px-2.5 py-1.5 text-xs" onClick={() => { setQ(""); setRole(""); setStatus(""); setPlan(""); }}>Clear</button>}
+        <span className="text-sm text-slate-500">{rows.length}{filtered ? " matching" : ""} users</span>
         <button className="btn-gold ml-auto text-sm" onClick={() => setEdit({ role: "member", status: "active" })}><Plus size={15} /> Add user</button>
       </div>
       <div className="card overflow-x-auto">
-        <table className="w-full min-w-[760px]">
+        <table className="w-full min-w-[820px]">
           <thead className="border-b border-line"><tr><th className="th">User</th><th className="th">Role</th><th className="th">Plan</th><th className="th">Status</th><th className="th">Last login</th><th className="th">Watchlist</th><th className="th">Joined</th><th className="th text-right">Actions</th></tr></thead>
           <tbody className="divide-y divide-line">
             {rows.map((u) => (
               <tr key={u.id} className="hover:bg-ink-700/40">
                 <td className="td"><div className="font-semibold">{u.name || "—"}</div><div className="text-xs text-slate-400">{u.email}{u.id === me?.id && <span className="ml-1 text-gold">(you)</span>}</div></td>
                 <td className="td"><span className={`chip ${u.role === "admin" ? "border-gold/50 text-gold" : ""}`}>{u.role}</span></td>
-                <td className="td text-sm">{u.plan ?? <span className="text-slate-500">none</span>}</td>
-                <td className="td"><button onClick={() => toggle(u)} className={`chip ${u.status === "active" ? "border-buy/40 text-buy" : "border-sell/40 text-sell"}`} title="Click to toggle">{u.status}</button></td>
+                <td className="td text-sm">{u.plan ? <span className={u.paid ? "text-buy" : ""}>{u.plan}</span> : <span className="text-slate-500">none</span>}</td>
+                <td className="td"><button onClick={() => toggle(u)} className={`chip ${u.status === "active" ? "border-buy/40 text-buy" : "border-sell/40 text-sell"}`} title={u.status === "active" ? "Click to suspend" : "Click to re-activate"}>{u.status}</button></td>
                 <td className="td text-sm text-slate-400">{u.last_login ? ago(u.last_login) : "never"}</td>
                 <td className="td text-sm text-slate-400">{u.watch}</td>
                 <td className="td text-sm text-slate-400">{u.created_at?.slice(0, 10)}</td>
-                <td className="td text-right"><button className="btn-ghost px-2 py-1.5" onClick={() => setEdit({ ...u, password: "" })} title="Edit"><Pencil size={14} /></button> <button className="btn-ghost px-2 py-1.5 text-sell" onClick={() => del(u)} title="Delete"><Trash2 size={14} /></button></td>
+                <td className="td whitespace-nowrap text-right">
+                  <button className="btn-ghost px-2 py-1.5" onClick={() => setEdit({ ...u, password: "" })} title="Edit user"><Pencil size={14} /></button>{" "}
+                  <button className="btn-ghost px-2 py-1.5" onClick={() => setEdit({ ...u, password: "", focusPassword: true })} title="Reset password"><KeyRound size={14} /></button>{" "}
+                  <button className="btn-ghost px-2 py-1.5 text-sell disabled:opacity-30" disabled={u.id === me?.id} onClick={() => del(u)} title={u.id === me?.id ? "You cannot delete your own account" : "Delete user"}><Trash2 size={14} /></button>
+                </td>
               </tr>
             ))}
             {!rows.length && <tr><td colSpan={8}><Empty text="No users found." /></td></tr>}
           </tbody>
         </table>
       </div>
+      <p className="text-xs text-slate-500">Tip: to change the admin login, edit your own row <span className="text-gold">(you)</span> — a new email or password saved here is permanent and survives redeploys. Deleting a user also removes their watchlist. Suspended users are signed out immediately.</p>
       {edit && <UserModal f={edit} plans={plans} onClose={() => setEdit(null)} onSave={save} />}
     </div>
   );
 }
 
 function UserModal({ f, plans, onClose, onSave }: { f: any; plans: any[]; onClose: () => void; onSave: (f: any) => void }) {
-  const [v, setV] = useState<any>({ ...f, plan_id: f.plan_id ?? "" });
-  const [show, setShow] = useState(false);
+  const { focusPassword, ...init } = f;
+  const [v, setV] = useState<any>({ ...init, plan_id: f.plan_id ?? "" });
+  const [show, setShow] = useState(Boolean(focusPassword));
   const up = (k: string, x: any) => setV({ ...v, [k]: x });
   return (
-    <Modal title={f.id ? "Edit user" : "Add user"} onClose={onClose}>
+    <Modal title={f.id ? (focusPassword ? "Reset password" : "Edit user") : "Add user"} onClose={onClose}>
       <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); onSave(v); }}>
         <Field label="Email"><input className="input" type="email" required value={v.email ?? ""} onChange={(e) => up("email", e.target.value)} /></Field>
         <Field label="Name"><input className="input" value={v.name ?? ""} onChange={(e) => up("name", e.target.value)} /></Field>
         <Field label={f.id ? "New password (leave blank to keep)" : "Password"} hint="Minimum 6 characters">
-          <div className="relative"><input className="input pr-10" type={show ? "text" : "password"} required={!f.id} minLength={6} value={v.password ?? ""} onChange={(e) => up("password", e.target.value)} autoComplete="new-password" />
+          <div className="relative"><input className="input pr-10" type={show ? "text" : "password"} required={!f.id || Boolean(focusPassword)} minLength={6} value={v.password ?? ""} onChange={(e) => up("password", e.target.value)} autoComplete="new-password" autoFocus={Boolean(focusPassword)} />
             <button type="button" className="absolute right-3 top-3 text-slate-400" onClick={() => setShow(!show)}>{show ? <EyeOff size={16} /> : <Eye size={16} />}</button></div>
         </Field>
         <div className="grid grid-cols-3 gap-3">

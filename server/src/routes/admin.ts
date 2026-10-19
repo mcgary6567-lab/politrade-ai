@@ -54,12 +54,28 @@ const userSchema = z.object({
 
 admin.get("/admin/users", (req, res) => {
   const q = String(req.query.q ?? "").trim();
+  const role = String(req.query.role ?? ""), status = String(req.query.status ?? ""), plan = String(req.query.plan ?? "");
+  const where: string[] = [], args: unknown[] = [];
+  if (q) { where.push("(u.email LIKE ? OR u.name LIKE ?)"); args.push(`%${q}%`, `%${q}%`); }
+  if (role === "admin" || role === "member") { where.push("u.role=?"); args.push(role); }
+  if (status === "active" || status === "suspended") { where.push("u.status=?"); args.push(status); }
+  if (plan === "none") where.push("u.plan_id IS NULL");
+  else if (plan === "paid") where.push("p.price_cents > 0 AND p.active=1");
+  else if (/^\d+$/.test(plan)) { where.push("u.plan_id=?"); args.push(Number(plan)); }
   const rows = all(
     `SELECT u.id,u.email,u.name,u.role,u.status,u.plan_id,u.last_login,u.created_at, p.name plan,
+            (p.price_cents > 0 AND p.active=1) paid,
             (SELECT COUNT(*) FROM watchlist w WHERE w.user_id=u.id) watch
      FROM users u LEFT JOIN plans p ON p.id=u.plan_id
-     ${q ? "WHERE u.email LIKE ? OR u.name LIKE ?" : ""} ORDER BY u.id DESC`, ...(q ? [`%${q}%`, `%${q}%`] : []));
-  res.json({ rows });
+     ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY u.id DESC`, ...args);
+  const stats = get(
+    `SELECT COUNT(*) total,
+            SUM(u.role='admin') admins,
+            SUM(u.status='suspended') suspended,
+            SUM(p.price_cents > 0 AND p.active=1) paid,
+            SUM(u.last_login >= datetime('now','-7 day')) active7d
+     FROM users u LEFT JOIN plans p ON p.id=u.plan_id`);
+  res.json({ rows, stats });
 });
 
 admin.post("/admin/users", wrap((req, res) => {
@@ -80,8 +96,10 @@ admin.put("/admin/users/:id", wrap((req, res) => {
   const admins = get("SELECT COUNT(*) c FROM users WHERE role='admin' AND status='active'").c;
   const losingAdmin = u.role === "admin" && ((b.role && b.role !== "admin") || (b.status && b.status !== "active"));
   if (losingAdmin && admins <= 1) throw new Error("At least one active admin is required");
+  const email = (b.email ?? u.email).toLowerCase();
+  if (email !== u.email && get("SELECT 1 FROM users WHERE email=? AND id<>?", email, id)) throw new Error("Email already exists");
   run("UPDATE users SET email=?, name=?, role=?, status=?, plan_id=? WHERE id=?",
-    (b.email ?? u.email).toLowerCase(), b.name ?? u.name, b.role ?? u.role, b.status ?? u.status,
+    email, b.name ?? u.name, b.role ?? u.role, b.status ?? u.status,
     b.plan_id === undefined ? u.plan_id : b.plan_id, id);
   if (b.password) run("UPDATE users SET password_hash=? WHERE id=?", bcrypt.hashSync(b.password, 10), id);
   res.json({ ok: true });

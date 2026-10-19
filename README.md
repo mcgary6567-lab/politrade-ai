@@ -18,7 +18,7 @@ Built with the same stack as a production app: **Node.js 22 + TypeScript + Expre
 ## Admin panel (`/admin`, admin role only)
 Everything is controlled from the browser — no redeploy or secrets needed after first boot:
 - **Overview** — users, plans, trades, alerts, channel status, last ingest.
-- **Users** — add / edit / suspend / delete members, reset passwords, assign a plan, admin or member role. Suspended users are cut off immediately.
+- **Users** — stats (total, admins, paid, suspended), search + role / status / plan filters, add / edit / suspend / delete members, reset passwords, assign a plan, admin or member role. Suspended users are cut off immediately. Edit your own row to change the **admin email or password** — it is permanent (the env admin is only seeded on first boot; set `ADMIN_FORCE_RESET=1` for one boot to recover a lost admin login).
 - **Plans** — Free and Pro ($300 / year) by default; edit price, billing period, feature list, visibility. Free members see the last 30 days of filings and 1 watchlist item; Pro (assigned by an admin, or any paid active plan) unlocks full history, alerts, unlimited watchlist and CSV.
 - **Integrations** — AI keys (Claude or Gemini), Telegram bot, WhatsApp Cloud API, email provider, branding & social links. Each has a **Test** button; secrets are stored masked.
 - **Data feed** — feed URL, cron schedule, alerts on/off, **Run now**, manual JSON import, ingest history, **Clear demo data**.
@@ -40,7 +40,7 @@ DEMO_DATA=1 npm run dev           # API on :4000
 # frontend (another terminal)
 cd web && npm install && npm run dev   # Vite on :5173
 ```
-Sign in with `admin@politrade.ai` / `politrade123` (override via `ADMIN_EMAIL` / `ADMIN_PASSWORD`).
+Sign in with `admin@politrade.ai` / `politrade123` (first boot only — override via `ADMIN_EMAIL` / `ADMIN_PASSWORD`, then change it any time in Admin → Users).
 
 ## Deploy (Fly.io)
 ```bash
