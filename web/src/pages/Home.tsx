@@ -8,9 +8,11 @@ import { compact, partyTone, pill } from "../components/ui";
 import { useProPrice } from "../lib/plan";
 import { Avatar } from "./Politicians";
 import IssuerLogo from "../components/IssuerLogo";
+import { useChartTheme } from "../lib/theme";
 
 export default function Home() {
   const { user } = useAuth();
+  const c = useChartTheme();
   const price = useProPrice();
   const [d, setD] = useState<any>(null);
   const [assets, setAssets] = useState<"stocks" | "all">("stocks");
@@ -104,10 +106,10 @@ export default function Home() {
                 </div>
                 <ResponsiveContainer width="100%" height={90}>
                   <BarChart data={p.series} margin={{ top: 8, left: 0, right: 0, bottom: 0 }} barGap={1}>
-                    <XAxis dataKey="month" tick={{ fill: "#8a96ad", fontSize: 9 }} tickFormatter={(m) => MON[Number(m.slice(5, 7)) - 1]} axisLine={false} tickLine={false} interval={0} />
-                    <Tooltip {...tip} labelFormatter={(m) => m} />
-                    <Bar dataKey="buys" fill="#22c58b" barSize={5} radius={[2, 2, 0, 0]} />
-                    <Bar dataKey="sells" fill="#e7b23c" barSize={5} radius={[2, 2, 0, 0]} />
+                    <XAxis dataKey="month" tick={{ fill: c.tick, fontSize: 9 }} tickFormatter={(m) => MON[Number(m.slice(5, 7)) - 1]} axisLine={false} tickLine={false} interval={0} />
+                    <Tooltip {...c.tip} labelFormatter={(m) => m} />
+                    <Bar dataKey="buys" fill={c.buy} barSize={5} radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="sells" fill={c.gold} barSize={5} radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -126,7 +128,7 @@ export default function Home() {
                   <Stat n={i.trades} l="Trades" />
                   <div className="text-right text-xs"><div className="font-mono text-buy">{i.buys}</div><div className="font-mono text-sell">{i.sells}</div></div>
                   <div className="hidden h-9 sm:block"><ResponsiveContainer width="100%" height={36}>
-                    <LineChart data={i.series}><Line type="monotone" dataKey="trades" stroke="#22c58b" strokeWidth={1.5} dot={false} /></LineChart>
+                    <LineChart data={i.series}><Line type="monotone" dataKey="trades" stroke={c.buy} strokeWidth={1.5} dot={false} /></LineChart>
                   </ResponsiveContainer></div>
                 </Link>
               ))}
@@ -154,7 +156,6 @@ export default function Home() {
 }
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const tip = { contentStyle: { background: "#121a2e", border: "1px solid #223052", borderRadius: 10, color: "#e7ecf5", fontSize: 12 }, cursor: { fill: "rgba(231,178,60,.08)" } } as any;
 const band = (a?: number | null, b?: number | null) => a == null ? "—" : `${k(a)}–${k(b ?? a)}`;
 const k = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(n % 1e6 ? 1 : 0)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n);
 

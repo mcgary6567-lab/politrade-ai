@@ -1,9 +1,27 @@
 import { useEffect, useState } from "react";
-import { Send, MessageCircle, Mail, Eye, EyeOff, Trash2, Plus, CheckCircle2, XCircle, Crown, UserCog, Bell, ListChecks, UserRound, History, Save, Link2, Unlink, FlaskConical, Zap, KeyRound } from "lucide-react";
+import { Send, MessageCircle, Mail, Eye, EyeOff, Trash2, Plus, CheckCircle2, XCircle, Crown, UserCog, Bell, ListChecks, UserRound, History, Save, Link2, Unlink, FlaskConical, Zap, KeyRound, Sun, Moon, Monitor, SunMoon } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../App";
 import { Field, Select, toast } from "../components/ui";
 import { useProPrice } from "../lib/plan";
+import { useTheme, type Preference } from "../lib/theme";
+
+/** Light / dark / follow-OS switch; stored in this browser only. */
+function Appearance() {
+  const { pref, set } = useTheme();
+  const opts: [Preference, string, React.ReactNode][] = [["light", "Light", <Sun size={14} />], ["dark", "Dark", <Moon size={14} />], ["system", "System", <Monitor size={14} />]];
+  return (
+    <div className="card p-5">
+      <h2 className="mb-1 flex items-center gap-2 font-display font-600"><SunMoon size={16} className="text-gold" /> Appearance</h2>
+      <p className="mb-3 text-xs text-slate-500">Choose how Hillradar looks on this device. "System" follows your OS setting.</p>
+      <div className="grid grid-cols-3 gap-2">
+        {opts.map(([k, label, icon]) => (
+          <button key={k} type="button" onClick={() => set(k)} className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition ${pref === k ? "border-gold/60 bg-gold/15 text-gold" : "border-line text-slate-300 hover:bg-ink-600"}`} aria-pressed={pref === k}>{icon}{label}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /** Member's own account: profile, password, alert channels, watchlist, plan. */
 export default function Settings() {
@@ -25,6 +43,7 @@ export default function Settings() {
           <Profile u={u} onChange={load} />
         </div>
         <div className="space-y-5">
+          <Appearance />
           <div className="card p-5">
             <h2 className="mb-2 flex items-center gap-2 font-display font-600"><Crown size={16} className="text-gold" /> Your plan</h2>
             <div className="font-display text-2xl font-700">{u.pro ? (u.plan === "Free" ? "Admin" : u.plan) : "Free"}</div>

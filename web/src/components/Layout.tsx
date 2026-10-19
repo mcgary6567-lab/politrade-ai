@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog, TrendingUp, Wallet } from "lucide-react";
+import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog, TrendingUp, Wallet, Sun, Moon } from "lucide-react";
 import { useAuth } from "../App";
+import { useTheme } from "../lib/theme";
 import { prefetch } from "../lib/api";
 import { Search } from "lucide-react";
 import Footer from "./Footer";
@@ -24,6 +25,7 @@ export default function Layout() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
+  const { theme, toggle } = useTheme();
   const signOut = () => { logout(); nav("/login"); };
   const NAV = [...BASE_NAV, { to: "/settings", label: "Settings", icon: UserCog }, ...(user?.role === "admin" ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : [])];
 
@@ -49,6 +51,7 @@ export default function Layout() {
             {user?.role === "admin" && <Link to="/admin" className="btn-ghost hidden px-2.5 py-2 md:flex" title="Admin panel"><ShieldCheck size={16} /></Link>}
             <Link to="/settings" className="hidden max-w-[180px] items-center gap-2 truncate text-sm text-slate-400 hover:text-gold sm:flex" title="Your settings"><UserCog size={15} className="shrink-0" /><span className="hidden truncate xl:inline">{user?.name ?? user?.email}</span>
               <span className={`chip hidden py-0.5 text-[10px] xl:inline ${user?.pro ? "border-gold/50 text-gold" : ""}`}>{user?.role === "admin" ? "ADMIN" : user?.pro ? "PRO" : "FREE"}</span></Link>
+            <button onClick={toggle} className="btn-ghost shrink-0 px-2.5 py-2" title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle light / dark mode">{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button>
             <button onClick={signOut} className="btn-ghost shrink-0 gap-1.5 whitespace-nowrap px-3 py-2 text-sm" title="Logout"><LogOut size={15} /> <span className="hidden sm:inline">Logout</span></button>
             <button onClick={() => setOpen(!open)} className="btn-ghost px-2.5 py-2 md:hidden" aria-label="Menu">{open ? <X size={18} /> : <Menu size={18} />}</button>
           </div>

@@ -7,6 +7,7 @@ import { Select, compact, partyTone } from "../components/ui";
 import { Avatar } from "./Politicians";
 import IssuerLogo from "../components/IssuerLogo";
 import { useProPrice } from "../lib/plan";
+import { useChartTheme } from "../lib/theme";
 
 /** Smart-money signals page: which tickers Congress is clustering into, weighted by each lawmaker's track record. */
 export default function Signals() {
@@ -135,13 +136,14 @@ function SignalCard({ s, rank }: { s: any; rank: number }) {
 }
 
 function Score({ v, small }: { v: number; small?: boolean }) {
-  const tone = v >= 55 ? "#22c58b" : v >= 35 ? "#e7b23c" : "#8a96ad";
+  const th = useChartTheme();
+  const tone = v >= 55 ? th.buy : v >= 35 ? th.gold : th.muted;
   const r = small ? 14 : 20, c = 2 * Math.PI * r;
   return (
     <svg width={r * 2 + 6} height={r * 2 + 6} className="shrink-0" aria-label={`score ${v}`}>
-      <circle cx={r + 3} cy={r + 3} r={r} stroke="#223052" strokeWidth={small ? 3 : 4} fill="none" />
+      <circle cx={r + 3} cy={r + 3} r={r} stroke={th.grid} strokeWidth={small ? 3 : 4} fill="none" />
       <circle cx={r + 3} cy={r + 3} r={r} stroke={tone} strokeWidth={small ? 3 : 4} fill="none" strokeDasharray={`${(v / 100) * c} ${c}`} strokeLinecap="round" transform={`rotate(-90 ${r + 3} ${r + 3})`} />
-      <text x="50%" y="50%" dy=".35em" textAnchor="middle" fill="#e7ecf5" fontSize={small ? 10 : 12} fontWeight={700} fontFamily="ui-monospace, monospace">{v}</text>
+      <text x="50%" y="50%" dy=".35em" textAnchor="middle" fill={th.text} fontSize={small ? 10 : 12} fontWeight={700} fontFamily="ui-monospace, monospace">{v}</text>
     </svg>
   );
 }

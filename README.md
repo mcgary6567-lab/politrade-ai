@@ -14,6 +14,7 @@ Built with the same stack as a production app: **Node.js 22 + TypeScript + Expre
 - **Insights** — charts: trades per month, party split, top issuers, sectors, buy/sell ratio.
 - **AI automation** — when a new trade is ingested, an AI one-line summary is generated and **pushed to every connected channel** (Telegram / WhatsApp / email). Unconfigured channels are logged as "simulated" so the app always works.
 - **Footer** — Terms & Conditions, Disclaimer, Privacy Policy, Contact Us, social links.
+- **Light & dark mode** — follows the OS by default; toggle in the header (sun / moon), on the login page, or pick Light / Dark / System in Settings → Appearance. The legal pages share the same preference.
 
 ## Admin panel (`/admin`, admin role only)
 Everything is controlled from the browser — no redeploy or secrets needed after first boot:

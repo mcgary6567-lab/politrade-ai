@@ -4,11 +4,13 @@ import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tool
 import { Sparkles, BarChart3 } from "lucide-react";
 import { api } from "../lib/api";
 import { KPI, Select, compact, partyTone } from "../components/ui";
+import { useChartTheme } from "../lib/theme";
 
 const PARTY: Record<string, string> = { Democrat: "#38bdf8", Republican: "#fb7185", Independent: "#a78bfa" };
-const GOLD = "#e7b23c", GRID = "#223052", BUY = "#22c58b", SELL = "#f26a6a";
 
 export default function Insights() {
+  const c = useChartTheme();
+  const GOLD = c.gold, GRID = c.grid, BUY = c.buy, SELL = c.sell, tip = c.tip;
   const [d, setD] = useState<any>(null);
   const [days, setDays] = useState("");
   useEffect(() => { api(`/insights${days ? `?days=${days}` : ""}`).then(setD).catch(() => {}); }, [days]);
@@ -38,8 +40,8 @@ export default function Insights() {
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={d.volume} margin={{ left: -18, right: 8, top: 8 }}>
               <CartesianGrid stroke={GRID} vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "#8a96ad", fontSize: 11 }} tickFormatter={(m) => m?.slice(2)} />
-              <YAxis tick={{ fill: "#8a96ad", fontSize: 11 }} allowDecimals={false} />
+              <XAxis dataKey="month" tick={{ fill: c.tick, fontSize: 11 }} tickFormatter={(m) => m?.slice(2)} />
+              <YAxis tick={{ fill: c.tick, fontSize: 11 }} allowDecimals={false} />
               <Tooltip {...tip} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="buys" stackId="a" fill={BUY} barSize={18} />
@@ -52,8 +54,8 @@ export default function Insights() {
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={d.volume} margin={{ left: 0, right: 8, top: 8 }}>
               <CartesianGrid stroke={GRID} vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "#8a96ad", fontSize: 11 }} tickFormatter={(m) => m?.slice(2)} />
-              <YAxis tick={{ fill: "#8a96ad", fontSize: 11 }} tickFormatter={(v) => compact(v)} width={56} />
+              <XAxis dataKey="month" tick={{ fill: c.tick, fontSize: 11 }} tickFormatter={(m) => m?.slice(2)} />
+              <YAxis tick={{ fill: c.tick, fontSize: 11 }} tickFormatter={(v) => compact(v)} width={56} />
               <Tooltip {...tip} formatter={(v: any) => compact(v)} />
               <Line type="monotone" dataKey="volume" stroke={GOLD} strokeWidth={2.5} dot={false} />
             </LineChart>
@@ -84,8 +86,8 @@ export default function Insights() {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={d.bands} margin={{ left: -18, right: 8 }}>
               <CartesianGrid stroke={GRID} vertical={false} />
-              <XAxis dataKey="band" tick={{ fill: "#8a96ad", fontSize: 10 }} interval={0} />
-              <YAxis tick={{ fill: "#8a96ad", fontSize: 11 }} allowDecimals={false} />
+              <XAxis dataKey="band" tick={{ fill: c.tick, fontSize: 10 }} interval={0} />
+              <YAxis tick={{ fill: c.tick, fontSize: 11 }} allowDecimals={false} />
               <Tooltip {...tip} />
               <Bar dataKey="trades" fill={GOLD} radius={[5, 5, 0, 0]} barSize={30} />
             </BarChart>
@@ -96,8 +98,8 @@ export default function Insights() {
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={d.topIssuers} layout="vertical" margin={{ left: 20, right: 12 }}>
               <CartesianGrid stroke={GRID} horizontal={false} />
-              <XAxis type="number" tick={{ fill: "#8a96ad", fontSize: 11 }} allowDecimals={false} />
-              <YAxis type="category" dataKey="ticker" tick={{ fill: "#e7ecf5", fontSize: 11 }} width={56} />
+              <XAxis type="number" tick={{ fill: c.tick, fontSize: 11 }} allowDecimals={false} />
+              <YAxis type="category" dataKey="ticker" tick={{ fill: c.text, fontSize: 11 }} width={56} />
               <Tooltip {...tip} />
               <Bar dataKey="buys" stackId="a" fill={BUY} barSize={14} />
               <Bar dataKey="sells" stackId="a" fill={SELL} radius={[0, 5, 5, 0]} barSize={14} />
@@ -109,8 +111,8 @@ export default function Insights() {
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={d.bySector} margin={{ left: -18, right: 8 }}>
               <CartesianGrid stroke={GRID} vertical={false} />
-              <XAxis dataKey="sector" tick={{ fill: "#8a96ad", fontSize: 10 }} interval={0} angle={-20} textAnchor="end" height={60} />
-              <YAxis tick={{ fill: "#8a96ad", fontSize: 11 }} allowDecimals={false} />
+              <XAxis dataKey="sector" tick={{ fill: c.tick, fontSize: 10 }} interval={0} angle={-20} textAnchor="end" height={60} />
+              <YAxis tick={{ fill: c.tick, fontSize: 11 }} allowDecimals={false} />
               <Tooltip {...tip} />
               <Bar dataKey="buys" stackId="a" fill={BUY} barSize={26} />
               <Bar dataKey="sells" stackId="a" fill={SELL} radius={[5, 5, 0, 0]} barSize={26} />
@@ -155,7 +157,6 @@ export default function Insights() {
   );
 }
 
-const tip = { contentStyle: { background: "#121a2e", border: "1px solid #223052", borderRadius: 10, color: "#e7ecf5" }, cursor: { fill: "rgba(231,178,60,.08)" } } as any;
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return <div className="card p-4"><h2 className="mb-3 flex items-center gap-2 font-display font-600"><BarChart3 size={15} className="text-gold" /> {title}</h2>{children}</div>;
 }

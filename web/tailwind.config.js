@@ -1,13 +1,22 @@
 /** @type {import('tailwindcss').Config} */
+// Every colour is a CSS variable (see src/index.css) so the same classes render the dark or the
+// light palette depending on <html data-theme>. Values are "r g b" so Tailwind's /opacity still works.
+const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+const scale = (name, steps) => Object.fromEntries(steps.map((s) => [s, v(`${name}-${s}`)]));
+
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        ink: { 900: "#0a0f1c", 800: "#0d1322", 700: "#121a2e", 600: "#1a2440", 500: "#24314f" },
-        line: "#223052",
-        gold: { DEFAULT: "#e7b23c", 600: "#d79f26", 300: "#f3cf74" },
-        buy: "#22c58b", sell: "#f26a6a",
+        ink: scale("ink", [900, 800, 700, 600, 500]),
+        line: v("line"),
+        gold: { DEFAULT: v("gold"), 600: v("gold-600"), 300: v("gold-300") },
+        buy: v("buy"), sell: v("sell"),
+        // text greys flip in light mode (slate-100 = strongest text, slate-600 = faintest)
+        slate: scale("slate", [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        // party tones: readable on both backgrounds
+        sky: { 400: v("party-d") }, rose: { 400: v("party-r") }, violet: { 300: v("party-i") },
       },
       fontFamily: {
         display: ['"Space Grotesk"', "system-ui", "sans-serif"],

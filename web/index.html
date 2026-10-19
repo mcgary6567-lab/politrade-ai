@@ -2,6 +2,10 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // apply the saved (or OS) theme before first paint — keep in sync with src/lib/theme.ts
+      (function () { try { var t = localStorage.getItem("hr-theme"); if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; var h = document.documentElement; h.dataset.theme = t; h.classList.toggle("dark", t === "dark"); } catch (e) {} })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hillradar AI — Congressional trade tracker</title>
     <meta name="description" content="Track publicly disclosed US congressional stock trades with AI-powered alerts." />

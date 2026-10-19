@@ -1,4 +1,5 @@
-import { LogIn, KeyRound, Lock, UserPlus, Eye, EyeOff } from "lucide-react";
+import { LogIn, KeyRound, Lock, UserPlus, Eye, EyeOff, Sun, Moon } from "lucide-react";
+import { useTheme } from "../lib/theme";
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
@@ -61,9 +62,11 @@ export default function Login() {
 }
 
 export function Shell({ children, title }: { children: React.ReactNode; title?: string }) {
+  const { theme, toggle } = useTheme();
   return (
-    <div className="grid min-h-screen place-items-center bg-ink-900 p-4"
+    <div className="relative grid min-h-screen place-items-center bg-ink-900 p-4"
       style={{ backgroundImage: "radial-gradient(1000px 500px at 80% -10%, rgba(231,178,60,.10), transparent 60%)" }}>
+      <button onClick={toggle} className="btn-ghost absolute right-4 top-4 px-2.5 py-2" title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle light / dark mode">{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button>
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <Logo className="mx-auto h-20 w-20" />

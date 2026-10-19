@@ -6,12 +6,14 @@ import { api } from "../lib/api";
 import { useAuth } from "../App";
 import { compact, partyTone } from "../components/ui";
 import IssuerLogo from "../components/IssuerLogo";
+import { useChartTheme } from "../lib/theme";
 
 /**
  * Invest Plan: what the back-test says about following congressional "smart clusters", a calculator that projects a
  * member's own numbers under market vs. signal-following scenarios, and a model allocation across today's signals.
  */
 export default function Invest() {
+  const c = useChartTheme();
   const { user } = useAuth();
   const [d, setD] = useState<any>(null);
   const [branding, setBranding] = useState<any>(null);
@@ -80,17 +82,17 @@ export default function Invest() {
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={sim.rows} margin={{ left: 8, right: 8, top: 10 }}>
                 <defs>
-                  <linearGradient id="gS" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#22c58b" stopOpacity={0.5} /><stop offset="100%" stopColor="#22c58b" stopOpacity={0} /></linearGradient>
-                  <linearGradient id="gM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#8a96ad" stopOpacity={0.4} /><stop offset="100%" stopColor="#8a96ad" stopOpacity={0} /></linearGradient>
+                  <linearGradient id="gS" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={c.buy} stopOpacity={0.5} /><stop offset="100%" stopColor={c.buy} stopOpacity={0} /></linearGradient>
+                  <linearGradient id="gM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={c.tick} stopOpacity={0.4} /><stop offset="100%" stopColor={c.tick} stopOpacity={0} /></linearGradient>
                 </defs>
-                <CartesianGrid stroke="#223052" vertical={false} />
-                <XAxis dataKey="month" tick={{ fill: "#8a96ad", fontSize: 11 }} tickFormatter={(m) => (m % 12 === 0 ? `${m / 12}y` : "")} interval={0} />
-                <YAxis tick={{ fill: "#8a96ad", fontSize: 11 }} tickFormatter={(v) => compact(v)} width={60} />
-                <Tooltip contentStyle={{ background: "#121a2e", border: "1px solid #223052", borderRadius: 10, color: "#e7ecf5", fontSize: 12 }} formatter={(v: any) => usd(v)} labelFormatter={(m) => `Month ${m}`} />
+                <CartesianGrid stroke={c.grid} vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: c.tick, fontSize: 11 }} tickFormatter={(m) => (m % 12 === 0 ? `${m / 12}y` : "")} interval={0} />
+                <YAxis tick={{ fill: c.tick, fontSize: 11 }} tickFormatter={(v) => compact(v)} width={60} />
+                <Tooltip contentStyle={c.tip.contentStyle} formatter={(v: any) => usd(v)} labelFormatter={(m) => `Month ${m}`} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="contributed" name="Contributed" stroke="#223052" fill="none" strokeDasharray="4 4" />
-                <Area type="monotone" dataKey="market" name={`Market (${pct(sim.annMarket, 0)}/yr)`} stroke="#8a96ad" fill="url(#gM)" strokeWidth={2} />
-                <Area type="monotone" dataKey="signals" name={`AI signals (${pct(sim.annSmart, 0)}/yr)`} stroke="#22c58b" fill="url(#gS)" strokeWidth={2.5} />
+                <Area type="monotone" dataKey="contributed" name="Contributed" stroke={c.grid} fill="none" strokeDasharray="4 4" />
+                <Area type="monotone" dataKey="market" name={`Market (${pct(sim.annMarket, 0)}/yr)`} stroke={c.tick} fill="url(#gM)" strokeWidth={2} />
+                <Area type="monotone" dataKey="signals" name={`AI signals (${pct(sim.annSmart, 0)}/yr)`} stroke={c.buy} fill="url(#gS)" strokeWidth={2.5} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -171,7 +173,7 @@ function Stat({ label, v, sub, tone, highlight }: { label: string; v: string; su
   return <div className={`card p-4 ${highlight ? "border-buy/50 bg-buy/5" : ""}`}><div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</div><div className={`mt-1 font-display text-2xl font-700 ${tone ?? ""}`}>{v}</div><div className="mt-1 text-xs text-slate-500">{sub}</div></div>;
 }
 function Slider({ label, v, set, min, max, step, fmt }: { label: string; v: number; set: (n: number) => void; min: number; max: number; step: number; fmt: (n: number) => string }) {
-  return <label className="block"><div className="flex justify-between text-sm"><span className="text-slate-400">{label}</span><b className="font-mono">{fmt(v)}</b></div><input type="range" className="mt-1 w-full accent-[#e7b23c]" min={min} max={max} step={step} value={v} onChange={(e) => set(Number(e.target.value))} /></label>;
+  return <label className="block"><div className="flex justify-between text-sm"><span className="text-slate-400">{label}</span><b className="font-mono">{fmt(v)}</b></div><input type="range" className="mt-1 w-full accent-gold" min={min} max={max} step={step} value={v} onChange={(e) => set(Number(e.target.value))} /></label>;
 }
 function Box({ label, v, tone }: { label: string; v: string; tone?: string }) {
   return <div className="rounded-xl border border-line bg-ink-800/60 p-2.5"><div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div><div className={`font-mono text-sm font-700 ${tone ?? "text-slate-100"}`}>{v}</div></div>;
