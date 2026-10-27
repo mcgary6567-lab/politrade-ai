@@ -130,6 +130,12 @@ test("parseForm4 keeps open-market buys and sells only", async () => {
   assert.equal(buy.raw_id, "0001045810-26-000201#2");
 });
 
+test("sub-$1,000 trades (penny-stock noise) are skipped", async () => {
+  const { parseForm4 } = await import("../src/insiders.js");
+  const tiny = FORM4.replace("<value>100</value></transactionShares><transactionPricePerShare><value>180</value>", "<value>97500</value></transactionShares><transactionPricePerShare><value>0.0005</value>");
+  assert.deepEqual(parseForm4(tiny, "x").map((r) => r.tx_type), ["sell"]);
+});
+
 test("parseFormIndex lists each Form 4 once and skips 4/A, 424B, 40-F", async () => {
   const { parseFormIndex } = await import("../src/insiders.js");
   const r = parseFormIndex(INDEX);
@@ -141,7 +147,11 @@ test("insiderName reorders EDGAR last-first names", async () => {
   const { insiderName } = await import("../src/insiders.js");
   assert.equal(insiderName("HUANG JEN HSUN"), "Jen Hsun Huang");
   assert.equal(insiderName("SMITH JOHN A JR"), "John A Smith Jr.");
+  assert.equal(insiderName("Gheuens Sarah"), "Sarah Gheuens");
+  assert.equal(insiderName("Equels Thomas K"), "Thomas K Equels");
   assert.equal(insiderName("Berkshire Hathaway Inc"), "Berkshire Hathaway Inc");
+  assert.equal(insiderName("CHS US Investments LLC"), "CHS US Investments LLC");
+  assert.equal(insiderName("Aggregator LP Ignite"), "Aggregator LP Ignite");
 });
 
 test("/api/insiders lists stored trades; storing twice does not duplicate", async () => {

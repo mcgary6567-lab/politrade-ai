@@ -40,15 +40,23 @@ const flag = (v?: string) => (v ? (/^(1|true)$/i.test(v) ? 1 : 0) : 0);
 const numOrNull = (v?: string) => { const n = Number(String(v ?? "").replace(/,/g, "")); return v && Number.isFinite(n) ? n : null; };
 function decode(s: string) { return s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'"); }
 
-/** "HUANG JEN HSUN" → "Jen Hsun Huang" (EDGAR lists owners last name first, upper case). */
+const ENTITY = /\b(LLC|L\.?L\.?C|LP|L\.P|INC|CORP|CORPORATION|CO|COMPANY|LTD|LIMITED|TRUST|FUND|FUNDS|PARTNERS|PARTNERSHIP|HOLDINGS?|CAPITAL|GROUP|MANAGEMENT|INVESTMENTS?|ADVISORS?|ADVISERS?|AGGREGATOR|FOUNDATION|BANK|N\.A|PLC|AG|SA|GMBH|VENTURES?|ASSOCIATES|SECURITIES|ENTERPRISES?)\b\.?/i;
+
+/** EDGAR lists people last name first ("HUANG JEN HSUN", "Gheuens Sarah") → "Jen Hsun Huang". Entities are left alone. */
 export function insiderName(n: string): string {
-  const parts = n.replace(/\s+/g, " ").trim().split(" ");
-  if (parts.length < 2 || n !== n.toUpperCase()) return n.trim();
-  const tc = (w: string) => w.toLowerCase().replace(/(^|[-'])\w/g, (c) => c.toUpperCase());
+  const s = n.replace(/\s+/g, " ").trim();
+  const tc = (w: string) => (w === w.toUpperCase() || w === w.toLowerCase() ? w.toLowerCase().replace(/(^|[-'])\w/g, (c) => c.toUpperCase()) : w);
+  if (ENTITY.test(s)) return s === s.toUpperCase() ? s.split(" ").map((w) => (w.length <= 3 ? w : tc(w))).join(" ") : s;
+  const parts = s.replace(/,/g, " ").split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return tc(s);
   const suffix = /^(JR|SR|II|III|IV)\.?$/i.test(parts[parts.length - 1]) ? parts.pop()! : "";
   const [last, ...rest] = parts;
-  return [...rest.map(tc), tc(last), suffix && (suffix.length <= 3 && /^(jr|sr)/i.test(suffix) ? tc(suffix.replace(/\.$/, "")) + "." : suffix)].filter(Boolean).join(" ");
+  const suf = !suffix ? "" : /^(jr|sr)/i.test(suffix) ? tc(suffix.replace(/\.$/, "")) + "." : suffix.toUpperCase();
+  return [...rest.map(tc), tc(last), suf].filter(Boolean).join(" ");
 }
+
+/** Trades below this value are mostly sub-penny OTC noise. */
+const MIN_VALUE = 1000;
 
 export type InsiderTrade = {
   raw_id: string; accession: string; ticker?: string; issuer_name: string; issuer_cik?: string;
@@ -79,6 +87,7 @@ export function parseForm4(xml: string, accession: string): InsiderTrade[] {
     const code = (tag(t, "transactionCode") ?? "").toUpperCase();
     if (code !== "P" && code !== "S") return;
     const shares = numOrNull(tag(t, "transactionShares")), price = numOrNull(tag(t, "transactionPricePerShare"));
+    if (shares != null && price != null && shares * price < MIN_VALUE) return;
     out.push({
       raw_id: `${accession}#${i}`, accession, ticker, issuer_name: tag(issuer, "issuerName") ?? ticker ?? "Unknown", issuer_cik: tag(issuer, "issuerCik"),
       insider, insider_cik: tag(o, "rptOwnerCik"), role, officer_title, is_director, is_officer, is_ten_pct,
