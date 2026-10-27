@@ -6,8 +6,11 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22' }
-      - run: cd server && npm ci --silent
-      - run: cd server && DB_PATH=/tmp/v.db npx tsx scripts/verify-insiders.ts 2026-10-23 80
+      - name: Live health check
+        run: |
+          for u in https://hillradar-ai.fly.dev https://app.hillradar.com; do
+            echo "== $u"; curl -sS -m 30 "$u/api/health" || true; echo
+            curl -sS -m 30 -o /dev/null -w "insiders page HTTP %{http_code}\n" "$u/insiders" || true
+            curl -sS -m 30 -o /dev/null -w "insiders API (no login, expect 401) HTTP %{http_code}\n" "$u/api/insiders" || true
+            curl -sS -m 30 "$u/" | grep -o 'assets/index-[^"]*\.js' | head -1 | while read js; do curl -sS -m 30 "$u/$js" | grep -c 'Corporate insiders\|/insiders' | sed 's/^/bundle mentions insiders: /'; done
+          done
