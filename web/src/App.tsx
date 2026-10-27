@@ -11,6 +11,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Insights = lazy(() => import("./pages/Insights"));
 const Signals = lazy(() => import("./pages/Signals"));
 const Invest = lazy(() => import("./pages/Invest"));
+const Insiders = lazy(() => import("./pages/Insiders"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
 import { Toasts } from "./components/ui";
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/politicians/:id" element={<Politicians />} />
             <Route path="/issuers" element={<Issuers />} />
             <Route path="/issuers/:id" element={<Issuers />} />
+            <Route path="/insiders" element={<Suspense fallback={<Fallback />}><Insiders /></Suspense>} />
             <Route path="/insights" element={<Suspense fallback={<Fallback />}><Insights /></Suspense>} />
             <Route path="/signals" element={<Suspense fallback={<Fallback />}><Signals /></Suspense>} />
             <Route path="/invest" element={<Suspense fallback={<Fallback />}><Invest /></Suspense>} />

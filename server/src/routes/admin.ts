@@ -10,6 +10,7 @@ import { ingestFromFeed, ingestRows, fireAlert, stats, syncPoliticians } from ".
 import { FEED_PRESETS } from "../sources.js";
 import { bumpCache } from "../perf.js";
 import { tradeInsight } from "../ai.js";
+import { ingestInsiders, insiderStats } from "../insiders.js";
 
 export const admin = Router();
 
@@ -43,6 +44,16 @@ admin.get("/admin/overview", (_req, res) => {
     recentUsers: all("SELECT id,email,name,role,status,last_login,created_at FROM users ORDER BY id DESC LIMIT 5"),
     version: config.publicUrl,
   });
+});
+
+/* ---------- corporate insiders (SEC Form 4) ---------- */
+admin.get("/admin/insiders", (_req, res) => res.json(insiderStats()));
+admin.post("/admin/insiders/run", (req, res) => {
+  const days = Math.min(Math.max(Number(req.body?.days ?? 5), 1), 30);
+  // a day of Form 4s is ~1-3k filings at SEC's rate limit: run in the background and report via the log
+  ingestInsiders(days).then((r) => { if (r.added) bumpCache(); console.log(`[insiders] admin run: ${r.added} added over ${r.days.join(", ") || "no new days"}`); })
+    .catch((e) => console.error("[insiders]", e.message));
+  res.json({ started: true, days });
 });
 
 /* ---------- users ---------- */
