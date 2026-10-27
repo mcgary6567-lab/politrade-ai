@@ -176,7 +176,68 @@ data.get("/issuers/:id", (req, res) => {
       COUNT(DISTINCT politician_id) politicians FROM trades WHERE issuer_id=?`, req.params.id);
   const topPols = all(`SELECT p.id, p.name, p.party, p.chamber, COUNT(*) trades FROM trades tr JOIN politicians p ON p.id=tr.politician_id
       WHERE tr.issuer_id=? GROUP BY p.id ORDER BY trades DESC LIMIT 6`, req.params.id);
-  res.json({ issuer: i, trades, summary, topPols });
+  // corporate insiders (SEC Form 4) of the same company, matched on ticker
+  const insiders = i.ticker ? all(`SELECT ${INSIDER_COLS} FROM insider_trades it WHERE it.ticker=? ORDER BY it.filed_date DESC, it.id DESC LIMIT 50`, i.ticker) : [];
+  const insiderSummary = i.ticker ? get(`SELECT COUNT(*) trades, SUM(tx_type='buy') buys, SUM(tx_type='sell') sells,
+      SUM(CASE WHEN tx_type='buy' THEN value ELSE 0 END) buy_value, SUM(CASE WHEN tx_type='sell' THEN value ELSE 0 END) sell_value,
+      COUNT(DISTINCT insider) insiders FROM insider_trades WHERE ticker=?`, i.ticker) : null;
+  res.json({ issuer: i, trades, summary, topPols, insiders, insiderSummary });
+});
+
+/* ---------- corporate insiders (SEC Form 4) ---------- */
+const INSIDER_COLS = `it.id, it.ticker, it.issuer_name, it.insider, it.role, it.is_director, it.is_officer, it.is_ten_pct, it.tx_type, it.tx_date, it.filed_date,
+  it.shares, it.price, it.value, it.owned_after, it.direct, it.plan_10b5_1, it.accession, it.issuer_cik`;
+const INSIDER_SORTS: Record<string, string> = { filed: "it.filed_date DESC, it.id DESC", value: "COALESCE(it.value,0) DESC, it.id DESC", traded: "it.tx_date DESC, it.id DESC" };
+
+function insiderFilters(qs: Record<string, string>) {
+  const where: string[] = []; const p: any[] = [];
+  if (qs.type === "buy" || qs.type === "sell") { where.push("it.tx_type=?"); p.push(qs.type); }
+  if (qs.ticker) { where.push("it.ticker=?"); p.push(qs.ticker.toUpperCase()); }
+  if (qs.role === "officer") where.push("it.is_officer=1");
+  if (qs.role === "director") where.push("it.is_director=1");
+  if (qs.role === "owner") where.push("it.is_ten_pct=1");
+  if (qs.min_value) { where.push("COALESCE(it.value,0)>=?"); p.push(Number(qs.min_value)); }
+  if (qs.days) { where.push("it.filed_date >= date('now', ?)"); p.push(`-${Math.max(1, Number(qs.days))} days`); }
+  if (qs.congress === "1") where.push("it.ticker IN (SELECT i.ticker FROM trades tr JOIN issuers i ON i.id=tr.issuer_id WHERE tr.published_date >= date('now','-90 days') AND i.ticker IS NOT NULL)");
+  if (qs.q) { where.push("(it.insider LIKE ? OR it.issuer_name LIKE ? OR it.ticker LIKE ?)"); const s = `%${qs.q}%`; p.push(s, s, s); }
+  return { w: where.length ? `WHERE ${where.join(" AND ")}` : "", p };
+}
+
+/** GET /api/insiders — open-market buys and sells by company officers, directors and 10% owners.
+ *  Free plan: first FREE_VISIBLE rows, the rest locked (same rule as the Congress feed). */
+data.get("/insiders", (req, res) => {
+  const qs = req.query as Record<string, string>;
+  const pro = Boolean(req.user?.pro);
+  const { w, p } = insiderFilters(qs);
+  const total = get(`SELECT COUNT(*) c FROM insider_trades it ${w}`, ...p).c;
+  const limit = pro ? Math.min(Number(qs.limit ?? 50), 200) : FREE_VISIBLE;
+  const offset = pro ? Math.max(Number(qs.offset ?? 0), 0) : 0;
+  const rows = all(`SELECT ${INSIDER_COLS}, (SELECT id FROM issuers WHERE ticker=it.ticker LIMIT 1) issuer_id,
+      (SELECT COUNT(DISTINCT tr.politician_id) FROM trades tr JOIN issuers i ON i.id=tr.issuer_id WHERE i.ticker=it.ticker AND tr.published_date >= date('now','-90 days')) congress_90d
+    FROM insider_trades it ${w} ORDER BY ${INSIDER_SORTS[qs.sort ?? "filed"] ?? INSIDER_SORTS.filed} LIMIT ? OFFSET ?`, ...p, limit, offset);
+  res.json({ rows, total, limit, offset, plan: pro ? "pro" : "free", free_visible: pro ? null : FREE_VISIBLE, locked: pro ? 0 : Math.max(0, total - rows.length) });
+});
+
+/** GET /api/insiders/summary — top bought / sold companies and the Congress + insider overlap (last N days). */
+data.get("/insiders/summary", cached(300_000), (req, res) => {
+  const days = Math.min(Math.max(Number(req.query.days ?? 30), 1), 365);
+  const since = `-${days} days`;
+  const totals = get(`SELECT COUNT(*) trades, SUM(tx_type='buy') buys, SUM(tx_type='sell') sells,
+      SUM(CASE WHEN tx_type='buy' THEN value ELSE 0 END) buy_value, SUM(CASE WHEN tx_type='sell' THEN value ELSE 0 END) sell_value,
+      COUNT(DISTINCT ticker) companies, MAX(filed_date) last FROM insider_trades WHERE filed_date >= date('now', ?)`, since);
+  const top = (type: string) => all(`SELECT ticker, MAX(issuer_name) name, COUNT(*) trades, COUNT(DISTINCT insider) insiders, SUM(value) value,
+      (SELECT id FROM issuers WHERE ticker=it.ticker LIMIT 1) issuer_id
+    FROM insider_trades it WHERE tx_type=? AND ticker IS NOT NULL AND filed_date >= date('now', ?) GROUP BY ticker ORDER BY value DESC LIMIT 8`, type, since);
+  // companies both lawmakers and insiders traded in the window — the view no other tracker shows
+  const overlap = all(`SELECT it.ticker, MAX(it.issuer_name) name,
+      SUM(it.tx_type='buy') ins_buys, SUM(it.tx_type='sell') ins_sells, COUNT(DISTINCT it.insider) insiders,
+      c.pols, c.cbuys, c.csells, c.issuer_id
+    FROM insider_trades it JOIN (
+      SELECT i.ticker, i.id issuer_id, COUNT(DISTINCT tr.politician_id) pols, SUM(tr.tx_type='buy') cbuys, SUM(tr.tx_type='sell') csells
+      FROM trades tr JOIN issuers i ON i.id=tr.issuer_id WHERE tr.published_date >= date('now', ?) AND i.ticker IS NOT NULL GROUP BY i.ticker
+    ) c ON c.ticker=it.ticker
+    WHERE it.filed_date >= date('now', ?) GROUP BY it.ticker ORDER BY (c.pols + COUNT(DISTINCT it.insider)) DESC LIMIT 12`, since, since);
+  res.json({ days, totals, topBuys: top("buy"), topSells: top("sell"), overlap });
 });
 
 /** GET /api/insights — aggregates for the dashboard + insights page. */

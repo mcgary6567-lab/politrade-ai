@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog, TrendingUp, Wallet, Sun, Moon } from "lucide-react";
+import { LayoutGrid, ArrowLeftRight, Landmark, Building2, Sparkles, LogOut, Menu, X, ShieldCheck, UserCog, TrendingUp, Wallet, Sun, Moon, BriefcaseBusiness } from "lucide-react";
 import { useAuth } from "../App";
 import { useTheme } from "../lib/theme";
 import { prefetch } from "../lib/api";
@@ -10,12 +10,13 @@ import { OfflineBar, InstallNudge } from "./InstallApp";
 import Logo from "./Logo";
 
 /** Warm the cache for a page when its nav link is hovered. */
-const PREFETCH: Record<string, string[]> = { "/": ["/dashboard?assets=stocks"], "/trades": ["/trades?limit=50&offset=0", "/filters"], "/politicians": ["/politicians?"], "/issuers": ["/issuers?limit=60"], "/insights": ["/insights"], "/signals": ["/signals?days=90"], "/invest": ["/invest"] };
+const PREFETCH: Record<string, string[]> = { "/": ["/dashboard?assets=stocks"], "/trades": ["/trades?limit=50&offset=0", "/filters"], "/politicians": ["/politicians?"], "/issuers": ["/issuers?limit=60"], "/insights": ["/insights"], "/signals": ["/signals?days=90"], "/invest": ["/invest"], "/insiders": ["/insiders/summary?days=30", "/insiders?limit=50&offset=0"] };
 const BASE_NAV: { to: string; label: string; icon: any; end?: boolean }[] = [
   { to: "/", label: "Home", icon: LayoutGrid, end: true },
   { to: "/trades", label: "Trades", icon: ArrowLeftRight },
   { to: "/politicians", label: "Politicians", icon: Landmark },
   { to: "/issuers", label: "Issuers", icon: Building2 },
+  { to: "/insiders", label: "Insiders", icon: BriefcaseBusiness },
   { to: "/insights", label: "Insights", icon: Sparkles },
   { to: "/signals", label: "Signals", icon: TrendingUp },
   { to: "/invest", label: "Invest Plan", icon: Wallet },

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Search, ArrowLeft, Building2, Users, History, ExternalLink } from "lucide-react";
+import { Search, ArrowLeft, Building2, Users, History, ExternalLink, BriefcaseBusiness } from "lucide-react";
 import { api, ago, money } from "../lib/api";
 import { pill } from "../components/ui";
 import { Select, KPI, partyTone, compact } from "../components/ui";
@@ -145,6 +145,32 @@ function Detail({ id }: { id: string }) {
           </div>
         </div>
       </div>
+      {data.insiders?.length > 0 && (
+        <div className="card overflow-hidden">
+          <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
+            <span className="flex items-center gap-2 font-display font-600"><BriefcaseBusiness size={15} className="text-gold" /> Corporate insiders (SEC Form 4)</span>
+            <span className="text-xs text-slate-500"><span className="text-buy">{compact(data.insiderSummary?.buy_value)} bought</span> · <span className="text-sell">{compact(data.insiderSummary?.sell_value)} sold</span> by {data.insiderSummary?.insiders ?? 0} insiders</span>
+            <Link to={`/insiders?q=${encodeURIComponent(i.ticker)}`} className="ml-auto text-xs text-gold hover:underline">All insider trades →</Link>
+          </div>
+          <div className="max-h-[420px] overflow-auto">
+            <table className="w-full min-w-[620px]">
+              <thead className="sticky top-0 border-b border-line bg-ink-700"><tr><th className="th">Insider</th><th className="th">Type</th><th className="th text-right">Shares</th><th className="th text-right">Value</th><th className="th">Traded</th><th className="th">Filed</th></tr></thead>
+              <tbody className="divide-y divide-line">
+                {data.insiders.map((t: any) => (
+                  <tr key={t.id} className="hover:bg-ink-700/40">
+                    <td className="td"><div className="font-semibold">{t.insider}</div><div className="text-xs text-slate-500">{t.role}</div></td>
+                    <td className="td"><span className={pill(t.tx_type)}>{t.tx_type.toUpperCase()}</span></td>
+                    <td className="td text-right font-mono">{t.shares != null ? Math.round(t.shares).toLocaleString() : "—"}</td>
+                    <td className={`td text-right font-mono ${t.tx_type === "buy" ? "text-buy" : "text-sell"}`}>{compact(t.value)}</td>
+                    <td className="td text-sm text-slate-300">{t.tx_date ?? "—"}</td>
+                    <td className="td text-sm text-slate-400">{ago(t.filed_date)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

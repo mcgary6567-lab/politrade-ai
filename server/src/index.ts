@@ -17,6 +17,7 @@ import { compress, staticPrecompressed, photo, logo, bumpCache } from "./perf.js
 import { seedDemo } from "./seed.js";
 import { backfillSectors } from "./sectors.js";
 import { legalPage } from "./legal.js";
+import { migrateInsiders, ingestInsiders, insiderStats } from "./insiders.js";
 import { integ, aiOn, proPriceCents } from "./settings.js";
 
 export const app = express();
@@ -25,6 +26,7 @@ app.use(compress);
 app.use(express.json({ limit: "5mb" }));
 
 migrate();
+migrateInsiders();
 seedAdmin();
 seedPlans();
 rebrandOnce();
@@ -32,7 +34,7 @@ backfillSectors(); // fill in company sectors from the curated ticker map (feed 
 
 app.get("/api/photo/:bioguide", photo);
 app.get("/api/logo/:ticker", logo);
-app.get("/api/health", (_req, res) => res.json({ ok: true, version: APP_VERSION, ai: aiOn(), ...stats() }));
+app.get("/api/health", (_req, res) => res.json({ ok: true, version: APP_VERSION, ai: aiOn(), ...stats(), insiders: insiderStats().trades }));
 app.get("/api/branding", (_req, res) => res.json({
   name: integ.brandName(), version: APP_VERSION, contact: integ.contactEmail(),
   social: { x: integ.socialX(), telegram: integ.socialTelegram(), github: integ.socialGithub() },
@@ -185,6 +187,11 @@ function startScheduler() {
   };
   sync();
   setInterval(sync, 60_000).unref();
+  // corporate insiders (SEC Form 4): catch up every 6 hours; EDGAR posts each day's index that evening
+  if (process.env.INSIDERS !== "off") {
+    cron.schedule("40 */6 * * *", () => { ingestInsiders().then((r) => { if (r.added) bumpCache(); }).catch((e) => console.error("[insiders]", e.message)); });
+    if (!get("SELECT 1 FROM insider_trades LIMIT 1")) ingestInsiders().then((r) => { console.log(`[insiders] first load: ${r.added} trades from ${r.days.length} days`); bumpCache(); }).catch((e) => console.error("[insiders]", e.message));
+  }
   setInterval(() => pollTelegramLinks().catch(() => 0), 20_000).unref();
 }
 
